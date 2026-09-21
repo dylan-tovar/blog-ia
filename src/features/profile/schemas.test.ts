@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { updateProfileSchema, usernameSchema } from "@/features/profile/schemas";
+import {
+  onboardingSchema,
+  updateProfileSchema,
+  usernameSchema,
+} from "@/features/profile/schemas";
 
 describe("usernameSchema", () => {
   it("accepts lowercase letters, digits and underscores", () => {
@@ -67,6 +71,40 @@ describe("updateProfileSchema", () => {
 
   it("does not let callers set other columns", () => {
     const result = updateProfileSchema.parse({
+      ...valid,
+      id: "00000000-0000-0000-0000-000000000000",
+      avatar_url: "https://evil.example",
+    });
+    expect(Object.keys(result).sort()).toEqual(["displayName", "username"]);
+  });
+});
+
+describe("onboardingSchema", () => {
+  const valid = { displayName: "Ana", username: "ana_dev" };
+
+  it("trims the name and normalizes the username", () => {
+    const result = onboardingSchema.parse({
+      displayName: "  Ana  ",
+      username: " Ana_Dev ",
+    });
+    expect(result).toEqual({ displayName: "Ana", username: "ana_dev" });
+  });
+
+  it("rejects a blank display name", () => {
+    const result = onboardingSchema.safeParse({ ...valid, displayName: "   " });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe("Ingresá un nombre para mostrar.");
+  });
+
+  it("requires a valid username", () => {
+    expect(onboardingSchema.safeParse({ displayName: "Ana" }).success).toBe(false);
+    expect(
+      onboardingSchema.safeParse({ ...valid, username: "ana@example.com" }).success,
+    ).toBe(false);
+  });
+
+  it("does not let callers set other columns", () => {
+    const result = onboardingSchema.parse({
       ...valid,
       id: "00000000-0000-0000-0000-000000000000",
       avatar_url: "https://evil.example",

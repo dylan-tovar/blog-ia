@@ -1,8 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { updateProfileSchema } from "@/features/profile/schemas";
+import {
+  onboardingSchema,
+  updateProfileSchema,
+} from "@/features/profile/schemas";
 
 export type ProfileActionState = { error?: string; success?: boolean } | undefined;
 
@@ -25,6 +29,60 @@ export async function getCurrentProfile() {
     .maybeSingle();
 
   return { user, profile };
+}
+
+export async function completeOnboarding(
+  _state: ProfileActionState,
+  formData: FormData,
+): Promise<ProfileActionState> {
+  const parsed = onboardingSchema.safeParse({
+    displayName: formData.get("displayName"),
+    username: formData.get("username"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  const { supabase, user } = await requireUser();
+
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  // Never overwrite an existing profile from here (that is /settings' job).
+  if (existing) {
+    redirect("/");
+  }
+
+  const { error } = await supabase.from("profiles").insert({
+    id: user.id,
+    display_name: parsed.data.displayName,
+    username: parsed.data.username,
+  });
+
+  if (error) {
+    if (error.code === UNIQUE_VIOLATION) {
+      // A double submit collides on the primary key. Re-query instead of
+      // guessing which constraint fired: if the profile exists it was a double
+      // submit, otherwise the username is taken.
+      const { data: created } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (created) {
+        redirect("/");
+      }
+      return { error: "Ese nombre de usuario ya está en uso." };
+    }
+    return { error: "No pudimos guardar tu perfil. Intentá de nuevo." };
+  }
+
+  redirect("/");
 }
 
 export async function updateProfile(

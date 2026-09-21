@@ -20,17 +20,3 @@ export async function getPublicProfile(id: string) {
 
   return profile;
 }
-
-export async function isUsernameAvailable(username: string) {
-  const supabase = await createClient();
-  const { count, error } = await supabase
-    .from("profiles")
-    .select("id", { count: "exact", head: true })
-    .eq("username", username);
-
-  if (error) {
-    throw new Error(`No pudimos verificar el usuario: ${error.message}`);
-  }
-
-  return (count ?? 0) === 0;
-}

@@ -16,3 +16,11 @@ export const updateProfileSchema = z.object({
     .min(1, { error: "Ingresá un nombre para mostrar." }),
   username: usernameSchema,
 });
+
+export const onboardingSchema = z.object({
+  displayName: z
+    .string()
+    .trim()
+    .min(1, { error: "Ingresá un nombre para mostrar." }),
+  username: usernameSchema,
+});

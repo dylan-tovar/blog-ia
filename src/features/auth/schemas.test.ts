@@ -6,8 +6,7 @@ describe("registerSchema", () => {
   const valid = {
     email: "ana@example.com",
     password: "12345678",
-    displayName: "Ana",
-    username: "ana_dev",
+    confirmPassword: "12345678",
   };
 
   it("accepts valid input", () => {
@@ -21,41 +20,37 @@ describe("registerSchema", () => {
   });
 
   it("rejects passwords shorter than 8 characters", () => {
-    const result = registerSchema.safeParse({ ...valid, password: "1234567" });
+    const result = registerSchema.safeParse({
+      ...valid,
+      password: "1234567",
+      confirmPassword: "1234567",
+    });
     expect(result.success).toBe(false);
     expect(result.error?.issues[0].message).toBe(
       "La contraseña debe tener al menos 8 caracteres.",
     );
   });
 
-  it("rejects a blank display name after trimming", () => {
-    const result = registerSchema.safeParse({ ...valid, displayName: "   " });
+  it("rejects mismatched passwords, reporting it on confirmPassword", () => {
+    const result = registerSchema.safeParse({ ...valid, confirmPassword: "87654321" });
     expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe("Las contraseñas no coinciden.");
+    expect(result.error?.issues[0].path).toEqual(["confirmPassword"]);
   });
 
-  it("trims the display name", () => {
-    const result = registerSchema.parse({ ...valid, displayName: "  Ana  " });
-    expect(result.displayName).toBe("Ana");
+  it("rejects a missing confirmation", () => {
+    const withoutConfirm: Partial<typeof valid> = { ...valid };
+    delete withoutConfirm.confirmPassword;
+    expect(registerSchema.safeParse(withoutConfirm).success).toBe(false);
   });
 
-  it("requires a username and normalizes it", () => {
-    const withoutUsername: Partial<typeof valid> = { ...valid };
-    delete withoutUsername.username;
-    expect(registerSchema.safeParse(withoutUsername).success).toBe(false);
-    expect(registerSchema.parse({ ...valid, username: " Ana_Dev " }).username).toBe(
-      "ana_dev",
-    );
-  });
-
-  it("rejects a username that looks like an email", () => {
-    expect(
-      registerSchema.safeParse({ ...valid, username: "ana@example.com" }).success,
-    ).toBe(false);
-  });
-
-  it("drops unknown fields", () => {
-    const result = registerSchema.parse({ ...valid, role: "admin" });
-    expect(result).not.toHaveProperty("role");
+  it("no longer reads profile fields", () => {
+    const result = registerSchema.parse({
+      ...valid,
+      displayName: "Ana",
+      username: "ana_dev",
+    });
+    expect(Object.keys(result).sort()).toEqual(["confirmPassword", "email", "password"]);
   });
 
   it("rejects missing fields", () => {
