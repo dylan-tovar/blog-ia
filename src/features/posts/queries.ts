@@ -1,17 +1,19 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { countWords } from "@/features/ai/words";
+import { resolveCover, type ResolvedCover } from "@/features/posts/cover/cover";
 import { idSchema } from "@/features/posts/schemas";
 import { excerpt, flattenTags, type ParentRef } from "@/features/posts/utils";
 import { getFollowedAuthorIds } from "@/features/subscriptions/queries";
 import { getLikedPostIds } from "@/features/likes/queries";
+import { env } from "@/lib/env";
 import { getViewer } from "@/lib/viewer";
 import type { PostType } from "@/lib/supabase/database.types";
 
-const POST_COLUMNS =
-  "id, author_id, title, content, status, rejection_reason, created_at, updated_at, published_at";
+const COVER_COLUMNS = "cover_image_url, cover_text, cover_color";
+const POST_COLUMNS = `id, author_id, title, content, status, rejection_reason, created_at, updated_at, published_at, ${COVER_COLUMNS}`;
 const TAGS_EMBED = "tags:post_tags(tag:tags(id, name))";
-const CARD_COLUMNS = "id, type, title, content, published_at, parent_post_id";
+const CARD_COLUMNS = `id, type, title, content, published_at, parent_post_id, ${COVER_COLUMNS}`;
 export const AUTHOR_EMBED = "author:profiles(id, display_name)";
 const LIKES_EMBED = "likes(count)";
 
@@ -35,6 +37,7 @@ export type ArticleFeedPost = FeedPostBase & {
   type: "article";
   title: string | null;
   excerpt: string;
+  cover: ResolvedCover;
 };
 
 export type NoteFeedPost = FeedPostBase & {
@@ -52,6 +55,9 @@ type CardRow = {
   content: string;
   published_at: string | null;
   parent_post_id: string | null;
+  cover_image_url: string | null;
+  cover_text: string | null;
+  cover_color: string | null;
   author: FeedAuthor;
   likes: { count: number }[] | null;
 };
@@ -83,7 +89,16 @@ function toFeedPost(row: CardRow, ctx: HydrationContext): FeedPost {
     };
   }
 
-  return { ...base, type: "article", title: row.title, excerpt: excerpt(row.content) };
+  return {
+    ...base,
+    type: "article",
+    title: row.title,
+    excerpt: excerpt(row.content),
+    cover: resolveCover(
+      { imageUrl: row.cover_image_url, text: row.cover_text, color: row.cover_color },
+      env.NEXT_PUBLIC_SUPABASE_URL,
+    ),
+  };
 }
 
 async function getNotesCounts(postIds: string[]) {

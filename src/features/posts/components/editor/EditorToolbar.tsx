@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { useEditorState, type Editor } from "@tiptap/react";
 import {
   Bold,
   ChevronDown,
   Code,
+  ImagePlus,
   Italic,
   Link2,
   List,
@@ -25,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { IMAGE_ACCEPTED_TYPES } from "@/features/posts/images/image-limits";
 import { cn } from "@/lib/utils";
 
 type BlockStyle = "paragraph" | "h2" | "h3";
@@ -78,9 +80,18 @@ function normalizeUrl(raw: string) {
   return /^(https?:\/\/|mailto:|\/|#)/i.test(value) ? value : `https://${value}`;
 }
 
-export function EditorToolbar({ editor }: { editor: Editor | null }) {
+export function EditorToolbar({
+  editor,
+  uploadingImage,
+  onPickImages,
+}: {
+  editor: Editor | null;
+  uploadingImage: boolean;
+  onPickImages: (files: File[]) => void;
+}) {
   const [linkOpen, setLinkOpen] = useState(false);
   const [href, setHref] = useState("");
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const state = useEditorState({
     editor,
@@ -221,6 +232,26 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
         <ToolbarButton label="Enlace" active={state.link || linkOpen} onClick={openLink}>
           <Link2 />
         </ToolbarButton>
+        <ToolbarButton
+          label={uploadingImage ? "Subiendo imagen…" : "Imagen"}
+          disabled={uploadingImage}
+          onClick={() => fileInput.current?.click()}
+        >
+          <ImagePlus />
+        </ToolbarButton>
+        <input
+          ref={fileInput}
+          type="file"
+          accept={IMAGE_ACCEPTED_TYPES.join(",")}
+          multiple
+          hidden
+          aria-hidden
+          tabIndex={-1}
+          onChange={(event) => {
+            onPickImages(Array.from(event.target.files ?? []));
+            event.target.value = "";
+          }}
+        />
 
         <Divider />
 

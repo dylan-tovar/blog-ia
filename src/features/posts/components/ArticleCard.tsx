@@ -1,18 +1,14 @@
 import Link from "next/link";
+import { ArticleCardView } from "@/features/posts/components/ArticleCardView";
 import type { ArticleFeedPost } from "@/features/posts/queries";
 
 export function ArticleCard({ post }: { post: ArticleFeedPost }) {
   return (
     <Link
       href={`/post/${post.id}`}
-      className="mt-2 block rounded-xl border border-border/80 bg-card p-4 transition-colors hover:bg-muted/40"
+      className="group mt-2 block rounded-xl focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
     >
-      <h2 className="text-base leading-snug font-semibold text-foreground">
-        {post.title || "Sin título"}
-      </h2>
-      {post.excerpt && (
-        <p className="mt-1.5 line-clamp-3 text-[15px] text-foreground/80">{post.excerpt}</p>
-      )}
+      <ArticleCardView cover={post.cover} title={post.title} excerpt={post.excerpt} />
     </Link>
   );
 }

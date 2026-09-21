@@ -17,7 +17,16 @@ import { Label } from "@/components/ui/label";
 import { MAX_TAGS_PER_POST } from "@/features/ai/constants";
 import { formatRetry } from "@/features/ai/components/ai-ui";
 import { useCountdown } from "@/features/ai/components/use-countdown";
-import { addTag, publishPost, removeTag } from "@/features/posts/actions";
+import { addTag, publishPost, removeTag, savePostCover } from "@/features/posts/actions";
+import { CoverPicker } from "@/features/posts/components/editor/CoverPicker";
+import { extractImageUrls, filterOwnCoverImages } from "@/features/posts/cover/cover";
+import {
+  coverValuesEqual,
+  draftToCoverValue,
+  toCoverDraft,
+} from "@/features/posts/cover/cover-draft";
+import type { CoverValue } from "@/features/posts/cover/cover-schema";
+import { env } from "@/lib/env";
 
 type Tag = { id: string; name: string };
 
@@ -25,6 +34,9 @@ interface PublishDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   canPublish: boolean;
+  title: string;
+  userId: string;
+  initialCover: CoverValue;
   tags: Tag[];
   onTagsChange: Dispatch<SetStateAction<Tag[]>>;
   allTagNames: string[];
@@ -62,6 +74,9 @@ export function PublishDialog({
   open,
   onOpenChange,
   canPublish,
+  title,
+  userId,
+  initialCover,
   tags,
   onTagsChange,
   allTagNames,
@@ -78,6 +93,32 @@ export function PublishDialog({
   const [reviewing, setReviewing] = useState(false);
   const [isPending, startTransition] = useTransition();
   const atTagLimit = tags.length >= MAX_TAGS_PER_POST;
+  const [coverDraft, setCoverDraft] = useState(() => toCoverDraft(initialCover));
+  const [savedCover, setSavedCover] = useState(initialCover);
+  const coverValue = draftToCoverValue(coverDraft);
+  const coverDirty = !coverValuesEqual(coverValue, savedCover);
+  const [coverUploading, setCoverUploading] = useState(false);
+  const locked = isPending || coverUploading;
+  const contentImages = open
+    ? filterOwnCoverImages(
+        extractImageUrls(getContent(), env.NEXT_PUBLIC_SUPABASE_URL),
+        env.NEXT_PUBLIC_SUPABASE_URL,
+        userId,
+      )
+    : [];
+
+  async function persistCover(postId: string): Promise<boolean> {
+    if (!coverDirty) {
+      return true;
+    }
+    const result = await savePostCover(postId, coverValue);
+    if (!result.ok) {
+      setError(result.error);
+      return false;
+    }
+    setSavedCover(coverValue);
+    return true;
+  }
 
   function handleAddTag() {
     const name = tagInput.trim();
@@ -141,6 +182,11 @@ export function PublishDialog({
         return;
       }
 
+      if (!(await persistCover(postId))) {
+        setReviewing(false);
+        return;
+      }
+
       const result = await publishPost(postId);
       setReviewing(false);
 
@@ -170,21 +216,43 @@ export function PublishDialog({
 
   // Only a request in flight locks the dialog: once there is an outcome the author can
   // always dismiss it (Escape, backdrop, "Seguir editando") and keep working.
+  function close() {
+    setOutcome(undefined);
+    setBusy(undefined);
+    setError(undefined);
+    onOpenChange(false);
+  }
+
   function handleOpenChange(next: boolean) {
-    if (!next && isPending) {
+    if (!next && locked) {
       return;
     }
     if (!next) {
-      setOutcome(undefined);
-      setBusy(undefined);
-      setError(undefined);
+      close();
+      return;
     }
     onOpenChange(next);
   }
 
+  // The footer's dismiss buttons keep the chosen cover; Escape and the backdrop only close.
+  function handleDone() {
+    if (!coverDirty) {
+      close();
+      return;
+    }
+
+    setError(undefined);
+    startTransition(async () => {
+      const postId = await ensurePostId();
+      if (!postId || (await persistCover(postId))) {
+        close();
+      }
+    });
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent showCloseButton={false} className="sm:max-w-md">
+      <DialogContent showCloseButton={false} className="max-h-[90svh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{canPublish ? "Publicar artículo" : "Tags del artículo"}</DialogTitle>
           <DialogDescription>
@@ -245,6 +313,15 @@ export function PublishDialog({
           )}
         </div>
 
+        <CoverPicker
+          draft={coverDraft}
+          title={title}
+          onDraftChange={setCoverDraft}
+          contentImages={contentImages}
+          disabled={isPending}
+          onUploadingChange={setCoverUploading}
+        />
+
         {error && (
           <p role="alert" className="text-sm text-destructive">
             {error}
@@ -294,11 +371,11 @@ export function PublishDialog({
             </>
           ) : (
             <>
-              <Button type="button" variant="ghost" onClick={() => handleOpenChange(false)} disabled={isPending}>
+              <Button type="button" variant="ghost" onClick={handleDone} disabled={locked}>
                 {canPublish ? "Seguir editando" : "Listo"}
               </Button>
               {canPublish && (
-                <Button type="button" onClick={handlePublish} disabled={isPending}>
+                <Button type="button" onClick={handlePublish} disabled={locked}>
                   {isPending && <Loader2 className="animate-spin" aria-hidden />}
                   {isPending ? "Revisando contenido…" : "Publicar"}
                 </Button>

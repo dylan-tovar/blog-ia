@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { EditorContent } from "@tiptap/react";
+import { Button } from "@/components/ui/button";
 import { AiChatDrawer } from "@/features/ai/components/chat/AiChatDrawer";
 import { AI_DRAWER_STORAGE_KEY, parseDrawerOpen, shortcutLabel } from "@/features/ai/components/chat/ai-drawer";
 import { QuickActions, QuickActionsGrid } from "@/features/ai/components/chat/QuickActions";
@@ -18,6 +19,7 @@ import { createEditorBridge } from "@/features/posts/components/editor/editor-br
 import { EditorToolbar } from "@/features/posts/components/editor/EditorToolbar";
 import { EditorTopBar } from "@/features/posts/components/editor/EditorTopBar";
 import { PublishDialog } from "@/features/posts/components/editor/PublishDialog";
+import type { CoverValue } from "@/features/posts/cover/cover-schema";
 import { useArticleEditor } from "@/features/posts/components/editor/use-article-editor";
 import { useAutosave } from "@/features/posts/components/editor/use-autosave";
 import { MarkdownContent } from "@/features/posts/components/MarkdownContent";
@@ -45,20 +47,24 @@ function writeDrawerOpen(open: boolean) {
 
 interface PostEditorProps {
   postId: string;
+  userId: string;
   status: string;
   initialTitle: string;
   initialContent: string;
   initialTags: Tag[];
+  initialCover: CoverValue;
   allTagNames: string[];
   rejectionReason: string | null;
 }
 
 export function PostEditor({
   postId,
+  userId,
   status: initialStatus,
   initialTitle,
   initialContent,
   initialTags,
+  initialCover,
   allTagNames,
   rejectionReason: initialRejection,
 }: PostEditorProps) {
@@ -81,7 +87,7 @@ export function PostEditor({
     content: initialContent,
   });
 
-  const editor = useArticleEditor(initialContent, (markdown) => {
+  const { editor, images } = useArticleEditor(initialContent, (markdown) => {
     setContent(markdown);
     update({ content: markdown });
   });
@@ -166,12 +172,35 @@ export function PostEditor({
 
       <div className="flex flex-1">
         <div className="flex min-w-0 flex-1 flex-col">
-          {!previewing && <EditorToolbar editor={editor} />}
+          {!previewing && (
+            <EditorToolbar
+              editor={editor}
+              uploadingImage={images.uploading}
+              onPickImages={(files) => images.insertFiles(files)}
+            />
+          )}
 
           <main className="mx-auto flex w-full min-w-0 max-w-3xl flex-1 flex-col px-4 pt-8 pb-24">
             {status === "rejected" && rejectionReason && (
               <p role="alert" className="mb-6 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
                 Rechazado: {rejectionReason}
+              </p>
+            )}
+
+            {images.uploading && (
+              <p role="status" className="mb-4 text-sm text-muted-foreground">
+                Subiendo imagen…
+              </p>
+            )}
+            {images.error && (
+              <p
+                role="alert"
+                className="mb-4 flex items-center justify-between gap-3 rounded-md bg-destructive/10 p-3 text-sm text-destructive"
+              >
+                {images.error}
+                <Button type="button" size="sm" variant="ghost" onClick={images.dismissError}>
+                  Cerrar
+                </Button>
               </p>
             )}
 
@@ -244,6 +273,9 @@ export function PostEditor({
         open={publishOpen}
         onOpenChange={setPublishOpen}
         canPublish={canPublish}
+        title={title}
+        userId={userId}
+        initialCover={initialCover}
         tags={tags}
         onTagsChange={setTags}
         allTagNames={allTagNames}

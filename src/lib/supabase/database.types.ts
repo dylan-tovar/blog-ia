@@ -55,6 +55,9 @@ export type Database = {
           ai_generated_summary: string | null;
           ai_generated_titles: Json | null;
           content_score: Json | null;
+          cover_image_url: string | null;
+          cover_text: string | null;
+          cover_color: string | null;
         };
         Insert: {
           id?: string;
@@ -71,6 +74,9 @@ export type Database = {
           ai_generated_summary?: string | null;
           ai_generated_titles?: Json | null;
           content_score?: Json | null;
+          cover_image_url?: string | null;
+          cover_text?: string | null;
+          cover_color?: string | null;
         };
         Update: {
           id?: string;
@@ -87,6 +93,9 @@ export type Database = {
           ai_generated_summary?: string | null;
           ai_generated_titles?: Json | null;
           content_score?: Json | null;
+          cover_image_url?: string | null;
+          cover_text?: string | null;
+          cover_color?: string | null;
         };
         Relationships: [
           {

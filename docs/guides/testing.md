@@ -17,7 +17,7 @@ El proyecto trabaja con Strict TDD: primero el test que falla, luego el código 
 | :--- | :--- |
 | Configuración | `vitest.config.mts`: entorno `node`, incluye `src/**/*.test.ts`, alias `@` a `src/` |
 | Ubicación | Junto al archivo probado (`src/features/<dominio>/schemas.test.ts`, `apply-action.test.ts`…) |
-| Cantidad | 36 archivos |
+| Cantidad | 41 archivos |
 | Ejecución | `pnpm test` (una vez) o `pnpm test:watch` |
 
 Los archivos por área:
@@ -28,6 +28,8 @@ Los archivos por área:
 | IA: interfaz (5) | `components/ai-client`, `components/ai-ui`, `components/chat/ai-drawer`, `chat-client`, `chat-state` | Cliente del stream, estado del chat (planes, propuestas, superposición), atajo del cajón |
 | Editor y motor de aplicar (3, en `src/features/posts/components/editor/`) | `editor-context`, `apply-action`, `action-overlap` | Bloques, fingerprints, localización, aplicar, límites, superposición ([ADR 0014](../adr/0014-aplicacion-de-ediciones-en-el-cliente-con-fingerprints.md)) |
 | Posts (5, en `src/features/posts/`) | `schemas`, `utils`, `limits`, `link-safety`, `publish` | Esquemas (incluye `feedQuerySchema`), `excerpt`, límites de longitud, enlaces seguros y el reclamo de publicación |
+| Imágenes (2, en `src/features/posts/images/`) | `image-utils`, `image-markdown` | Validación y tamaño de origen, dimensiones de destino, rutas, dimensiones en el nombre, allow-list de URLs, texto alternativo y la ida y vuelta de `![alt](url)` por Tiptap |
+| Portada (3, en `src/features/posts/cover/`) | `cover`, `cover-schema`, `cover-draft` | Paleta, elección imagen/texto/nada, extracción de imágenes del markdown, propiedad de la imagen por carpeta del autor, esquema de la portada y borrador del diálogo |
 | Otros dominios (4) | `auth/schemas`, `profile/schemas`, `likes/schemas`, `recommendations/scoreByTags` | Validaciones y el ranking de tags |
 | Transversal (2) | `lib/format`, `components/shared/navigation` | `getInitials`, `formatShortDate`, títulos y ruta activa |
 
@@ -37,7 +39,7 @@ Convenciones observadas:
 - Se comprueba el mensaje de error de Zod (`result.error?.issues[0].message`), porque es texto visible para el usuario.
 - Casos inválidos con `it.each` (por ejemplo ids con intentos de inyección en `idSchema`).
 - Las dependencias externas se inyectan (`GenerateStructured`, `rateLimit`, `fetcher`) para probar la lógica sin red.
-- Solo se prueba lógica pura. Los tests son `.ts`, no `.tsx`: el entorno es `node`, sin DOM.
+- Solo se prueba lógica pura. Los tests son `.ts`, no `.tsx`: el entorno es `node`, sin DOM. La excepción es `image-markdown.test.ts`, que activa `jsdom` con `// @vitest-environment jsdom` para crear un `Editor` de Tiptap sin montar React.
 
 **Lo que no se prueba con Vitest a propósito:** todo lo que necesita un ProseMirror real, es decir, el adaptador `editor-bridge.ts` (aplicar en Tiptap, `closeHistory`, deshacer) y los componentes React. Eso lo cubren los e2e del cajón de IA.
 

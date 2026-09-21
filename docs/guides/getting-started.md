@@ -1,12 +1,12 @@
 # Puesta en marcha
 
-Para levantar el proyecto hace falta un proyecto de Supabase con las siete migraciones aplicadas y tres variables de entorno. Las funciones de IA piden además una clave de Gemini; sin ella la app funciona y solo la IA responde "no configurada".
+Para levantar el proyecto hace falta un proyecto de Supabase con las nueve migraciones aplicadas y tres variables de entorno. Las funciones de IA piden además una clave de Gemini; sin ella la app funciona y solo la IA responde "no configurada".
 
 ## Camino rápido
 
 1. Instalar dependencias: `pnpm install`
 2. Crear `.env.local` en la raíz con las variables de [la tabla](#variables-de-entorno).
-3. Aplicar las migraciones de `supabase/migrations/` en orden (`0001` a `0007`) en el SQL Editor de Supabase ([procedimiento](#migraciones)). (ESTO SOLO ES LA PRIMERA VEZ, YA ESTAN APLICADAS EN EL PROYECTO DE SUPABASE)
+3. Aplicar las migraciones de `supabase/migrations/` en orden (`0001` a `0009`) en el SQL Editor de Supabase ([procedimiento](#migraciones)). (ESTO SOLO ES LA PRIMERA VEZ, YA ESTAN APLICADAS EN EL PROYECTO DE SUPABASE)
 4. Opcional, para ver el feed con contenido: `pnpm seed:dev`. (YA TIENE CONTENIDO, NO ES NECESARIO EN NUESTRO CASO)
 5. Levantar el servidor: `pnpm dev` y abrir <http://localhost:3000/register>.
 
@@ -52,12 +52,14 @@ Los archivos de `supabase/migrations/` se aplican a mano, en orden, en el SQL Ed
 | 5 | `0005_post_types_and_likes.sql` | `posts.type`, `posts.parent_post_id`, restricciones del modelo, `can_attach_note`, `likes` y políticas ajustadas. Convierte los posts de prueba existentes en notas la primera vez ([PRD-7](../prds/PRD-7-notes-likes.md)) | Solo dentro de la cadena 0005 → 0006 → 0007 |
 | 6 | `0006_allow_note_updates.sql` | Política de UPDATE de `posts` sin la restricción a artículos, para editar notas ([ADR 0015](../adr/0015-notas-editables.md)) | Solo dentro de la cadena 0005 → 0006 → 0007 |
 | 7 | `0007_ai_features.sql` | Columnas de caché de IA, trigger, privilegios por columna sobre `posts`, INSERT de artículos solo como borrador y el límite por minuto ([ADR 0012](../adr/0012-integridad-de-escritura-de-posts.md)) | Sí, si `0005` y `0006` ya corrieron antes |
+| 8 | `0008_post_images.sql` | Bucket público `post-images` de Storage y sus políticas (INSERT, SELECT y DELETE) por carpeta de usuario ([ADR 0022](../adr/0022-imagenes-en-supabase-storage.md)) | Sí |
+| 9 | `0009_post_cover.sql` | Portada de artículos: columnas `cover_*` de `posts`, restricciones y privilegio de UPDATE ([ADR 0023](../adr/0023-portada-de-articulos.md)) | Sí |
 
 > **`0005` no se repite sola.** Vuelve a crear la política de INSERT de `posts` sin la condición `type = 'note' or status = 'draft'` y deja el UPDATE limitado a `type = 'article'`. Esas dos políticas las redefinen después `0007` y `0006`. Si se corre `0005` sola sobre un proyecto ya migrado, con los privilegios por columna de `0007` todavía vigentes (`status` y `published_at` insertables), un autor podría insertar un artículo ya publicado sin moderación y `updateNote` dejaría de funcionar. Si hay que repetir `0005`, se repite la cadena completa en orden: `0005`, `0006`, `0007`.
 
 Reglas prácticas:
 
-- **Proyecto nuevo:** correr las siete en orden.
+- **Proyecto nuevo:** correr las nueve en orden.
 - **Proyecto existente:** correr solo las que falten, en orden. Las de la fila "No" fallan si se repiten (por ejemplo, una política o una restricción que ya existe).
 - **Si `0007` cambió** desde la última vez que se aplicó (el archivo se edita en su lugar), volver a correrla es seguro siempre que `0005` y `0006` ya estén aplicadas: usa `drop ... if exists` y `create or replace`. Nunca repetir `0005` o `0006` por separado (ver el aviso de arriba).
 - **Ver hasta dónde llegó un proyecto** (solo lectura), en el SQL Editor. La consulta se armó a partir de los nombres que crean las migraciones y no se ejecutó contra un proyecto real:
@@ -75,7 +77,11 @@ select
           where schemaname = 'public' and tablename = 'posts'
             and policyname = 'Users can update their own posts'
             and qual not like '%article%')                                            as m0006,
-  to_regclass('public.ai_rate_limits') is not null                                    as m0007;
+  to_regclass('public.ai_rate_limits') is not null                                    as m0007,
+  exists (select 1 from storage.buckets where id = 'post-images')                      as m0008,
+  exists (select 1 from information_schema.columns
+          where table_schema = 'public' and table_name = 'posts'
+            and column_name = 'cover_image_url')                                     as m0009;
 ```
 
 - **Verificar después de `0007`:** con el seed cargado, `pnpm verify:writes` confirma que el navegador ya no puede escribir `status` ni las columnas de IA (ver el [desfase de email conocido](testing.md#problemas-conocidos) entre este script y el seed).
