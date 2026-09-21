@@ -14,7 +14,7 @@ Para levantar el proyecto hace falta un proyecto de Supabase con las siete migra
 
 | Requisito | Detalle |
 | :--- | :--- |
-| Node.js | 20.9 o superior (`engines` de Next 16.3.5). Los scripts usan `node --env-file`, que existe desde Node 20.6. `package.json` no fija la versión ni hay `.nvmrc` |
+| Node.js | 24.18.0, la versión con la que se desarrolla y corre el CI. `vitest` 5 y `jsdom` 30 no soportan Node 20 (`engines`: `^22.12 \|\| ^24 \|\| >=26`), aunque Next 16.3.5 acepte 20.9. `package.json` no fija la versión ni hay `.nvmrc` |
 | pnpm | `packageManager` declara `pnpm@12.4.2` |
 | Proyecto de Supabase | Se necesita la URL, la publishable key y la secret key del proyecto |
 | Navegador de Playwright | Solo para los e2e: `pnpm exec playwright install chromium` ([testing](testing.md)) (Ignorar si no eres D1 o D2)|

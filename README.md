@@ -12,7 +12,7 @@ pnpm seed:dev   # opcional: datos de prueba
 pnpm dev        # http://localhost:3000
 ```
 
-Requiere Node 20.9 o superior y pnpm. El detalle (variables de entorno, migraciones, scripts) está en [`docs/guides/getting-started.md`](docs/guides/getting-started.md).
+Requiere Node 24.18.0 y pnpm. El detalle (variables de entorno, migraciones, scripts) está en [`docs/guides/getting-started.md`](docs/guides/getting-started.md).
 
 ## Documentación
 
