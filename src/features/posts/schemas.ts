@@ -14,8 +14,12 @@ export const tagNameSchema = z
   .min(1, { error: "El tag no puede estar vacío." })
   .max(50, { error: "El tag es demasiado largo." });
 
+export const feedScopeSchema = z.enum(["global", "following"]);
+
+// `following` is resolved server-side from the session: the client never sends author ids.
 export const feedQuerySchema = z.object({
   tag: tagNameSchema.optional(),
+  scope: feedScopeSchema.default("global"),
   offset: z.number().int().min(0).max(10_000).default(0),
 });
 

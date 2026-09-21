@@ -34,6 +34,20 @@ export async function getFollowedAuthorIds(followerId: string, authorIds: string
   return (data ?? []).map((row) => row.author_id);
 }
 
+export async function getAllFollowedAuthorIds(followerId: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select("author_id")
+    .eq("follower_id", followerId);
+
+  if (error) {
+    throw new Error(`No pudimos leer los seguimientos: ${error.message}`);
+  }
+
+  return (data ?? []).map((row) => row.author_id);
+}
+
 export async function getFollowerCount(authorId: string) {
   const supabase = await createClient();
   const { count, error } = await supabase

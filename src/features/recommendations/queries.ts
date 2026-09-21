@@ -1,7 +1,12 @@
 import { AUTHOR_EMBED } from "@/features/posts/queries";
 import { excerpt } from "@/features/posts/utils";
 import { createClient } from "@/lib/supabase/server";
-import { CANDIDATE_WINDOW, HISTORY_LIMIT, RECOMMENDATIONS_LIMIT } from "./constants";
+import {
+  CANDIDATE_WINDOW,
+  FEED_RECOMMENDATIONS_LIMIT,
+  HISTORY_LIMIT,
+  RECOMMENDATIONS_LIMIT,
+} from "./constants";
 import { buildTagProfile, rankCandidates, withInterestTags } from "./scoreByTags";
 
 export type RecommendedPost = {
@@ -11,9 +16,16 @@ export type RecommendedPost = {
   author: { id: string; display_name: string } | null;
 };
 
-async function loadRecommendations(viewerId: string): Promise<RecommendedPost[]> {
-  const supabase = await createClient();
+type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
+// Ranked ids of unread articles by other authors. `excludeAuthorIds` is applied before the
+// limit, but after the candidate window: if excluded authors wrote most of the latest
+// `CANDIDATE_WINDOW` articles, the pool can come back short.
+async function rankRecommendedIds(
+  supabase: SupabaseClient,
+  viewerId: string,
+  { excludeAuthorIds = [], limit }: { excludeAuthorIds?: string[]; limit: number },
+): Promise<string[]> {
   const [historyResult, candidatesResult, interestsResult] = await Promise.all([
     supabase
       .from("reading_history")
@@ -44,6 +56,7 @@ async function loadRecommendations(viewerId: string): Promise<RecommendedPost[]>
     console.error("Recommendations: could not read interests", interestsResult.error.message);
   }
 
+  const excluded = new Set(excludeAuthorIds);
   const { readPostIds, tagIds: readTagIds } = buildTagProfile(historyResult.data ?? [], viewerId);
   const tagIds = withInterestTags(
     readTagIds,
@@ -52,16 +65,24 @@ async function loadRecommendations(viewerId: string): Promise<RecommendedPost[]>
   const ranked = rankCandidates({
     tagIds,
     readPostIds,
-    candidates: candidatesResult.data ?? [],
+    candidates: (candidatesResult.data ?? []).filter(
+      (candidate) => !excluded.has(candidate.author_id),
+    ),
     viewerId,
-    limit: RECOMMENDATIONS_LIMIT,
+    limit,
   });
 
-  if (ranked.length === 0) {
+  return ranked.map(({ id }) => id);
+}
+
+async function loadRecommendations(viewerId: string): Promise<RecommendedPost[]> {
+  const supabase = await createClient();
+  const ids = await rankRecommendedIds(supabase, viewerId, { limit: RECOMMENDATIONS_LIMIT });
+
+  if (ids.length === 0) {
     return [];
   }
 
-  const ids = ranked.map(({ id }) => id);
   const { data, error } = await supabase
     .from("posts")
     .select(`id, title, content, ${AUTHOR_EMBED}`)
@@ -84,6 +105,21 @@ async function loadRecommendations(viewerId: string): Promise<RecommendedPost[]>
 export async function getRecommendedPosts(viewerId: string): Promise<RecommendedPost[]> {
   try {
     return await loadRecommendations(viewerId);
+  } catch (error) {
+    console.error("Recommendations failed", error);
+    return [];
+  }
+}
+
+// Ids for the interleaved home feed. Same ranking as the carousel, and the same contract:
+// it never rejects, an error just means no recommendations.
+export async function getRecommendedPostIds(
+  viewerId: string,
+  { excludeAuthorIds = [], limit = FEED_RECOMMENDATIONS_LIMIT }: { excludeAuthorIds?: string[]; limit?: number } = {},
+): Promise<string[]> {
+  try {
+    const supabase = await createClient();
+    return await rankRecommendedIds(supabase, viewerId, { excludeAuthorIds, limit });
   } catch (error) {
     console.error("Recommendations failed", error);
     return [];
