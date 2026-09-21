@@ -1,6 +1,6 @@
 # 0024. El perfil se crea en `/onboarding`, no al registrarse
 
-- **Estado:** Aceptada
+- **Estado:** Aceptada; la regla de la puerta fue reemplazada parcialmente por [ADR 0025](0025-intereses-en-onboarding.md)
 - **Fecha:** 2026-09-21
 - **Fuentes:** [PRD-1](../prds/PRD-1-auth.md), [PRD-1.2](../prds/PRD-1.2-auth-security.md); `src/features/profile/actions.ts` (`completeOnboarding`), `src/features/auth/onboarding-gate.ts`, `src/proxy.ts`
 
@@ -34,5 +34,9 @@ El registro pedía cuatro datos de una vez (email, contraseña, nombre, username
   - Una cuenta puede existir sin perfil (entre `signUp` y el envío de `/onboarding`); quien abandona el paso queda retenido en `/onboarding` (solo puede completar el perfil o cerrar sesión).
 - **Confirmación de email.** Con "Confirm email" activado en Supabase, `signUp` no devuelve sesión y `/onboarding` (que exige sesión) redirigiría a `/login` sin explicación. Se comprobó en el proyecto real (`GET /auth/v1/settings` daba `mailer_autoconfirm: false`) y es lo que ocurrió al probar el registro. `signUp` ahora detecta que no hay sesión y muestra el aviso "Te enviamos un email para confirmar tu cuenta" en lugar de redirigir. Para llegar directo a `/onboarding` hay que desactivar "Confirm email" (Auth → Sign In / Providers → Email); mantenerlo exigiría además una ruta de callback que canjee el enlace del correo, que este cambio no incluye. El e2e `register` asume que no se exige ([testing](../guides/testing.md)).
 - **Cuándo revisar:** si el costo de la consulta del proxy importa (por ejemplo, cachear el resultado en una cookie firmada o mover la comprobación a los layouts), o si se migra la creación del perfil a un trigger.
+
+## Actualización (2026-09-21)
+
+Tener fila en `profiles` ya no significa "onboarding terminado": el [ADR 0025](0025-intereses-en-onboarding.md) agrega un segundo paso (intereses) y la puerta del proxy usa `profiles.onboarded_at` (estados `none`, `interests`, `done`). Un usuario con perfil pero sin `onboarded_at` sigue retenido en `/onboarding`, y `completeOnboarding` redirige a `/onboarding` (no a `/`) tanto al crear el perfil como si ya existía. El resto de esta decisión (perfil creado en la action, sin trigger, `INSERT` y falla abierta) sigue vigente.
 
 <!-- † Alternativa reconstruida al escribir el ADR; el motivo de descartarla no quedó registrado. -->
