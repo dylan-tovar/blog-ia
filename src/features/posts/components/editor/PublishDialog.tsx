@@ -34,6 +34,7 @@ interface PublishDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   canPublish: boolean;
+  title: string;
   userId: string;
   initialCover: CoverValue;
   tags: Tag[];
@@ -73,6 +74,7 @@ export function PublishDialog({
   open,
   onOpenChange,
   canPublish,
+  title,
   userId,
   initialCover,
   tags,
@@ -313,6 +315,7 @@ export function PublishDialog({
 
         <CoverPicker
           draft={coverDraft}
+          title={title}
           onDraftChange={setCoverDraft}
           contentImages={contentImages}
           disabled={isPending}

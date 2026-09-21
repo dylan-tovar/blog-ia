@@ -5,6 +5,7 @@ import { ImagePlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ArticleCardView } from "@/features/posts/components/ArticleCardView";
 import { PostCover } from "@/features/posts/components/PostCover";
 import { resolveCover } from "@/features/posts/cover/cover";
 import { draftToCoverValue, type CoverDraft, type CoverMode } from "@/features/posts/cover/cover-draft";
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
 
 interface CoverPickerProps {
   draft: CoverDraft;
+  title: string;
   onDraftChange: Dispatch<SetStateAction<CoverDraft>>;
   contentImages: string[];
   disabled: boolean;
@@ -32,6 +34,7 @@ const MODES: { value: CoverMode; label: string }[] = [
 
 export function CoverPicker({
   draft,
+  title,
   onDraftChange,
   contentImages,
   disabled,
@@ -200,9 +203,13 @@ export function CoverPicker({
       {preview.kind !== "none" && (
         <div className="flex flex-col gap-1.5">
           <p className="text-xs text-muted-foreground">Así se verá en el feed</p>
-          <div className="overflow-hidden rounded-xl border border-border/80">
-            <PostCover cover={preview} />
-          </div>
+          {preview.kind === "text" ? (
+            <ArticleCardView cover={preview} title={title} excerpt="" />
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-border/80">
+              <PostCover cover={preview} />
+            </div>
+          )}
         </div>
       )}
     </fieldset>

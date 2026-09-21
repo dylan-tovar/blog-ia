@@ -273,6 +273,7 @@ export function PostEditor({
         open={publishOpen}
         onOpenChange={setPublishOpen}
         canPublish={canPublish}
+        title={title}
         userId={userId}
         initialCover={initialCover}
         tags={tags}

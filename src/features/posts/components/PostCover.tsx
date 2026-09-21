@@ -1,7 +1,8 @@
-import { COVER_COLOR_STYLES } from "@/features/posts/cover/cover-palette";
 import type { ResolvedCover } from "@/features/posts/cover/cover";
 import { cn } from "@/lib/utils";
 
+// A text cover has no background of its own: the card surface (ArticleCardView) paints the
+// palette color so the tile and the title share one continuous surface.
 export function PostCover({ cover, className }: { cover: ResolvedCover; className?: string }) {
   if (cover.kind === "image") {
     return (
@@ -20,13 +21,7 @@ export function PostCover({ cover, className }: { cover: ResolvedCover; classNam
 
   if (cover.kind === "text") {
     return (
-      <div
-        className={cn(
-          "flex min-h-44 flex-col gap-3 p-5 text-white ring-1 ring-white/10 ring-inset sm:aspect-video sm:min-h-0",
-          COVER_COLOR_STYLES[cover.color].className,
-          className,
-        )}
-      >
+      <div className={cn("flex min-h-44 flex-col gap-3 p-5 sm:aspect-video sm:min-h-0", className)}>
         <span aria-hidden className="font-serif text-4xl leading-none">
           &ldquo;
         </span>
