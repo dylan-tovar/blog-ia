@@ -1,6 +1,6 @@
 # Esquema de la base de datos
 
-Derivado de `supabase/migrations/0001_profiles.sql` a `0007_ai_features.sql`. Todas las tablas están en el esquema `public` y tienen RLS habilitado. Las migraciones se corren a mano en el SQL Editor de Supabase ([ADR 0016](../adr/0016-migraciones-sql-manuales.md)); este documento describe el esquema **resultante de aplicarlas todas**, no el estado de ningún proyecto en particular.
+Derivado de `supabase/migrations/0001_profiles.sql` a `0008_post_images.sql`. Todas las tablas están en el esquema `public` y tienen RLS habilitado. Las migraciones se corren a mano en el SQL Editor de Supabase ([ADR 0016](../adr/0016-migraciones-sql-manuales.md)); este documento describe el esquema **resultante de aplicarlas todas**, no el estado de ningún proyecto en particular.
 
 | Tabla / objeto | Migración | PRD |
 | :--- | :--- | :--- |
@@ -11,6 +11,7 @@ Derivado de `supabase/migrations/0001_profiles.sql` a `0007_ai_features.sql`. To
 | `posts.type`, `posts.parent_post_id`, restricciones del modelo, función `can_attach_note`, tabla `likes`, políticas de `posts` y `post_tags` ajustadas | `0005_post_types_and_likes.sql` | [PRD-7](../prds/PRD-7-notes-likes.md) |
 | Política de UPDATE de `posts` sin restricción a artículos (notas editables) | `0006_allow_note_updates.sql` | [ADR 0015](../adr/0015-notas-editables.md) |
 | Columnas de caché de IA, trigger, privilegios por columna, `ai_rate_limits` y `ai_rate_limit_hit` | `0007_ai_features.sql` | [PRD-5](../prds/PRD-5-ai-author.md), [PRD-6](../prds/PRD-6-ai-reader.md) |
+| Bucket `post-images` de Storage y sus políticas | `0008_post_images.sql` | [ADR 0022](../adr/0022-imagenes-en-supabase-storage.md) |
 
 `0001` a `0004` no se pueden repetir. `0005`, `0006` y `0007` solo se repiten como cadena completa y en orden, nunca `0005` sola: recrea las políticas de INSERT y UPDATE de `posts` en su versión original ([db/README](README.md)).
 
@@ -255,6 +256,17 @@ Contadores del límite de peticiones a la IA (`0007`). Ventana fija de un minuto
 | `count` | `int` | No | `0` | Peticiones contadas en esa ventana |
 
 RLS habilitada **sin políticas** y `revoke all` a `anon` y `authenticated`: solo se accede por la función `public.ai_rate_limit_hit(p_user_key text, p_user_limit int, p_global_limit int, p_global_key text default 'global')` (`security definer`, `search_path` vacío), que devuelve `(allowed, scope, retry_after)`. La versión anterior de tres parámetros se elimina al re-ejecutar `0007` (`drop function if exists`). Cuenta primero por usuario y, si no lo superó, por el contador global. `grant execute` solo a `service_role`. Limpia ventanas de más de una hora de forma oportunista.
+
+## Storage: bucket `post-images`
+
+Bucket público (`0008`) para las imágenes de los artículos, con límite de 2 MB y solo `image/webp`, `image/jpeg` e `image/png`. Los objetos viven en `<user_id>/<uuid>-<ancho>x<alto>.webp`. Las URLs públicas se sirven sin RLS, así que no hay política de SELECT abierta: nadie puede listar el bucket. Las políticas de `storage.objects` valen solo para `authenticated` y solo dentro de la carpeta propia (`(storage.foldername(name))[1] = auth.uid()::text`):
+
+| Política | Operación |
+| :--- | :--- |
+| Users can upload their own post images | INSERT |
+| Users can view their own post images | SELECT (Storage lo necesita para borrar) |
+| Users can update their own post images | UPDATE |
+| Users can delete their own post images | DELETE |
 
 ## Índices y triggers
 

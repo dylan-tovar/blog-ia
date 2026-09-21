@@ -18,7 +18,7 @@ El artículo necesita un editor completo (título, formato, vista previa) y no u
 - **Flujo de publicación:** la barra superior tiene "Vista previa" (renderiza con `MarkdownContent`, igual que el lector) y "Continuar", que abre un diálogo con los tags y el botón "Publicar". En un artículo ya publicado el botón dice "Tags" y el diálogo solo edita tags. Ahí mismo entrarán la moderación y las sugerencias de tags de PRD-5.
 - **Límites:** título de hasta 200 caracteres y contenido de hasta 100 000, validados en el schema compartido que usan `createDraftPost` y `savePostContent`. El editor comprueba los mismos límites antes de guardar (`limits.ts`): muestra "El título/artículo es demasiado largo" en vez de un error genérico y un contador desde el 90 % del límite.
 - **Publicar:** `publishPost(postId)` ya no recibe el contenido; lee de la base el contenido guardado del propio artículo y rechaza publicar si está vacío. El editor guarda (flush del autosave) antes de llamarla.
-- **Fuera de alcance por ahora:** subida y botón de imágenes, botón de tablas, subtítulo (no hay almacenamiento ni campo en el modelo). Las imágenes que ya estén en el markdown se conservan en el editor pero **los lectores no las ven** (`MarkdownContent` las descarta). El HTML crudo dentro del markdown se pierde al abrirlo en el editor (tampoco se renderiza a lectores).
+- **Fuera de alcance por ahora:** ~~subida y botón de imágenes~~ (resuelto, ver la actualización del 2026-09-21), botón de tablas, subtítulo (no hay almacenamiento ni campo en el modelo). Las imágenes que ya estén en el markdown se conservan en el editor pero **los lectores no las ven** (`MarkdownContent` las descarta). El HTML crudo dentro del markdown se pierde al abrirlo en el editor (tampoco se renderiza a lectores).
 
 ## Alternativas consideradas
 
@@ -39,3 +39,7 @@ El artículo necesita un editor completo (título, formato, vista previa) y no u
 ## Actualización (2026-09-20)
 
 La frase "Ahí mismo entrarán la moderación y las sugerencias de tags de PRD-5" ya se cumplió: "Publicar" en el diálogo llama a `publishPost`, que modera con Gemini y adjunta los tags sugeridos ([ADR 0011](0011-ia-con-gemini.md)). Además, el editor incluye el cajón del chat de IA (`Cmd/Ctrl+I`) que lee y propone cambios sobre este mismo documento ([ADR 0013](0013-chat-ia-protocolo-ndjson-y-function-calling.md), [ADR 0014](0014-aplicacion-de-ediciones-en-el-cliente-con-fingerprints.md)); el editor es el que expone el documento en bloques `b0`, `b1`…
+
+## Actualización (2026-09-21)
+
+Las imágenes ya se pueden subir (botón, arrastrar y pegar) y los lectores las ven: se guardan en Supabase Storage y `MarkdownContent` deja de descartar `img`, pero solo renderiza las del bucket propio ([ADR 0022](0022-imagenes-en-supabase-storage.md)). Lo demás de esta decisión no cambia: el markdown sigue siendo la fuente de verdad (`![alt](url)` hace ida y vuelta) y el HTML crudo sigue sin renderizarse.
