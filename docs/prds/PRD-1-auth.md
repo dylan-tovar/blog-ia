@@ -54,7 +54,7 @@ flowchart TD
   A -->|ok| R[redirect a /onboarding]
 ```
 
-* **Validación** (`src/features/auth/schemas.ts`): email válido, contraseña fuerte (8 o más caracteres, minúscula, mayúscula, número y símbolo, y como máximo 72 bytes por el límite de bcrypt; reglas en `password-rules.ts`, compartidas con el indicador del formulario) y confirmación idéntica ("Las contraseñas no coinciden.", error sobre `confirmPassword`). `loginSchema` **no** aplica estas reglas a propósito: las cuentas creadas antes deben poder seguir entrando.
+* **Validación** (`src/features/auth/schemas.ts`): email válido, contraseña fuerte (8 o más caracteres, minúscula, mayúscula, número y símbolo, estos cuatro solo ASCII porque la política de Supabase no reconoce otros caracteres, y como máximo 72 bytes por el límite de bcrypt; reglas en `password-rules.ts`, compartidas con el indicador del formulario) y confirmación idéntica ("Las contraseñas no coinciden.", error sobre `confirmPassword`). `loginSchema` **no** aplica estas reglas a propósito: las cuentas creadas antes deben poder seguir entrando.
 * `signUp` **no crea el perfil**: solo la cuenta en Auth. No hay trigger en la base.
 
 ### Onboarding (`completeOnboarding`, `src/features/profile/actions.ts`)
