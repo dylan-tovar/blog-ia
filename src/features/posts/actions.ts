@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireUser } from "@/lib/auth";
+import { env } from "@/lib/env";
+import { createCoverSchema } from "@/features/posts/cover/cover-schema";
 import { MAX_TAGS_PER_POST } from "@/features/ai/constants";
 import type { AiErrorKind } from "@/features/ai/errors";
 import { generateStructured } from "@/features/ai/gemini";
@@ -192,6 +194,48 @@ export async function savePostContent(
     .eq("author_id", user.id);
 
   return { ok: !error };
+}
+
+export type SaveCoverResult = { ok: true } | { ok: false; error: string };
+
+// Written with the user client (column grant from migration 0009). It does not touch
+// `updated_at` (the trigger only moves it on content changes), so it cannot disturb the
+// publish compare-and-set, and it also works on already published articles.
+export async function savePostCover(postId: string, input: unknown): Promise<SaveCoverResult> {
+  if (!idSchema.safeParse(postId).success) {
+    return { ok: false, error: "Post inválido." };
+  }
+
+  const { supabase, user } = await requireUser();
+
+  const parsed = createCoverSchema({
+    supabaseUrl: env.NEXT_PUBLIC_SUPABASE_URL,
+    userId: user.id,
+  }).safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0].message };
+  }
+
+  const { data, error } = await supabase
+    .from("posts")
+    .update({
+      cover_image_url: parsed.data.imageUrl,
+      cover_text: parsed.data.text,
+      cover_color: parsed.data.color,
+    })
+    .eq("id", postId)
+    .eq("author_id", user.id)
+    .eq("type", "article")
+    .select("id");
+
+  if (error || !data?.length) {
+    return { ok: false, error: "No pudimos guardar la portada." };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/explore");
+  revalidatePath(`/author/${user.id}`);
+  return { ok: true };
 }
 
 export type PublishPostResult =
