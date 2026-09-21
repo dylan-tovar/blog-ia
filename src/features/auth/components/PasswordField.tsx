@@ -25,6 +25,11 @@ export function PasswordField({
         autoComplete="new-password"
         {...props}
         type={visible ? "text" : "password"}
+        // Revealed, the field is a plain text input: stop iOS/Chrome from
+        // capitalizing, autocorrecting or spellchecking the password.
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
         className={cn("pr-11 md:pr-9", className)}
       />
       <Button
@@ -32,7 +37,6 @@ export function PasswordField({
         variant="ghost"
         size="icon"
         aria-label={visible ? hideLabel : showLabel}
-        aria-pressed={visible}
         onClick={() => setVisible((v) => !v)}
         className="absolute top-0 right-0 size-11 text-muted-foreground md:size-9"
       >

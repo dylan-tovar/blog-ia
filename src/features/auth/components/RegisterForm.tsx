@@ -17,8 +17,16 @@ export function RegisterForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [confirmTouched, setConfirmTouched] = useState(false);
+
   const passwordsMatch = password === confirmPassword;
-  const mismatch = confirmPassword.length > 0 && !passwordsMatch;
+  // Don't flag a mismatch while the user is still typing the confirmation:
+  // wait until they leave the field or have typed as many characters as the
+  // password, when a difference can no longer be "not finished yet".
+  const mismatch =
+    confirmPassword.length > 0 &&
+    !passwordsMatch &&
+    (confirmTouched || confirmPassword.length >= password.length);
   const canSubmit = isPasswordValid(password) && passwordsMatch;
 
   return (
@@ -55,6 +63,7 @@ export function RegisterForm() {
           name="confirmPassword"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
+          onBlur={() => setConfirmTouched(true)}
           aria-invalid={mismatch || undefined}
           aria-describedby="confirm-password-status"
           showLabel="Mostrar confirmación"

@@ -64,7 +64,7 @@ export function PasswordStrength({ password, requirementsId }: PasswordStrengthP
                 <div key={i} className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                   <div
                     className={cn(
-                      "h-full origin-left rounded-full transition-[transform,background-color] duration-300 ease-out motion-reduce:transition-none",
+                      "h-full origin-left rounded-full transition-[scale,background-color] duration-300 ease-out motion-reduce:transition-none",
                       LEVEL_FILL[level],
                       i < filled ? "scale-x-100" : "scale-x-0",
                     )}
@@ -81,6 +81,7 @@ export function PasswordStrength({ password, requirementsId }: PasswordStrengthP
                 LEVEL_TEXT[level],
               )}
             >
+              {level !== "empty" && <span className="sr-only">Fortaleza: </span>}
               {LEVEL_LABEL[level]}
             </p>
           </div>
