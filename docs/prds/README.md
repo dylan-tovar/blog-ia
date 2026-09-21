@@ -18,6 +18,7 @@ El producto completo, su filosofía KISS y la lista de qué se cortó y qué se 
 | [PRD-7](PRD-7-notes-likes.md) | Notas, artículos y me gusta | Notas cortas, respuestas, likes, feed diferenciado | Implementado |
 | [PRD-8](PRD-8-ai-chat.md) | Chat de IA del editor | Panel lateral que conversa, analiza y propone ediciones aplicables | Implementado |
 | [PRD-9](PRD-9-explore-activity.md) | Explorar, Actividad y opciones de post | `/explore` con tags, `/activity`, menú de opciones de un post | Parcial (hay placeholders) |
+| [PRD-10](PRD-10-post-images-cover.md) | Imágenes de artículos y portada en el feed | Subida de imágenes a Storage desde el editor, render seguro y portada (imagen o texto sobre color) en las tarjetas del feed | Implementado con limitaciones |
 
 ## Nombres de archivo y paquetes de trabajo
 
@@ -43,6 +44,7 @@ El slug es corto y describe el contenido, en inglés y en minúsculas, igual que
 | [PRD-7](PRD-7-notes-likes.md) Notas y me gusta | [7.1 tipos en la base](PRD-7.1-post-types-db.md) · [7.2 notas, UI](PRD-7.2-notes-ui.md) · [7.3 me gusta](PRD-7.3-likes.md) |
 | [PRD-8](PRD-8-ai-chat.md) Chat de IA | [8.1 servidor](PRD-8.1-chat-server.md) · [8.2 cajón](PRD-8.2-chat-drawer-ui.md) · [8.3 contexto y aplicar](PRD-8.3-editor-context-apply.md) · [8.4 tarjetas y análisis](PRD-8.4-action-cards-analysis.md) |
 | [PRD-9](PRD-9-explore-activity.md) Explorar y Actividad | [9.1 Explorar](PRD-9.1-explore-page.md) · [9.2 Actividad y navegación](PRD-9.2-activity-nav.md) · [9.3 opciones del post](PRD-9.3-post-options-drawer.md) |
+| [PRD-10](PRD-10-post-images-cover.md) Imágenes y portada | [10.1 imágenes](PRD-10.1-post-images.md) · [10.2 portada](PRD-10.2-post-cover.md) (ya implementados por D1) |
 | [PRD-global](../PRD-global-vision.md) (transversales) | [X.1 tests](PRD-X.1-testing-e2e.md) · [X.2 herramientas](PRD-X.2-dev-tooling.md) |
 
 Un paquete sigue la misma cabecera que un PRD padre y estas secciones: Resumen, Qué necesitás entender antes, Alcance / fuera de alcance, Cómo funciona (en el orden en que conviene leer el código), Decisiones y por qué, Criterios de aceptación, Cómo verificarla a mano, Trabajo pendiente asignable y Preguntas de autoevaluación. Sus campos propios de cabecera son **Dificultad** (A avanzada, M media, B básica), **Esfuerzo** (S, M, L), **Dueño sugerido** y **Mentor**.
@@ -62,6 +64,8 @@ flowchart LR
   P5 --> P8[PRD-8 Chat de IA]
   P3 --> P9[PRD-9 Explorar y Actividad]
   P7 --> P9
+  P2 --> P10[PRD-10 Imágenes y portada]
+  P3 --> P10
 ```
 
 Si vas a tocar una zona, lee su PRD y luego los ADRs que enlaza en la cabecera.
@@ -70,6 +74,7 @@ Si vas a tocar una zona, lee su PRD y luego los ADRs que enlaza en la cabecera.
 | :--- | :--- |
 | Login, registro, ajustes | PRD-1 |
 | El editor o la publicación | PRD-2, luego PRD-5 y PRD-8 |
+| Imágenes del artículo o la portada del feed | PRD-10 (y [ADR 0022](../adr/0022-imagenes-en-supabase-storage.md), [ADR 0023](../adr/0023-portada-de-articulos.md)) |
 | El feed, seguir, el perfil | PRD-3, PRD-7, PRD-9 |
 | Cualquier función de IA | PRD-5, PRD-6, PRD-8 y [ADR 0011](../adr/0011-ia-con-gemini.md) |
 | La base de datos | El PRD de la feature y [`../db/schema.md`](../db/schema.md) |

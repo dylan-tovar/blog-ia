@@ -44,6 +44,7 @@ Esta documentación está escrita para que alguien que recibe el proyecto entien
 | [PRD-7](prds/PRD-7-notes-likes.md) | Tipos de post (notas y artículos) y me gusta |
 | [PRD-8](prds/PRD-8-ai-chat.md) | Chat de IA del editor |
 | [PRD-9](prds/PRD-9-explore-activity.md) | Explorar, Actividad y opciones de post |
+| [PRD-10](prds/PRD-10-post-images-cover.md) | Imágenes de artículos y portada en el feed |
 
 Cada PRD se parte en paquetes de trabajo (`PRD-1.1`, `PRD-1.2`…) con quien lo implementará; el listado y las convenciones de nombre están en [`prds/README.md`](prds/README.md#nombres-de-archivo-y-paquetes-de-trabajo) y el reparto del equipo en [`team/reparto-de-tareas.md`](team/reparto-de-tareas.md).
 
@@ -63,6 +64,8 @@ Lo que existe en el código hoy. Las limitaciones y pendientes están en la [tab
 | Seguir y dejar de seguir; lecturas (`reading_history`) | Implementado; seguir no cambia el feed | `src/features/subscriptions/` |
 | Recomendaciones por tags | Implementado ([ADR 0004](adr/0004-recomendaciones-scoring-determinista.md)) | `src/features/recommendations/` |
 | Chat de IA del editor (propuestas aplicables, análisis) | Implementado ([ADR 0013](adr/0013-chat-ia-protocolo-ndjson-y-function-calling.md), [ADR 0014](adr/0014-aplicacion-de-ediciones-en-el-cliente-con-fingerprints.md)) | `src/features/ai/`, `src/features/posts/components/editor/` |
+| Imágenes en el editor (subir, arrastrar, pegar) y verlas en el lector | Implementado ([ADR 0022](adr/0022-imagenes-en-supabase-storage.md)) | `src/features/posts/images/` |
+| Portada del artículo (imagen o texto sobre color) en las tarjetas del feed | Implementado con limitaciones: el texto de la portada no se modera ([ADR 0023](adr/0023-portada-de-articulos.md)) | `src/features/posts/cover/` |
 | Moderación con auto-tagging al publicar | Implementado | `publishPost`, `src/features/ai/moderation.ts` |
 | Resumen de IA para lectores | Implementado | `src/features/ai/summary-actions.ts` |
 | Herramientas de IA "legacy" (outline, títulos, tono, score) | Código sin llamador; deprecadas ([ADR 0019](adr/0019-rutas-legacy-de-ia-deprecadas.md)) | `src/app/api/ai/{outline,titles,tone,score}` |
