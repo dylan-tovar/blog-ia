@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { UserAvatar } from "@/components/shared/UserAvatar";
@@ -63,10 +63,13 @@ function FollowControl({
 
 export function PostCard({ post, viewerId, showReplyTo = true, onDeleted }: PostCardProps) {
   const [following, setFollowing] = useState(post.viewerFollows);
-
-  useEffect(() => {
+  // Re-sync when the server value changes. Adjusting state during render avoids
+  // the extra render an effect would cause.
+  const [syncedViewerFollows, setSyncedViewerFollows] = useState(post.viewerFollows);
+  if (post.viewerFollows !== syncedViewerFollows) {
+    setSyncedViewerFollows(post.viewerFollows);
     setFollowing(post.viewerFollows);
-  }, [post.viewerFollows]);
+  }
 
   const authorName = post.author?.display_name ?? "Autor desconocido";
   const isOwn = !!viewerId && viewerId === post.author?.id;

@@ -127,9 +127,13 @@ export function PostOptionsDrawer({
   const [copied, setCopied] = useState(false);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
+  // Re-sync when the server value changes. Adjusting state during render avoids
+  // the extra render an effect would cause.
+  const [syncedInitialFollowing, setSyncedInitialFollowing] = useState(initialFollowing);
+  if (initialFollowing !== syncedInitialFollowing) {
+    setSyncedInitialFollowing(initialFollowing);
     setFollowing(initialFollowing);
-  }, [initialFollowing]);
+  }
 
   useEffect(() => {
     return () => {
