@@ -24,6 +24,7 @@ export async function followAuthor(authorId: string): Promise<FollowResult> {
       { onConflict: "follower_id,author_id", ignoreDuplicates: true },
     );
 
+  revalidatePath("/");
   revalidatePath(`/author/${authorId}`);
   return { ok: !error };
 }
@@ -41,6 +42,7 @@ export async function unfollowAuthor(authorId: string): Promise<FollowResult> {
     .eq("follower_id", user.id)
     .eq("author_id", authorId);
 
+  revalidatePath("/");
   revalidatePath(`/author/${authorId}`);
   return { ok: !error };
 }

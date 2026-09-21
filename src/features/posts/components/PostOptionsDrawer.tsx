@@ -1,21 +1,20 @@
 "use client";
 
-import { useState, useTransition, type ComponentType } from "react";
+import { useEffect, useRef, useState, useTransition, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   Ban,
   Bookmark,
-  Bot,
-  Download,
+  Check,
   Ellipsis,
   EyeOff,
   Link2,
   Loader2,
   Pencil,
   Trash2,
+  UserMinus,
   UserPlus,
-  VolumeX,
 } from "lucide-react";
 import {
   Drawer,
@@ -26,7 +25,9 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { EditNoteDialog } from "@/features/posts/components/EditNoteDialog";
+import { LoginDrawer } from "@/features/auth/components/LoginDrawer";
 import { deleteNote } from "@/features/posts/actions";
+import { followAuthor, unfollowAuthor } from "@/features/subscriptions/actions";
 import { cn } from "@/lib/utils";
 
 interface PostOptionsDrawerProps {
@@ -43,6 +44,9 @@ interface PostOptionsDrawerProps {
   onDeleted?: (postId: string) => void;
   onEdited?: (newContent: string) => void;
   redirectOnDelete?: string;
+  viewerId?: string | null;
+  initialFollowing?: boolean;
+  onFollowChange?: (following: boolean) => void;
 }
 
 interface OptionProps {
@@ -71,6 +75,35 @@ function Option({ icon: Icon, label, onClick, destructive, disabled, iconClassNa
   );
 }
 
+async function copyToClipboard(text: string): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fall through to fallback
+    }
+  }
+
+  try {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    const successful = document.execCommand("copy");
+    textArea.remove();
+    return successful;
+  } catch {
+    return false;
+  }
+}
+
 export function PostOptionsDrawer({
   post,
   isOwn = false,
@@ -79,12 +112,32 @@ export function PostOptionsDrawer({
   onDeleted,
   onEdited,
   redirectOnDelete,
+  viewerId,
+  initialFollowing = false,
+  onFollowChange,
 }: PostOptionsDrawerProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isDeleting, startDeleting] = useTransition();
+  const [following, setFollowing] = useState(initialFollowing);
+  const [isFollowingPending, startFollowTransition] = useTransition();
+  const [copied, setCopied] = useState(false);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setFollowing(initialFollowing);
+  }, [initialFollowing]);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) {
+        clearTimeout(copyTimerRef.current);
+      }
+    };
+  }, []);
 
   function close() {
     setOpen(false);
@@ -94,14 +147,53 @@ export function PostOptionsDrawer({
     setOpen(next);
     if (!next) {
       setConfirmingDelete(false);
+      setCopied(false);
+      if (copyTimerRef.current) {
+        clearTimeout(copyTimerRef.current);
+      }
     }
   }
 
-  function handleCopyLink() {
-    if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(`${window.location.origin}/post/${post.id}`);
+  async function handleCopyLink() {
+    if (typeof window === "undefined") return;
+    const url = `${window.location.origin}/post/${post.id}`;
+    const ok = await copyToClipboard(url);
+    if (ok) {
+      setCopied(true);
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => {
+        setCopied(false);
+        close();
+      }, 900);
+    } else {
+      close();
     }
-    close();
+  }
+
+  function handleToggleFollow() {
+    if (viewerId === null) {
+      close();
+      setLoginOpen(true);
+      return;
+    }
+
+    const author = post.author;
+    if (!author) return;
+
+    const nextFollowing = !following;
+    startFollowTransition(async () => {
+      setFollowing(nextFollowing);
+      onFollowChange?.(nextFollowing);
+      close();
+      const res = await (nextFollowing
+        ? followAuthor(author.id)
+        : unfollowAuthor(author.id));
+      if (!res.ok) {
+        setFollowing(!nextFollowing);
+        onFollowChange?.(!nextFollowing);
+      }
+      router.refresh();
+    });
   }
 
   function handleDelete() {
@@ -169,9 +261,13 @@ export function PostOptionsDrawer({
                       }}
                     />
                   )}
-                  <Option icon={Link2} label="Copiar enlace" onClick={handleCopyLink} />
+                  <Option
+                    icon={copied ? Check : Link2}
+                    iconClassName={copied ? "text-emerald-500" : undefined}
+                    label={copied ? "¡Enlace copiado!" : "Copiar enlace"}
+                    onClick={handleCopyLink}
+                  />
                   <Option icon={Bookmark} label="Guardar" onClick={close} />
-                  <Option icon={Download} label="Guardar como imagen" onClick={close} />
                 </div>
 
                 <div className="my-1 border-t border-border/80" />
@@ -192,16 +288,22 @@ export function PostOptionsDrawer({
             ) : (
               <>
                 <div className="flex flex-col">
-                  <Option icon={Link2} label="Copiar enlace" onClick={handleCopyLink} />
-                  <Option icon={UserPlus} label="Seguir" onClick={close} />
+                  <Option
+                    icon={copied ? Check : Link2}
+                    iconClassName={copied ? "text-emerald-500" : undefined}
+                    label={copied ? "¡Enlace copiado!" : "Copiar enlace"}
+                    onClick={handleCopyLink}
+                  />
+                  {post.author && viewerId !== post.author.id && (
+                    <Option
+                      icon={isFollowingPending ? Loader2 : following ? UserMinus : UserPlus}
+                      iconClassName={isFollowingPending ? "animate-spin" : undefined}
+                      label={following ? "Dejar de seguir" : "Seguir"}
+                      onClick={handleToggleFollow}
+                      disabled={isFollowingPending}
+                    />
+                  )}
                   <Option icon={Bookmark} label="Guardar" onClick={close} />
-                  <Option icon={Download} label="Guardar como imagen" onClick={close} />
-                </div>
-
-                <div className="my-1 border-t border-border/80" />
-
-                <div className="flex flex-col">
-                  <Option icon={Bot} label="Analizar texto con IA" onClick={close} />
                 </div>
 
                 <div className="my-1 border-t border-border/80" />
@@ -213,7 +315,6 @@ export function PostOptionsDrawer({
                 <div className="my-1 border-t border-border/80" />
 
                 <div className="flex flex-col">
-                  <Option icon={VolumeX} label="Silenciar" onClick={close} destructive />
                   <Option icon={Ban} label="Bloquear" onClick={close} destructive />
                   <Option icon={AlertCircle} label="Reportar" onClick={close} destructive />
                 </div>
@@ -232,6 +333,10 @@ export function PostOptionsDrawer({
           authorName={post.author?.display_name}
           onEdited={onEdited}
         />
+      )}
+
+      {viewerId === null && (
+        <LoginDrawer trigger={null} open={loginOpen} onOpenChange={setLoginOpen} />
       )}
     </>
   );

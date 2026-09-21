@@ -42,7 +42,7 @@ export function LoginDrawer({
 
   return (
     <Drawer open={open} onOpenChange={setOpen} showSwipeHandle>
-      {trigger ? (
+      {trigger === null ? null : trigger ? (
         isValidElement(trigger) ? (
           <DrawerTrigger render={trigger} className={className} />
         ) : (

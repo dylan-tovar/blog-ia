@@ -262,7 +262,7 @@ export function AuthorProfileView({
         ) : (
           <div className="flex flex-col">
             {displayedPosts.map((post) => (
-              <PostCard key={post.id} post={post} viewerId={viewer?.id} />
+              <PostCard key={post.id} post={post} viewerId={viewer?.id ?? null} />
             ))}
           </div>
         )
