@@ -124,6 +124,17 @@ describe("resolveAuthRedirect", () => {
     expect(resolveAuthRedirect("/login?from=/profile")).toBe("/");
   });
 
+  it("falls back to root for /register and /onboarding", () => {
+    expect(resolveAuthRedirect("/register")).toBe("/");
+    expect(resolveAuthRedirect("/onboarding")).toBe("/");
+    expect(resolveAuthRedirect("/onboarding?x=1")).toBe("/");
+  });
+
+  it("blocks paths with a backslash (browsers read it as a slash)", () => {
+    expect(resolveAuthRedirect("/\\evil.com")).toBe("/");
+    expect(resolveAuthRedirect("/foo\\bar")).toBe("/");
+  });
+
   it("blocks protocol-relative open redirects", () => {
     expect(resolveAuthRedirect("//evil.com")).toBe("/");
     expect(resolveAuthRedirect("//evil.com/path")).toBe("/");
