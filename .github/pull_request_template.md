@@ -15,8 +15,7 @@ Describe brevemente qué hace este Pull Request (qué problema resuelve o qué f
 - [ ] **Dependencias sincronizadas:** Si instalé paquetes (`pnpm add`), incluí `pnpm-lock.yaml` en el commit.
 
 ## 🧪 Pruebas realizadas
-- [ ] **Build de producción:** Ejecuté `pnpm build` localmente y terminó en verde sin errores de TypeScript ni Next.js.
-- [ ] **Tests:** Ejecuté `pnpm test` localmente y pasaron todas las pruebas sin fallos.
+- [ ] **CI en verde:** Los checks automáticos (lint, typecheck, tests y build) pasan en este PR.
 - [ ] **Flujo de IA:** Si involucra IA, verifiqué la llamada (Markdown devuelto, estados de loading y manejo de errores).
 
 ## 📸 Capturas de pantalla (si aplica a la interfaz)
