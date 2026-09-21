@@ -5,6 +5,7 @@ import {
   defaultAltText,
   isAllowedImageUrl,
   parseImageSize,
+  shouldInterceptPaste,
   validateSourceFile,
 } from "@/features/posts/images/image-utils";
 import {
@@ -190,5 +191,50 @@ describe("defaultAltText", () => {
 
   it("truncates very long names", () => {
     expect(defaultAltText(`${"palabra ".repeat(30)}.png`).length).toBeLessThanOrEqual(80);
+  });
+});
+
+describe("shouldInterceptPaste", () => {
+  function clipboard(files: string[], text: Record<string, string> = {}) {
+    return {
+      files: files.map((type) => ({ type })),
+      getData: (format: string) => text[format] ?? "",
+    };
+  }
+
+  it("intercepts a pasted image with no text payload (screenshot)", () => {
+    expect(shouldInterceptPaste(clipboard(["image/png"]))).toBe(true);
+  });
+
+  it("does not intercept an image that comes with HTML (Word, Excel, Sheets)", () => {
+    expect(
+      shouldInterceptPaste(clipboard(["image/png"], { "text/html": "<table><tr><td>1</td></tr></table>" })),
+    ).toBe(false);
+  });
+
+  it("does not intercept an image that comes with plain text", () => {
+    expect(shouldInterceptPaste(clipboard(["image/png"], { "text/plain": "a1\tb1" }))).toBe(false);
+  });
+
+  it("intercepts when the text payloads are only whitespace", () => {
+    expect(
+      shouldInterceptPaste(clipboard(["image/png"], { "text/plain": "  \n", "text/html": "" })),
+    ).toBe(true);
+  });
+
+  it("does not intercept text-only pastes", () => {
+    expect(shouldInterceptPaste(clipboard([], { "text/plain": "hola" }))).toBe(false);
+  });
+
+  it("does not intercept an empty clipboard", () => {
+    expect(shouldInterceptPaste(clipboard([]))).toBe(false);
+  });
+
+  it("does not intercept non-image files", () => {
+    expect(shouldInterceptPaste(clipboard(["application/pdf"]))).toBe(false);
+  });
+
+  it("does not intercept when there is no clipboard data", () => {
+    expect(shouldInterceptPaste(null)).toBe(false);
   });
 });

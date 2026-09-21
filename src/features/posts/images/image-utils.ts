@@ -113,3 +113,21 @@ export function defaultAltText(fileName: string): string {
 
   return isDescriptive ? text.slice(0, ALT_MAX_LENGTH).trim() : "";
 }
+
+interface PasteData {
+  files: ArrayLike<{ type: string }>;
+  getData(format: string): string;
+}
+
+// Office apps and spreadsheets put a rendered PNG next to the real text/html payload;
+// intercepting those would swallow the text, so only image-only pastes (screenshots) are ours.
+export function shouldInterceptPaste(data: PasteData | null | undefined): boolean {
+  if (!data) {
+    return false;
+  }
+  const hasImage = Array.from(data.files).some((file) => file.type.startsWith("image/"));
+  if (!hasImage) {
+    return false;
+  }
+  return data.getData("text/plain").trim() === "" && data.getData("text/html").trim() === "";
+}

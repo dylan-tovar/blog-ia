@@ -12,6 +12,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { SafeLink } from "@/features/posts/components/editor/safe-link";
 import { useImageUpload } from "@/features/posts/components/editor/use-image-upload";
 import { ARTICLE_PROSE_CLASS } from "@/features/posts/components/markdown-styles";
+import { shouldInterceptPaste } from "@/features/posts/images/image-utils";
 
 // Cmd/Ctrl+I is reserved for the AI drawer, so italic keeps only its Shift variant.
 const ShiftItalic = Italic.extend({
@@ -71,12 +72,11 @@ export function useArticleEditor(initialContent: string, onChange: (markdown: st
         return true;
       },
       handlePaste(_view, event) {
-        const files = imageFiles(event.clipboardData?.files);
-        if (files.length === 0) {
+        if (!shouldInterceptPaste(event.clipboardData)) {
           return false;
         }
         event.preventDefault();
-        insertFiles(files);
+        insertFiles(imageFiles(event.clipboardData?.files));
         return true;
       },
     },
