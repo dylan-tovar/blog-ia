@@ -259,13 +259,12 @@ RLS habilitada **sin políticas** y `revoke all` a `anon` y `authenticated`: sol
 
 ## Storage: bucket `post-images`
 
-Bucket público (`0008`) para las imágenes de los artículos, con límite de 2 MB y solo `image/webp`, `image/jpeg` e `image/png`. Los objetos viven en `<user_id>/<uuid>-<ancho>x<alto>.webp`. Las URLs públicas se sirven sin RLS, así que no hay política de SELECT abierta: nadie puede listar el bucket. Las políticas de `storage.objects` valen solo para `authenticated` y solo dentro de la carpeta propia (`(storage.foldername(name))[1] = auth.uid()::text`):
+Bucket público (`0008`) para las imágenes de los artículos, con límite de 2 MB y solo `image/webp`, `image/jpeg` e `image/png`. Los objetos viven en `<user_id>/<uuid>-<ancho>x<alto>.webp`. Las URLs públicas se sirven sin RLS, así que no hay política de SELECT abierta: nadie puede listar el bucket. Las políticas de `storage.objects` valen solo para `authenticated` y solo dentro de la carpeta propia (`(storage.foldername(name))[1] = auth.uid()::text`). No hay política de UPDATE: las imágenes nunca se reemplazan (`upsert: false`), y `0008` elimina la de versiones anteriores al re-ejecutarse:
 
 | Política | Operación |
 | :--- | :--- |
 | Users can upload their own post images | INSERT |
 | Users can view their own post images | SELECT (Storage lo necesita para borrar) |
-| Users can update their own post images | UPDATE |
 | Users can delete their own post images | DELETE |
 
 ## Índices y triggers

@@ -17,7 +17,7 @@ PostgreSQL gestionado por Supabase (Auth, RLS y PostgREST). El esquema vive en a
 | 5 | `0005_post_types_and_likes.sql` | Tipos de post, `parent_post_id`, restricciones, `can_attach_note`, `likes`. Convierte los posts de prueba existentes en notas la primera vez | Solo dentro de la cadena 0005 → 0006 → 0007 |
 | 6 | `0006_allow_note_updates.sql` | Permite editar notas | Solo dentro de la cadena 0005 → 0006 → 0007 |
 | 7 | `0007_ai_features.sql` | Caché de IA, trigger, privilegios por columna, `ai_rate_limits` y `ai_rate_limit_hit` | Sí, si `0005` y `0006` ya corrieron |
-| 8 | `0008_post_images.sql` | Bucket público `post-images` de Storage y sus políticas sobre `storage.objects` ([ADR 0022](../adr/0022-imagenes-en-supabase-storage.md)) | Sí |
+| 8 | `0008_post_images.sql` | Bucket público `post-images` de Storage y sus políticas de INSERT, SELECT y DELETE sobre `storage.objects` ([ADR 0022](../adr/0022-imagenes-en-supabase-storage.md)) | Sí |
 
 **`0005` nunca se repite sola.** Recrea la política de INSERT de `posts` sin la condición `type = 'note' or status = 'draft'` (que añade `0007`) y deja el UPDATE limitado a artículos (que abre `0006`). Corrida sola sobre un proyecto ya migrado, reabriría la inserción de artículos ya publicados sin moderación y rompería la edición de notas. Si hay que repetirla, se repite la cadena `0005` → `0006` → `0007`.
 
