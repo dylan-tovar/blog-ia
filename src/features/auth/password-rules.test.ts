@@ -50,9 +50,12 @@ describe("PASSWORD_RULES", () => {
       expect(rule("lowercase").test("ABc123!")).toBe(true);
     });
 
-    it("accepts accented lowercase letters", () => {
-      expect(rule("lowercase").test("Ñ")).toBe(false);
-      expect(rule("lowercase").test("ñ")).toBe(true);
+    // Supabase's required-characters policy is ASCII-only, so accented
+    // letters must not satisfy the rule or the backend would reject them.
+    it("only counts ASCII lowercase letters", () => {
+      expect(rule("lowercase").test("ñÁü")).toBe(false);
+      expect(rule("lowercase").test("ñ")).toBe(false);
+      expect(rule("lowercase").test("ña")).toBe(true);
     });
   });
 
@@ -62,9 +65,9 @@ describe("PASSWORD_RULES", () => {
       expect(rule("uppercase").test("abC123!")).toBe(true);
     });
 
-    it("accepts accented uppercase letters", () => {
-      expect(rule("uppercase").test("ñ")).toBe(false);
-      expect(rule("uppercase").test("Ñ")).toBe(true);
+    it("only counts ASCII uppercase letters", () => {
+      expect(rule("uppercase").test("Ñ")).toBe(false);
+      expect(rule("uppercase").test("ÑA")).toBe(true);
     });
   });
 
@@ -82,9 +85,14 @@ describe("PASSWORD_RULES", () => {
       }
     });
 
-    it("accepts an underscore and an emoji", () => {
+    it("accepts an underscore", () => {
       expect(rule("symbol").test("a_")).toBe(true);
-      expect(rule("symbol").test("a😀")).toBe(true);
+    });
+
+    it("rejects non-ASCII symbols the backend policy would not recognise", () => {
+      expect(rule("symbol").test("a😀")).toBe(false);
+      expect(rule("symbol").test("a€")).toBe(false);
+      expect(rule("symbol").test("a¡")).toBe(false);
     });
 
     it("rejects letters, digits and accented letters", () => {

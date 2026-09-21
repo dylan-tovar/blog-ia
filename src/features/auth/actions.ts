@@ -37,10 +37,19 @@ export async function signUp(
   const { error } = await supabase.auth.signUp({ email, password });
 
   if (error) {
+    // Keep the typed email: React resets the form after the action returns.
     if (error.code === "user_already_exists") {
-      return { error: "Ya existe una cuenta con este email." };
+      return { error: "Ya existe una cuenta con este email.", email };
     }
-    return { error: "No pudimos crear tu cuenta. Intentá de nuevo." };
+    // The dashboard password policy can be stricter than ours.
+    if (error.code === "weak_password") {
+      return {
+        error:
+          "La contraseña no cumple los requisitos de seguridad. Probá con una más larga o con otros caracteres.",
+        email,
+      };
+    }
+    return { error: "No pudimos crear tu cuenta. Intentá de nuevo.", email };
   }
 
   // The profile (display name + username) is created in /onboarding.

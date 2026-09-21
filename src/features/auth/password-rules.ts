@@ -32,26 +32,29 @@ export const PASSWORD_RULES: readonly PasswordRule[] = [
     id: "lowercase",
     label: "Una minúscula",
     message: "La contraseña debe incluir una minúscula.",
-    test: (pw) => /\p{Ll}/u.test(pw),
+    // The character-class rules are ASCII on purpose: Supabase's required
+    // characters policy only recognises ASCII, so anything else that passed
+    // here would be rejected by the backend with no way to explain why.
+    test: (pw) => /[a-z]/.test(pw),
   },
   {
     id: "uppercase",
     label: "Una mayúscula",
     message: "La contraseña debe incluir una mayúscula.",
-    test: (pw) => /\p{Lu}/u.test(pw),
+    test: (pw) => /[A-Z]/.test(pw),
   },
   {
     id: "number",
     label: "Un número",
     message: "La contraseña debe incluir un número.",
-    test: (pw) => /\p{Nd}/u.test(pw),
+    test: (pw) => /[0-9]/.test(pw),
   },
   {
     id: "symbol",
     label: "Un símbolo",
     message: "La contraseña debe incluir un símbolo.",
-    // Anything that is not a letter, digit, combining mark or whitespace.
-    test: (pw) => /[^\p{L}\p{N}\p{M}\s]/u.test(pw),
+    // ASCII punctuation (the 32 printable non-alphanumeric characters).
+    test: (pw) => /[!-/:-@[-`{-~]/.test(pw),
   },
 ];
 
