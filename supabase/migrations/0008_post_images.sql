@@ -18,7 +18,7 @@ on conflict (id) do update
       allowed_mime_types = excluded.allowed_mime_types;
 
 -- 2. Escritura solo dentro de la carpeta propia: el primer segmento del path es el
--- id del usuario (`<uid>/<uuid>-<w>x<h>.webp`). Un usuario no puede subir, pisar ni
+-- id del usuario (`<uid>/<uuid>-<w>x<h>.webp`). Un usuario no puede subir ni
 -- borrar archivos de otro.
 drop policy if exists "Users can upload their own post images" on storage.objects;
 create policy "Users can upload their own post images"
@@ -29,7 +29,7 @@ create policy "Users can upload their own post images"
     and (storage.foldername (name))[1] = (select auth.uid ())::text
   );
 
--- SELECT acotado a la carpeta propia: Storage lo necesita para borrar/reemplazar.
+-- SELECT acotado a la carpeta propia: Storage lo necesita para borrar.
 -- La lectura pública de las imágenes no depende de esta política (bucket público).
 drop policy if exists "Users can view their own post images" on storage.objects;
 create policy "Users can view their own post images"
@@ -40,18 +40,10 @@ create policy "Users can view their own post images"
     and (storage.foldername (name))[1] = (select auth.uid ())::text
   );
 
+-- No hay política de UPDATE: el cliente sube con `upsert: false` y los nombres llevan UUID,
+-- así que nunca se reemplaza un objeto. Esta línea retira la política de versiones anteriores
+-- de esta migración al volver a correrla.
 drop policy if exists "Users can update their own post images" on storage.objects;
-create policy "Users can update their own post images"
-  on storage.objects for update
-  to authenticated
-  using (
-    bucket_id = 'post-images'
-    and (storage.foldername (name))[1] = (select auth.uid ())::text
-  )
-  with check (
-    bucket_id = 'post-images'
-    and (storage.foldername (name))[1] = (select auth.uid ())::text
-  );
 
 drop policy if exists "Users can delete their own post images" on storage.objects;
 create policy "Users can delete their own post images"
