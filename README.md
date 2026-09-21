@@ -1,6 +1,6 @@
 # blog-ia
 
-Plataforma de publicación tipo Substack asistida por IA. Monolito Next.js 16 (App Router, React 19) con Supabase (PostgreSQL, Auth, RLS), shadcn/ui y Gemini. Los usuarios leen, siguen y publican artículos y notas; un chat de IA dentro del editor propone cambios que el autor decide aplicar, la IA modera al publicar y resume artículos para los lectores.
+Plataforma de publicación asistida por IA. Monolito Next.js 16 (App Router, React 19) con Supabase (PostgreSQL, Auth, RLS), shadcn/ui y Gemini. Los usuarios leen, siguen y publican artículos y notas; un chat de IA dentro del editor propone cambios que el autor decide aplicar, la IA modera al publicar y resume artículos para los lectores.
 
 ## Empezar
 
