@@ -51,10 +51,10 @@ test.describe("auth flows", () => {
     page,
   }) => {
     await signUpAccount(page);
-    await expect(page.getByText("Paso 1 de 2")).toBeVisible();
+    await expect(page.getByText("Paso 1 de 2", { exact: true })).toBeVisible();
     await completeOnboarding(page);
     await expect(page).toHaveURL(ONBOARDING_URL);
-    await expect(page.getByText("Paso 2 de 2")).toBeVisible();
+    await expect(page.getByText("Paso 2 de 2", { exact: true })).toBeVisible();
     await completeInterests(page);
     await expect(page).toHaveURL(HOME_URL);
   });
