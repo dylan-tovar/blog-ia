@@ -22,6 +22,7 @@ export type Database = {
           username: string;
           avatar_url: string | null;
           created_at: string;
+          onboarded_at: string | null;
         };
         Insert: {
           id: string;
@@ -29,6 +30,7 @@ export type Database = {
           username: string;
           avatar_url?: string | null;
           created_at?: string;
+          onboarded_at?: string | null;
         };
         Update: {
           id?: string;
@@ -36,6 +38,7 @@ export type Database = {
           username?: string;
           avatar_url?: string | null;
           created_at?: string;
+          onboarded_at?: string | null;
         };
         Relationships: [];
       };
@@ -267,6 +270,39 @@ export type Database = {
           },
         ];
       };
+      user_interests: {
+        Row: {
+          user_id: string;
+          tag_id: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          tag_id: string;
+          created_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          tag_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_interests_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_interests_tag_id_fkey";
+            columns: ["tag_id"];
+            isOneToOne: false;
+            referencedRelation: "tags";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -277,6 +313,10 @@ export type Database = {
       login_email_for_username: {
         Args: { p_username: string };
         Returns: string | null;
+      };
+      popular_tags: {
+        Args: { p_limit?: number };
+        Returns: { id: string; name: string; uses: number }[];
       };
     };
     Enums: Record<string, never>;
