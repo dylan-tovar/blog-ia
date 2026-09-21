@@ -18,7 +18,6 @@ interface AccountSettingsProps {
   user: {
     id: string;
     email?: string | null;
-    phone?: string | null;
   };
   profile: {
     id: string;
@@ -31,14 +30,13 @@ interface AccountSettingsProps {
 
 export function AccountSettings({ user, profile, postCount = 0 }: AccountSettingsProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerSection, setDrawerSection] = useState<"profile" | "email" | "phone" | "handle">("profile");
+  const [drawerSection, setDrawerSection] = useState<"profile" | "email" | "handle">("profile");
 
   const displayName = profile?.display_name || "Usuario";
   const username = profile?.username || "usuario";
   const email = user.email || "No registrado";
-  const phone = user.phone || "+584123847815";
 
-  function openEdit(section: "profile" | "email" | "phone" | "handle") {
+  function openEdit(section: "profile" | "email" | "handle") {
     setDrawerSection(section);
     setDrawerOpen(true);
   }
@@ -88,22 +86,7 @@ export function AccountSettings({ user, profile, postCount = 0 }: AccountSetting
             </button>
           </div>
 
-          {/* Row 3: Phone */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-[15px] font-medium text-foreground">Phone</p>
-              <p className="truncate text-sm text-muted-foreground">{phone}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => openEdit("phone")}
-              className="shrink-0 rounded-lg bg-neutral-800 px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-neutral-700 cursor-pointer"
-            >
-              Edit
-            </button>
-          </div>
-
-          {/* Row 4: Handle */}
+          {/* Row 3: Handle */}
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
               <p className="text-[15px] font-medium text-foreground">Handle</p>
@@ -170,7 +153,6 @@ export function AccountSettings({ user, profile, postCount = 0 }: AccountSetting
               {drawerSection === "profile" && "Editar perfil"}
               {drawerSection === "handle" && "Editar nombre de usuario"}
               {drawerSection === "email" && "Correo electrónico"}
-              {drawerSection === "phone" && "Número de teléfono"}
             </DrawerTitle>
             <DrawerDescription>
               {drawerSection === "profile" || drawerSection === "handle"
@@ -185,19 +167,13 @@ export function AccountSettings({ user, profile, postCount = 0 }: AccountSetting
                 initialDisplayName={displayName}
                 initialUsername={username}
               />
-            ) : drawerSection === "email" ? (
+            ) : (
               <div className="flex flex-col gap-4 text-sm">
                 <p className="text-muted-foreground">
                   Tu correo actual es <strong className="text-foreground">{email}</strong>.
                 </p>
                 <p className="text-xs text-muted-foreground">
                   El correo se gestiona a través de la autenticación segura.
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-4 text-sm">
-                <p className="text-muted-foreground">
-                  Tu teléfono registrado es <strong className="text-foreground">{phone}</strong>.
                 </p>
               </div>
             )}
