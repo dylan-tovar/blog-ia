@@ -24,7 +24,7 @@ export async function getCurrentProfile() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, display_name, username, avatar_url")
+    .select("id, display_name, username, avatar_url, onboarded_at")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -52,9 +52,10 @@ export async function completeOnboarding(
     .eq("id", user.id)
     .maybeSingle();
 
-  // Never overwrite an existing profile from here (that is /settings' job).
+  // Never overwrite an existing profile from here (that is /settings' job). The
+  // onboarding page decides which step comes next.
   if (existing) {
-    redirect("/");
+    redirect("/onboarding");
   }
 
   const { error } = await supabase.from("profiles").insert({
@@ -75,14 +76,14 @@ export async function completeOnboarding(
         .maybeSingle();
 
       if (created) {
-        redirect("/");
+        redirect("/onboarding");
       }
       return { error: "Ese nombre de usuario ya está en uso." };
     }
     return { error: "No pudimos guardar tu perfil. Intentá de nuevo." };
   }
 
-  redirect("/");
+  redirect("/onboarding");
 }
 
 export async function updateProfile(
