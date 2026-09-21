@@ -1,14 +1,14 @@
 # Puesta en marcha
 
-Para levantar el proyecto hace falta un proyecto de Supabase con las nueve migraciones aplicadas y tres variables de entorno. Las funciones de IA piden además una clave de Gemini; sin ella la app funciona y solo la IA responde "no configurada".
+Para levantar el proyecto hace falta un proyecto de Supabase con las diez migraciones aplicadas y tres variables de entorno. Las funciones de IA piden además una clave de Gemini; sin ella la app funciona y solo la IA responde "no configurada".
 
 ## Camino rápido
 
 1. Instalar dependencias: `pnpm install`
 2. Crear `.env.local` en la raíz con las variables de [la tabla](#variables-de-entorno).
-3. Aplicar las migraciones de `supabase/migrations/` en orden (`0001` a `0009`) en el SQL Editor de Supabase ([procedimiento](#migraciones)). (ESTO SOLO ES LA PRIMERA VEZ, YA ESTAN APLICADAS EN EL PROYECTO DE SUPABASE)
+3. Aplicar las migraciones de `supabase/migrations/` en orden (`0001` a `0010`) en el SQL Editor de Supabase ([procedimiento](#migraciones)). (ESTO SOLO ES LA PRIMERA VEZ, YA ESTAN APLICADAS EN EL PROYECTO DE SUPABASE)
 4. Opcional, para ver el feed con contenido: `pnpm seed:dev`. (YA TIENE CONTENIDO, NO ES NECESARIO EN NUESTRO CASO)
-5. Levantar el servidor: `pnpm dev` y abrir <http://localhost:3000/register>. El registro pide email y una contraseña fuerte (8+ caracteres con minúscula, mayúscula, número y símbolo); después `/onboarding` pide nombre y username y crea el perfil ([ADR 0024](../adr/0024-perfil-en-onboarding.md)).
+5. Levantar el servidor: `pnpm dev` y abrir <http://localhost:3000/register>. El registro pide email y una contraseña fuerte (8+ caracteres con minúscula, mayúscula, número y símbolo); después `/onboarding` pide en el paso 1 nombre y username (crea el perfil, [ADR 0024](../adr/0024-perfil-en-onboarding.md)) y en el paso 2 elegir al menos 3 temas de interés, tomados de los tags de artículos publicados ([ADR 0025](../adr/0025-intereses-en-onboarding.md)). Con una base sin artículos publicados el mínimo se relaja y el paso 2 se puede completar sin elegir.
 
 ## Requisitos
 
@@ -54,12 +54,14 @@ Los archivos de `supabase/migrations/` se aplican a mano, en orden, en el SQL Ed
 | 7 | `0007_ai_features.sql` | Columnas de caché de IA, trigger, privilegios por columna sobre `posts`, INSERT de artículos solo como borrador y el límite por minuto ([ADR 0012](../adr/0012-integridad-de-escritura-de-posts.md)) | Sí, si `0005` y `0006` ya corrieron antes |
 | 8 | `0008_post_images.sql` | Bucket público `post-images` de Storage y sus políticas (INSERT, SELECT y DELETE) por carpeta de usuario ([ADR 0022](../adr/0022-imagenes-en-supabase-storage.md)) | Sí |
 | 9 | `0009_post_cover.sql` | Portada de artículos: columnas `cover_*` de `posts`, restricciones y privilegio de UPDATE ([ADR 0023](../adr/0023-portada-de-articulos.md)) | Sí |
+| 10 | `0010_onboarding_interests.sql` | `profiles.onboarded_at` (los perfiles existentes se marcan como terminados), `user_interests` con RLS de fila propia y `popular_tags` ([ADR 0025](../adr/0025-intereses-en-onboarding.md)) | Sí: el backfill corre solo la primera vez, así que repetirla no marca como terminado a quien esté a mitad del onboarding |
 
 > **`0005` no se repite sola.** Vuelve a crear la política de INSERT de `posts` sin la condición `type = 'note' or status = 'draft'` y deja el UPDATE limitado a `type = 'article'`. Esas dos políticas las redefinen después `0007` y `0006`. Si se corre `0005` sola sobre un proyecto ya migrado, con los privilegios por columna de `0007` todavía vigentes (`status` y `published_at` insertables), un autor podría insertar un artículo ya publicado sin moderación y `updateNote` dejaría de funcionar. Si hay que repetir `0005`, se repite la cadena completa en orden: `0005`, `0006`, `0007`.
 
 Reglas prácticas:
 
-- **Proyecto nuevo:** correr las nueve en orden.
+- **Proyecto nuevo:** correr las diez en orden.
+- **Aplicar `0010` ANTES de desplegar el código del paso de intereses** ([ADR 0016](../adr/0016-migraciones-sql-manuales.md), [ADR 0025](../adr/0025-intereses-en-onboarding.md)). Sin ella, el proxy falla abierto pero `/onboarding` queda mostrando el paso 1 y el paso 2 no se puede completar.
 - **Proyecto existente:** correr solo las que falten, en orden. Las de la fila "No" fallan si se repiten (por ejemplo, una política o una restricción que ya existe).
 - **Si `0007` cambió** desde la última vez que se aplicó (el archivo se edita en su lugar), volver a correrla es seguro siempre que `0005` y `0006` ya estén aplicadas: usa `drop ... if exists` y `create or replace`. Nunca repetir `0005` o `0006` por separado (ver el aviso de arriba).
 - **Ver hasta dónde llegó un proyecto** (solo lectura), en el SQL Editor. La consulta se armó a partir de los nombres que crean las migraciones y no se ejecutó contra un proyecto real:
@@ -81,7 +83,10 @@ select
   exists (select 1 from storage.buckets where id = 'post-images')                      as m0008,
   exists (select 1 from information_schema.columns
           where table_schema = 'public' and table_name = 'posts'
-            and column_name = 'cover_image_url')                                     as m0009;
+            and column_name = 'cover_image_url')                                     as m0009,
+  exists (select 1 from information_schema.columns
+          where table_schema = 'public' and table_name = 'profiles'
+            and column_name = 'onboarded_at')                                        as m0010;
 ```
 
 - **Verificar después de `0007`:** con el seed cargado, `pnpm verify:writes` confirma que el navegador ya no puede escribir `status` ni las columnas de IA (ver el [desfase de email conocido](testing.md#problemas-conocidos) entre este script y el seed).
@@ -99,7 +104,7 @@ El detalle del esquema está en [`../db/schema.md`](../db/schema.md).
 | `sofi_writes` | `sofia.seed@blog-ia.test` | `Seed-Password-123` |
 | `nico_tech` | `nicolas.seed@blog-ia.test` | `Seed-Password-123` |
 
-Requiere `.env.local` con las tres variables de Supabase y las migraciones `0001` a `0007`. Las cuentas se crean con el Admin API (la secret key) porque el registro público de Supabase rechaza dominios sin registro MX, como `example.com` o `test.com`. Los posts y notas se insertan con el cliente admin (desde `0007` el cliente ya no puede insertar un artículo publicado ni escribir fechas); perfil, tags, likes, lecturas y seguimientos se escriben con cada usuario logueado, bajo RLS. Para borrar estos datos, eliminar los usuarios desde Authentication en el dashboard de Supabase: el resto cae en cascada.
+Requiere `.env.local` con las tres variables de Supabase y las migraciones `0001` a `0010`. Las cuentas se crean con el Admin API (la secret key) porque el registro público de Supabase rechaza dominios sin registro MX, como `example.com` o `test.com`. Los posts y notas se insertan con el cliente admin (desde `0007` el cliente ya no puede insertar un artículo publicado ni escribir fechas); perfil (con `onboarded_at`, para que los usuarios de prueba no pasen por el paso de intereses), tags, likes, lecturas y seguimientos se escriben con cada usuario logueado, bajo RLS. Para borrar estos datos, eliminar los usuarios desde Authentication en el dashboard de Supabase: el resto cae en cascada.
 
 ## Scripts
 

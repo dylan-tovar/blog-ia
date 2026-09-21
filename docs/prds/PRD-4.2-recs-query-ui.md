@@ -7,11 +7,11 @@
 | Dueño sugerido / Mentor | D4 / D2 |
 | Depende de | [PRD-4.1](PRD-4.1-scoring-core.md) (`buildTagProfile`, `rankCandidates`), [PRD-3.2](PRD-3.2-feed-list.md) (la página `/` que la contiene) |
 | Código | `src/features/recommendations/queries.ts`, `src/features/recommendations/components/RecommendedSection.tsx`, `RecommendedCard.tsx`, `RecommendedSkeleton.tsx`, `row-styles.ts`; integración en `src/app/(public)/page.tsx` |
-| ADRs | [0004](../adr/0004-recomendaciones-scoring-determinista.md) |
+| ADRs | [0004](../adr/0004-recomendaciones-scoring-determinista.md), [0025](../adr/0025-intereses-en-onboarding.md) |
 
 ## Resumen
 
-Conecta el ranking ([4.1](PRD-4.1-scoring-core.md)) con la base de datos y con la pantalla: pide el historial de lectura y los artículos candidatos, calcula el ranking y dibuja una fila horizontal desplazable de tarjetas arriba del feed. La regla de oro: **si algo falla, la sección simplemente no aparece**; nunca rompe la portada.
+Conecta el ranking ([4.1](PRD-4.1-scoring-core.md)) con la base de datos y con la pantalla: pide el historial de lectura, los intereses elegidos en el onboarding y los artículos candidatos, calcula el ranking y dibuja una fila horizontal desplazable de tarjetas arriba del feed. La regla de oro: **si algo falla, la sección simplemente no aparece**; nunca rompe la portada.
 
 ## Qué necesitás entender antes
 
@@ -40,8 +40,10 @@ Orden de lectura: `queries.ts` (de abajo hacia arriba: `getRecommendedPosts` →
 en paralelo (Promise.all):
   historial  = últimas 1000 filas de reading_history del usuario, con author_id y tags de cada post
   candidatos = 200 artículos published (type = 'article') más recientes de OTROS autores, con sus tags
-si alguna falla -> lanza Error
-perfil  = buildTagProfile(historial, viewerId)                 # 4.1
+  intereses  = tag_id de user_interests del usuario (RLS: solo los propios)
+si falla el historial o los candidatos -> lanza Error
+si fallan los intereses -> console.error y se sigue sin ellos
+perfil  = withInterestTags(buildTagProfile(historial, viewerId), intereses)   # 4.1
 ranking = rankCandidates({ ..., limit: 10 })                   # 4.1
 si el ranking está vacío -> []
 hidratar: una 3ª consulta trae título, contenido y autor de esos 10 ids
@@ -65,13 +67,15 @@ devolver { id, title, excerpt, author } en el orden del ranking
 | Calcular en TypeScript sobre una ventana acotada, con 3 consultas simples | Una función pura fácil de probar; descartar SQL con agregación o una vista materializada es † (razón no registrada). Costo: no se ven artículos fuera de los 200 más recientes |
 | Recalcular en cada visita a `/`, sin caché | Refleja la última lectura sin invalidar nada †. Costo: tres consultas por carga (mitigado con `Suspense`) |
 | Nunca propagar errores | Un fallo del cálculo no debe romper la portada |
+| Los intereses son una señal extra y opcional | Si su lectura falla, el ranking sigue con el historial en vez de descartar toda la sección ([ADR 0025](../adr/0025-intereses-en-onboarding.md)) |
 | Solo artículos publicados de otros | Las notas no tienen tags; los propios no aportan |
 | No mostrar la sección con un filtro de tag activo | El usuario ya está viendo un subconjunto elegido †; el motivo no quedó registrado |
 
 ## Criterios de aceptación
 
 - [ ] Sin sesión, o con `?tag=` activo, la sección no aparece.
-- [ ] Con sesión y sin historial, aparecen artículos recientes de otros autores.
+- [ ] Con sesión y sin historial ni intereses, aparecen artículos recientes de otros autores.
+- [ ] Con sesión, sin historial y con intereses, aparecen primero los artículos que comparten tags con ellos.
 - [ ] Un artículo ya leído o propio no aparece.
 - [ ] Si la consulta falla (por ejemplo, base caída), la portada se muestra igual, sin la sección.
 - [ ] Mientras carga se ve el esqueleto; la fila se desplaza horizontalmente con "snap" en móvil.

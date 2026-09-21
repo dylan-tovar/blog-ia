@@ -7,7 +7,7 @@
 | Dueño sugerido / Mentor | D2 / — |
 | Depende de | Nada de código: es una función pura. Conceptualmente, los datos de [PRD-3](PRD-3-feed-follows.md) (`reading_history`) y [PRD-2.4](PRD-2.4-publish-dialog-tags.md) (tags) |
 | Lo usa | [PRD-4.2](PRD-4.2-recs-query-ui.md) (la consulta y la interfaz) |
-| Código | `src/features/recommendations/scoreByTags.ts`, `scoreByTags.test.ts`, `constants.ts` |
+| Código | `src/features/recommendations/scoreByTags.ts` (incluye `withInterestTags`), `scoreByTags.test.ts`, `constants.ts` |
 | ADRs | [0004](../adr/0004-recomendaciones-scoring-determinista.md) |
 
 ## Resumen
@@ -53,6 +53,10 @@ Recorre el historial de lecturas y devuelve dos conjuntos:
 
 Un tag cuenta **una sola vez** aunque haya sido leído en 50 artículos: es un conjunto (`Set`), no un contador.
 
+### 2b. `withInterestTags(tagIds, interestTagIds)`
+
+Une el perfil leído con los tags de los temas de interés que el usuario eligió en el onboarding ([ADR 0025](../adr/0025-intereses-en-onboarding.md)) y **devuelve un `Set` nuevo** (no muta el de entrada). Un interés cuenta igual que un tag leído, y un tag que está en ambos cuenta una sola vez. Con ella un usuario sin historial pero con intereses tiene un perfil no vacío.
+
 ### 3. `rankCandidates({ tagIds, readPostIds, candidates, viewerId, limit })`
 
 ```text
@@ -67,7 +71,7 @@ Detalles que importan:
 
 - El **desempate** en cadena: primero el puntaje; si empatan, el más reciente (`compareByRecency`); si empatan las fechas (o no tienen), el `id` (así el orden es **estable** entre ejecuciones).
 - Un post **sin fecha** de publicación se considera el más viejo (`Number.NEGATIVE_INFINITY`).
-- Si el usuario **no tiene historial**, todos puntúan 0 y el desempate por recencia devuelve los más nuevos: el "plan B" ocurre **de forma implícita**, no hay una rama especial.
+- Si el usuario **no tiene historial ni intereses**, todos puntúan 0 y el desempate por recencia devuelve los más nuevos: el "plan B" ocurre **de forma implícita**, no hay una rama especial.
 - Los candidatos con puntaje 0 también entran si sobra lugar, para que la sección no quede vacía sin necesidad.
 - No muta los datos que recibe (lo verifica un test).
 
@@ -87,7 +91,8 @@ Detalles que importan:
 
 ## Criterios de aceptación
 
-- [ ] Sin historial, devuelve los artículos más recientes de otros autores.
+- [ ] Sin historial ni intereses, devuelve los artículos más recientes de otros autores.
+- [ ] `withInterestTags` une intereses e historial sin duplicar y sin mutar el conjunto de entrada; un usuario solo con intereses recibe un ranking personalizado.
 - [ ] Con historial, los artículos que comparten más tags con lo leído aparecen primero.
 - [ ] Nunca devuelve un artículo ya leído ni uno propio.
 - [ ] A igual puntaje, el más reciente va primero; a igual fecha, el orden por `id` es estable.
@@ -113,7 +118,7 @@ Detalles que importan:
 
 1. ¿Qué significa que `rankCandidates` sea una función pura y qué ventaja da eso para probarla?
 2. ¿Por qué un tag leído 50 veces vale lo mismo que uno leído una vez?
-3. ¿Cómo se comporta el ranking para un usuario sin historial? ¿Dónde está el código de ese "plan B"?
+3. ¿Cómo se comporta el ranking para un usuario sin historial ni intereses? ¿Dónde está el código de ese "plan B"?
 4. Explicá el orden de desempate y por qué hace falta comparar por `id` al final.
 5. ¿Por qué se ignoran los tags de los artículos que el propio usuario escribió?
 6. ¿Por qué se descartó usar IA generativa para esto?
