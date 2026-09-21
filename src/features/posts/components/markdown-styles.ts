@@ -1,0 +1,2 @@
+export const ARTICLE_PROSE_CLASS =
+  "prose prose-invert max-w-none text-base leading-relaxed [overflow-wrap:anywhere] prose-headings:font-semibold prose-headings:text-foreground prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:before:content-none prose-code:after:content-none prose-pre:bg-muted prose-pre:text-foreground prose-blockquote:border-border prose-hr:border-border";
