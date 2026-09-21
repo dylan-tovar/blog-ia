@@ -25,5 +25,5 @@ Un username inexistente y una contraseña incorrecta devuelven el mismo `Credenc
 ## Consecuencias
 
 - **A favor:** el email no se filtra; el login por email sigue funcionando sin la secret key; los errores no permiten enumerar usuarios.
-- **En contra:** hay una segunda clave que proteger (`SUPABASE_SECRET_KEY` salta RLS); `signUp` chequea el username antes de crear el usuario y hay una carrera mínima entre el chequeo y el insert.
+- **En contra:** hay una segunda clave que proteger (`SUPABASE_SECRET_KEY` salta RLS); el username se valida al crear el perfil en `/onboarding` ([ADR 0024](0024-perfil-en-onboarding.md)) y lo garantiza el índice único (antes `signUp` lo chequeaba antes de crear el usuario, con una carrera mínima entre chequeo e insert).
 - **Cuándo revisar:** si se pasa a un trigger que cree el perfil (ver ADR 0003) o si Supabase ofrece login por identificador propio.

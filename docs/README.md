@@ -54,9 +54,9 @@ Lo que existe en el código hoy. Las limitaciones y pendientes están en la [tab
 
 | Área | Estado | Dónde |
 | :--- | :--- | :--- |
-| Autenticación (registro, login por email o username, logout) | Implementado ([ADR 0007](adr/0007-login-por-username-con-secret-key.md)) | `src/features/auth/` |
-| Protección de rutas privadas | Implementado: `proxy.ts` para `/settings`, `/editor` y `/posts`; `/profile` y `/activity` se protegen solas | `src/proxy.ts` |
-| Perfil (nombre y username editables) y perfil público de autor | Implementado; email y teléfono de `/settings` son solo lectura; sin avatar | `src/features/profile/` |
+| Autenticación (registro, onboarding de perfil, login por email o username, logout) | Implementado ([ADR 0007](adr/0007-login-por-username-con-secret-key.md)) | `src/features/auth/` |
+| Protección de rutas privadas | Implementado: `proxy.ts` para `/settings`, `/editor`, `/posts` y `/onboarding` (y lleva a `/onboarding` a quien no tiene perfil, [ADR 0024](adr/0024-perfil-en-onboarding.md)); `/profile` y `/activity` se protegen solas | `src/proxy.ts` |
+| Perfil (nombre y username editables) y perfil público de autor | Implementado; el email de `/settings` es solo lectura; sin avatar | `src/features/profile/` |
 | Interfaz: tema oscuro, barra superior e inferior, botón "+" | Implementado ([ADR 0008](adr/0008-tema-oscuro-y-shell-de-aplicacion.md)) | `src/components/shared/` |
 | Artículos: editor Tiptap con markdown, autoguardado, tags, publicar con moderación de IA | Implementado ([ADR 0010](adr/0010-editor-markdown.md), [ADR 0011](adr/0011-ia-con-gemini.md)) | `src/features/posts/`, `src/app/(editor)/` |
 | Notas (crear, editar, borrar, responder) y me gusta | Implementado ([ADR 0009](adr/0009-tipos-de-post-y-likes.md), [ADR 0015](adr/0015-notas-editables.md)) | `src/features/posts/`, `src/features/likes/` |

@@ -116,6 +116,8 @@ Los privilegios de columna sobre `posts` (`0007`) se suman a estas políticas; v
 
 No hay política de DELETE: nadie puede borrar perfiles desde la API.
 
+La fila la inserta la Server Action `completeOnboarding` cuando la persona completa `/onboarding`, no `signUp` ni un trigger ([ADR 0024](../adr/0024-perfil-en-onboarding.md)): una cuenta de `auth.users` puede existir un rato sin fila en `profiles`, y mientras tanto el proxy la retiene en `/onboarding`.
+
 `username` es público como el resto de `profiles`; el email **no** está en esta tabla. La función `public.login_email_for_username(text)` (`security definer`, `search_path` vacío) lee `auth.users` y devuelve el email de un username. Tiene `revoke` a `public`, `anon` y `authenticated`, y `grant execute` solo a `service_role`: únicamente el servidor con la secret key puede llamarla ([ADR 0007](../adr/0007-login-por-username-con-secret-key.md)). Para verificarlo, una llamada RPC con la publishable key debe fallar con `permission denied`.
 
 ## `posts`
@@ -279,4 +281,4 @@ Bucket público (`0008`) para las imágenes de los artículos, con límite de 2 
 - Índices de `0003_feed.sql`: `posts (published_at desc) where status = 'published'` (orden del feed), `post_tags (tag_id)` (filtro por tag; la PK de `post_tags` empieza por `post_id`), `subscriptions (author_id)` y `reading_history (user_id)`.
 - Índices de `0005_post_types_and_likes.sql`: `posts (parent_post_id) where parent_post_id is not null` (notas de un post) y `likes (post_id)` (conteo de likes).
 - Además, los índices implícitos de las claves primarias y de los `unique`.
-- Un solo trigger: `posts_invalidate_ai_cache` (`0007`, ver `posts`). La fila de `profiles` no se crea por trigger: la inserta la action `signUp`.
+- Un solo trigger: `posts_invalidate_ai_cache` (`0007`, ver `posts`). La fila de `profiles` no se crea por trigger: la inserta la action `completeOnboarding` ([ADR 0024](../adr/0024-perfil-en-onboarding.md)).

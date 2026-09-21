@@ -36,7 +36,7 @@ Los tests unitarios son la red de seguridad confiable del proyecto. Los tests **
 Orden recomendado para leer:
 
 1. `playwright.config.ts`: un proyecto `chromium`, `baseURL` `http://localhost:3000`, y arranca `pnpm dev` solo (o reutiliza el que ya corre). Sin reintentos en local.
-2. `e2e/helpers.ts`: `register(page)` llena `/register` con un email y un username únicos; `createDraft(page)` debería dejarte dentro del editor con un borrador.
+2. `e2e/helpers.ts`: `register(page)` llena `/register` (email, contraseña y confirmación), completa `/onboarding` (nombre y username únicos) y espera el feed; `createDraft(page)` debería dejarte dentro del editor con un borrador.
 3. `e2e/posts.spec.ts` y `e2e/feed.spec.ts`: crean un borrador, lo publican y comprueban el feed.
 4. `e2e/shell.spec.ts`: barra superior, barra inferior y botón "+".
 5. `e2e/editor-ai-drawer.spec.ts`: el más largo. **Intercepta** `POST /api/ai/chat` y responde NDJSON armado a mano, así que no llama a Gemini. Todos sus tests arrancan con `createDraft` en un `beforeEach`, por eso el desfase de ese helper los rompe a todos.

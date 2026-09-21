@@ -32,3 +32,7 @@ En el código: `proxy.ts` define `PROTECTED_PATHS = ["/settings", "/editor", "/p
 
 - **`PROTECTED_PATHS` sigue siendo `/settings`, `/editor`, `/posts`.** Las páginas `/profile` y `/activity` no están en la lista: cada una redirige a `/login` por sí misma (`getViewer()`), y `/api/ai/*` responde 401 JSON desde su propio código. Es coherente con la decisión (el proxy es UX), pero significa que "ruta privada" no se lee en un solo lugar.
 - **La defensa de datos se reforzó por columna:** además de RLS, el cliente perdió los privilegios de escritura sobre `status`, `published_at`, `rejection_reason` y `ai_*` ([ADR 0012](0012-integridad-de-escritura-de-posts.md)). El cliente admin (secret key) ya no se usa solo para el login por username: ver [ADR 0007](0007-login-por-username-con-secret-key.md) y [arquitectura](../architecture/overview.md).
+
+## Actualización (2026-09-21)
+
+- **El proxy ya no es solo un redirector a `/login`.** Además consulta `profiles` (una vez por navegación `GET` de un usuario con sesión) y lleva a `/onboarding` a quien aún no tiene perfil ([ADR 0024](0024-perfil-en-onboarding.md)). Sigue siendo UX y no seguridad: si la consulta falla, deja pasar, y RLS sigue siendo el límite. La lista de rutas privadas (ahora con `/onboarding`) vive en `src/features/auth/onboarding-gate.ts`.
