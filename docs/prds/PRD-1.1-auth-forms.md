@@ -40,8 +40,8 @@ Orden de lectura:
 
 | Schema | Campos y reglas |
 | :--- | :--- |
-| `registerSchema` | `email` válido; `password` de al menos 8 caracteres; `confirmPassword`, que debe ser igual (si no: "Las contraseñas no coinciden.", con el error en `confirmPassword`) |
-| `loginSchema` | `identifier` (recortado, entre 1 y 254 caracteres; puede ser email o usuario); `password` (no vacía) |
+| `registerSchema` | `email` válido; `password` fuerte (8 o más caracteres, minúscula, mayúscula, número y símbolo; máximo 72 bytes), validada con las reglas de `password-rules.ts`, con un mensaje por regla incumplida; `confirmPassword`, que debe ser igual (si no: "Las contraseñas no coinciden.", con el error en `confirmPassword`) |
+| `loginSchema` | `identifier` (recortado, entre 1 y 254 caracteres; puede ser email o usuario); `password` (no vacía). Es laxo a propósito: no aplica las reglas de fortaleza para no bloquear cuentas con contraseñas anteriores |
 
 Los mensajes de error están escritos en español dentro del propio schema.
 
@@ -58,7 +58,7 @@ Los mensajes de error están escritos en español dentro del propio schema.
 - Si `state.error` existe, se muestra debajo. Mientras `pending`, el botón queda deshabilitado y muestra un `Loader2` girando.
 - Prop `inDrawer`: cuando está dentro del cajón, el pie usa `DrawerFooter` y no muestra el enlace "Registrate" (el cajón ya tiene el suyo).
 
-**4. `RegisterForm.tsx`.** Igual estructura con `useActionState(signUp, undefined)`. Campos: email (`autoComplete="email"`), contraseña y confirmar contraseña (`minLength={8}`, `autoComplete="new-password"` ambos). Al terminar, `signUp` redirige a `/onboarding`. El error del formulario se anuncia con `role="alert"`.
+**4. `RegisterForm.tsx`.** Igual estructura con `useActionState(signUp, undefined)`. Campos: email (`autoComplete="email"`), contraseña y confirmar contraseña (`PasswordField`: controlados, `autoComplete="new-password"` y botón para mostrar/ocultar). `PasswordStrength` muestra una barra de fuerza y la lista de requisitos, y el formulario avisa en vivo si las contraseñas no coinciden. "Crear cuenta" queda deshabilitado hasta que se cumplan todas las reglas y coincidan; el servidor sigue siendo la autoridad. Al terminar, `signUp` redirige a `/onboarding`. El error del formulario se anuncia con `role="alert"`.
 
 **4b. `OnboardingForm.tsx`** (en `features/profile/`, con `useActionState(completeOnboarding, undefined)`). Campos: nombre para mostrar y nombre de usuario (con `minLength`, `maxLength`, `pattern="[A-Za-z0-9_]+"`, un texto de ayuda y `autoComplete="off"` para que los gestores de contraseñas no lo llenen con el email). Botón "Continuar". La página `/onboarding` agrega un botón "Cerrar sesión" para quien no tiene perfil, y redirige a `/login` sin sesión y a `/` si el perfil ya existe.
 
@@ -72,7 +72,7 @@ Los mensajes de error están escritos en español dentro del propio schema.
 
 | Situación | Mensaje |
 | :--- | :--- |
-| Dato inválido | El primer mensaje del schema (por ejemplo "La contraseña debe tener al menos 8 caracteres.") |
+| Dato inválido | El primer mensaje del schema (por ejemplo "La contraseña debe tener al menos 8 caracteres." o "La contraseña debe incluir un símbolo.") |
 | Contraseñas distintas al registrarse | "Las contraseñas no coinciden." |
 | Usuario ya usado (en `/onboarding`) | "Ese nombre de usuario ya está en uso." |
 | Email ya registrado | "Ya existe una cuenta con este email." |
@@ -93,7 +93,7 @@ Los mensajes de error están escritos en español dentro del propio schema.
 
 ## Criterios de aceptación
 
-- [ ] `/register` muestra tres campos (email, contraseña, confirmar contraseña) y "Crear cuenta". Un registro válido termina en `/onboarding`, que pide nombre y usuario y termina en `/`.
+- [ ] `/register` muestra tres campos (email, contraseña, confirmar contraseña) y "Crear cuenta". Con una contraseña que no cumple las reglas o que no coincide, el botón queda deshabilitado. Un registro válido termina en `/onboarding`, que pide nombre y usuario y termina en `/`.
 - [ ] `/login` acepta email **o** usuario (sin distinguir mayúsculas en el usuario).
 - [ ] Un dato inválido muestra el mensaje en español debajo de los campos, sin recargar toda la página.
 - [ ] Mientras se envía, el botón está deshabilitado y muestra el indicador de carga.
@@ -103,7 +103,7 @@ Los mensajes de error están escritos en español dentro del propio schema.
 
 ## Cómo verificarla a mano
 
-1. `pnpm dev` y abrir `/register`. Enviar el formulario con una contraseña de 3 caracteres: el navegador lo frena antes por `minLength` (validación de ayuda). El mensaje de Zod solo se ve si el dato llega al servidor.
+1. `pnpm dev` y abrir `/register`. Escribir una contraseña de 3 caracteres: la lista de requisitos marca lo que falta, la barra queda en "Débil" y "Crear cuenta" sigue deshabilitado. Escribir una confirmación distinta: aparece "Las contraseñas no coinciden." al instante. El mensaje de Zod solo se ve si el dato llega al servidor.
 2. Registrar un usuario nuevo con datos válidos: termina en `/onboarding`; completar nombre y usuario y llegar a `/` con sesión iniciada.
 3. Cerrar sesión desde el menú de cuenta. En `/login`, entrar con el **email**; salir; entrar con el **usuario en mayúsculas**.
 4. Entrar con una contraseña incorrecta y con un usuario inventado: el mensaje debe ser el mismo.
@@ -124,7 +124,7 @@ Los mensajes de error están escritos en español dentro del propio schema.
 ## Preguntas de autoevaluación
 
 1. ¿Qué pasa exactamente al pulsar "Crear cuenta"? ¿En qué archivo empieza el viaje de los datos y en cuál se valida?
-2. ¿Por qué la validación de Zod del servidor es necesaria aunque el navegador ya tenga `minLength` y `pattern`?
+2. ¿Por qué la validación de Zod del servidor es necesaria aunque el formulario ya deshabilite el botón según las reglas y el navegador tenga `pattern`?
 3. ¿Cómo distingue `isEmailIdentifier` un email de un usuario y por qué eso es seguro?
 4. ¿Qué es un *open redirect* y cómo lo evita `resolveAuthRedirect`?
 5. ¿Para qué sirve el campo oculto `redirectTo` y quién lo llena?

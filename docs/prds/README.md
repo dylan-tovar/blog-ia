@@ -132,7 +132,7 @@ Los PRDs 0 a 4 se escribieron **antes** de construir. Estas son las diferencias 
 | Lo que decía el diseño original | Lo que hay hoy | Dónde |
 | :--- | :--- | :--- |
 | El feed vive en `/feed` | Vive en `/`; `/feed` devuelve 404 | [PRD-3](PRD-3-feed-follows.md) |
-| Registro con email, contraseña y nombre | El registro pide email y contraseña (con confirmación); el nombre y un **username** único se piden después en `/onboarding`. Se inicia sesión con email o username | [PRD-1](PRD-1-auth.md) |
+| Registro con email, contraseña y nombre | El registro pide email y una contraseña fuerte (con confirmación); el nombre y un **username** único se piden después en `/onboarding`. Se inicia sesión con email o username | [PRD-1](PRD-1-auth.md) |
 | Los tags se ven en tarjetas, post y perfil, y filtran el feed con chips | No se muestran en tarjetas ni en el post; se guardan, alimentan las recomendaciones, se filtran por URL y hay chips solo en `/explore` | [PRD-2](PRD-2-posts.md), [PRD-3](PRD-3-feed-follows.md), [PRD-9](PRD-9-explore-activity.md) |
 | "Nuevo post" crea la fila y abre el editor | La fila se crea en el **primer autoguardado con contenido** | [PRD-2](PRD-2-posts.md) |
 | Publicar pasa el post a `pending_review` y queda pendiente de IA | Publicar **reserva**, **modera con Gemini** y termina en `published` o `rejected` (o no publica si hay límite de peticiones) | [PRD-2](PRD-2-posts.md), [PRD-5](PRD-5-ai-author.md) |

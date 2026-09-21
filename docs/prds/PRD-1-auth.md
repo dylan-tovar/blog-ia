@@ -20,7 +20,7 @@ Este PRD se reparte en tres paquetes que se pueden asignar por separado ([repart
 
 ## Resumen
 
-Una persona se registra con **email y contraseña (con confirmación)**, completa su perfil en `/onboarding` con **nombre para mostrar y nombre de usuario (`username`)**, inicia sesión con **email o username**, y edita su nombre y username desde `/settings`. Las políticas RLS de `profiles` quedan definidas aquí porque todos los PRDs siguientes las heredan. El username existe para dar una identidad pública corta (`@usuario`); como Supabase solo autentica por email, se resuelve a email **en el servidor** sin exponer nunca el email.
+Una persona se registra con **email y contraseña (fuerte y con confirmación)**, completa su perfil en `/onboarding` con **nombre para mostrar y nombre de usuario (`username`)**, inicia sesión con **email o username**, y edita su nombre y username desde `/settings`. Las políticas RLS de `profiles` quedan definidas aquí porque todos los PRDs siguientes las heredan. El username existe para dar una identidad pública corta (`@usuario`); como Supabase solo autentica por email, se resuelve a email **en el servidor** sin exponer nunca el email.
 
 ## Problema y objetivo
 
@@ -54,7 +54,7 @@ flowchart TD
   A -->|ok| R[redirect a /onboarding]
 ```
 
-* **Validación** (`src/features/auth/schemas.ts`): email válido, contraseña de al menos 8 caracteres y confirmación idéntica ("Las contraseñas no coinciden.", error sobre `confirmPassword`).
+* **Validación** (`src/features/auth/schemas.ts`): email válido, contraseña fuerte (8 o más caracteres, minúscula, mayúscula, número y símbolo, y como máximo 72 bytes por el límite de bcrypt; reglas en `password-rules.ts`, compartidas con el indicador del formulario) y confirmación idéntica ("Las contraseñas no coinciden.", error sobre `confirmPassword`). `loginSchema` **no** aplica estas reglas a propósito: las cuentas creadas antes deben poder seguir entrando.
 * `signUp` **no crea el perfil**: solo la cuenta en Auth. No hay trigger en la base.
 
 ### Onboarding (`completeOnboarding`, `src/features/profile/actions.ts`)
@@ -151,7 +151,7 @@ Las Server Actions que escriben usan `requireUser()` (`src/lib/auth.ts`), que re
 
 ## Criterios de aceptación
 
-- [x] Un usuario nuevo se registra con email y contraseña (con confirmación), completa nombre y usuario en `/onboarding`, termina en `/` y tiene una fila en `profiles`.
+- [x] Un usuario nuevo se registra con email y una contraseña fuerte (con confirmación), completa nombre y usuario en `/onboarding`, termina en `/` y tiene una fila en `profiles`.
 - [x] Quien tiene sesión y no tiene perfil es llevado a `/onboarding` desde cualquier página; quien ya lo tiene es llevado de `/onboarding` a `/`.
 - [x] Puede iniciar sesión con su email **o** con su username (sin distinguir mayúsculas), y el mismo error genérico aparece con contraseña incorrecta, usuario inexistente o email inexistente.
 - [x] Un username o email repetido muestra un mensaje amable (no el error crudo de Supabase).

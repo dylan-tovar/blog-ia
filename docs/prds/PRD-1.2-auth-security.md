@@ -50,7 +50,7 @@ La parte del sistema donde una equivocación es un problema de seguridad: cómo 
 
 ```text
 signUp (features/auth/actions.ts)
-1. registerSchema.safeParse(formData)          -> si falla, { error } con el primer mensaje
+1. registerSchema.safeParse(formData)          -> si falla, { error } con el primer mensaje (reglas de contraseña incluidas)
 2. supabase.auth.signUp({ email, password })   -> user_already_exists = "Ya existe una cuenta con este email."
 3. redirect("/onboarding")                     -> no se crea el perfil
 

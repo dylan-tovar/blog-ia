@@ -130,8 +130,8 @@ Las funciones de IA del editor van por **Route Handlers** porque las Server Acti
 | Cada request (excepto estáticos e imágenes, según `config.matcher`) | `proxy.ts` crea un cliente `@supabase/ssr` con las cookies del request y llama a `auth.getUser()`, lo que refresca la sesión |
 | Ruta que empieza con `/settings`, `/editor`, `/posts` o `/onboarding` sin usuario | Redirección a `/login` |
 | `GET` de página con usuario (no `POST`, no `/api`) | Una consulta `select id` a `profiles`: sin fila redirige a `/onboarding`; con fila, `/onboarding` redirige a `/`. Si la consulta falla, deja pasar ([ADR 0024](../adr/0024-perfil-en-onboarding.md)) |
-| Registro (`signUp`) | `supabase.auth.signUp` con email y contraseña (más su confirmación) y redirección a `/onboarding`. La fila de `profiles` (nombre y username) la inserta `completeOnboarding` ([ADR 0024](../adr/0024-perfil-en-onboarding.md)). No hay trigger en la base |
-| Login (`signIn`) | El identificador es email (si contiene `@`) o username. Un username se resuelve a email en el servidor con la secret key ([ADR 0007](../adr/0007-login-por-username-con-secret-key.md)); luego `signInWithPassword`. Ante cualquier fallo de credenciales responde `Credenciales inválidas.` |
+| Registro (`signUp`) | `supabase.auth.signUp` con email y contraseña (fuerte, más su confirmación; reglas en `password-rules.ts`) y redirección a `/onboarding`. La fila de `profiles` (nombre y username) la inserta `completeOnboarding` ([ADR 0024](../adr/0024-perfil-en-onboarding.md)). No hay trigger en la base |
+| Login (`signIn`) | El identificador es email (si contiene `@`) o username. Un username se resuelve a email en el servidor con la secret key ([ADR 0007](../adr/0007-login-por-username-con-secret-key.md)); luego `signInWithPassword`. Ante cualquier fallo de credenciales responde `Credenciales inválidas.` `loginSchema` no exige la fortaleza de contraseña del registro, a propósito |
 | Logout (`signOut`) | `auth.signOut()` y redirección a `/login` |
 
 Clientes de Supabase:

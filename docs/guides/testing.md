@@ -54,7 +54,7 @@ Convenciones observadas:
 
 | Archivo | Tests | Qué cubre |
 | :--- | :--- | :--- |
-| `e2e/auth.spec.ts` | 19 | Protección de rutas (incluye `/onboarding`), feed público, registro con onboarding, contraseñas distintas, redirecciones del proxy sin/con perfil, logout sin perfil, login por email y por username (ignora mayúsculas, error genérico en los tres casos de fallo), logout, edición de nombre y username en `/settings`, duplicados de email (en `/register`) y de username (en `/onboarding`) |
+| `e2e/auth.spec.ts` | 22 | Protección de rutas (incluye `/onboarding`), feed público, registro con onboarding, contraseñas distintas (aviso en vivo y botón deshabilitado), requisitos de contraseña, mostrar/ocultar, redirecciones del proxy sin/con perfil, logout sin perfil, login por email y por username (ignora mayúsculas, error genérico en los tres casos de fallo), logout, edición de nombre y username en `/settings`, duplicados de email (en `/register`) y de username (en `/onboarding`) |
 | `e2e/posts.spec.ts` | 8 | Borrador con autoguardado, tags sin duplicados y reutilizables entre usuarios, error al publicar vacío, publicación, 404 para borradores ajenos e ids inválidos |
 | `e2e/feed.spec.ts` | 10 | El feed vive en `/` y `/feed` no existe, filtro por tag por URL, tags que no se muestran a lectores, borradores fuera del feed, página de autor (404), seguir y dejar de seguir |
 | `e2e/shell.spec.ts` | 8 | Barra superior e inferior, botón "+", ausencia de scroll horizontal a 360 px, navegación en escritorio |

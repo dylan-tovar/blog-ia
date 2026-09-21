@@ -8,7 +8,7 @@ Para levantar el proyecto hace falta un proyecto de Supabase con las nueve migra
 2. Crear `.env.local` en la raíz con las variables de [la tabla](#variables-de-entorno).
 3. Aplicar las migraciones de `supabase/migrations/` en orden (`0001` a `0009`) en el SQL Editor de Supabase ([procedimiento](#migraciones)). (ESTO SOLO ES LA PRIMERA VEZ, YA ESTAN APLICADAS EN EL PROYECTO DE SUPABASE)
 4. Opcional, para ver el feed con contenido: `pnpm seed:dev`. (YA TIENE CONTENIDO, NO ES NECESARIO EN NUESTRO CASO)
-5. Levantar el servidor: `pnpm dev` y abrir <http://localhost:3000/register>. El registro pide email y contraseña; después `/onboarding` pide nombre y username y crea el perfil ([ADR 0024](../adr/0024-perfil-en-onboarding.md)).
+5. Levantar el servidor: `pnpm dev` y abrir <http://localhost:3000/register>. El registro pide email y una contraseña fuerte (8+ caracteres con minúscula, mayúscula, número y símbolo); después `/onboarding` pide nombre y username y crea el perfil ([ADR 0024](../adr/0024-perfil-en-onboarding.md)).
 
 ## Requisitos
 
@@ -125,6 +125,10 @@ pnpm dlx shadcn@latest add <componente>
 ```
 
 Ver [ADR 0005](../adr/0005-shadcn-ui-como-primitivas.md).
+
+## Política de contraseñas en Supabase
+
+El formulario y `registerSchema` exigen contraseñas fuertes, pero Zod se puede saltear llamando a Supabase Auth directo con la clave pública. Para que la regla valga también ahí, alineá la política del dashboard (Authentication -> Providers -> Email o Password): largo mínimo de 8, caracteres requeridos (minúscula, mayúscula, número y símbolo) y, si tu plan lo permite, la protección contra contraseñas filtradas (*leaked password protection*). Esta configuración no vive en el repo.
 
 ## Siguiente paso
 
