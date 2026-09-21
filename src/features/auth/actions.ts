@@ -8,7 +8,9 @@ import { isEmailIdentifier, resolveAuthRedirect } from "@/features/auth/utils";
 
 // `email` lets the register form keep what was typed: React resets uncontrolled
 // forms after an action, which would otherwise wipe it on a validation error.
-export type AuthActionState = { error?: string; email?: string } | undefined;
+export type AuthActionState =
+  | { error?: string; notice?: string; email?: string }
+  | undefined;
 
 // Reserved TLD (RFC 2606): never resolves to a real account.
 const UNKNOWN_USER_EMAIL = "unknown-user@example.invalid";
@@ -34,7 +36,7 @@ export async function signUp(
   const { email, password } = parsed.data;
   const supabase = await createClient();
 
-  const { error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({ email, password });
 
   if (error) {
     // Keep the typed email: React resets the form after the action returns.
@@ -50,6 +52,16 @@ export async function signUp(
       };
     }
     return { error: "No pudimos crear tu cuenta. Intentá de nuevo.", email };
+  }
+
+  // With "Confirm email" enabled in Supabase there is no session yet, and
+  // /onboarding would silently bounce to /login. Say what to do instead.
+  if (!data.session) {
+    return {
+      notice:
+        "Te enviamos un email para confirmar tu cuenta. Confirmalo y después iniciá sesión.",
+      email,
+    };
   }
 
   // The profile (display name + username) is created in /onboarding.
