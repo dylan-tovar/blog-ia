@@ -16,6 +16,16 @@ async function publishPost(page: Page, title: string, tag: string) {
   return id;
 }
 
+// Follows the author from their profile page. The reader must not follow anyone yet, so
+// the home is still the global feed and lists the author's fresh post.
+async function followAuthorFromHome(page: Page, authorName: string) {
+  await page.goto("/");
+  await page.getByRole("link", { name: authorName }).first().click();
+  await expect(page).toHaveURL(/\/author\/[0-9a-f-]{36}$/);
+  await page.getByRole("button", { name: "Seguir" }).click();
+  await expect(page.getByRole("button", { name: "Dejar de seguir" })).toBeVisible();
+}
+
 test.describe("feed", () => {
   test("lives at the root and /feed no longer exists", async ({ page }) => {
     expect((await page.goto("/"))?.status()).toBe(200);
@@ -48,7 +58,7 @@ test.describe("feed", () => {
     await expect(page.getByText(`Post con tag ${suffix}`)).toBeVisible();
 
     await page.goto(`/?tag=${tag}-otro`);
-    await expect(page.getByText("No hay posts publicados con ese tag.")).toBeVisible();
+    await expect(page.getByText("No hay publicaciones con ese tag.")).toBeVisible();
   });
 
   test("tags are stored but never shown to readers", async ({ page, browser }) => {
@@ -85,6 +95,78 @@ test.describe("feed", () => {
 
     await page.goto("/");
     await expect(page.getByText(title)).toHaveCount(0);
+  });
+});
+
+test.describe("following feed", () => {
+  test("a reader who follows someone sees only followed authors on the home", async ({
+    page,
+    browser,
+  }) => {
+    const suffix = Date.now();
+    const followedName = `Seguido ${suffix}`;
+    await register(page, followedName);
+    await publishPost(page, `Post seguido ${suffix}`, `e2e-a-${suffix}`);
+
+    const stranger = await browser.newPage();
+    await register(stranger, `Ajeno ${suffix}`);
+    await publishPost(stranger, `Post ajeno ${suffix}`, `e2e-b-${suffix}`);
+
+    const reader = await browser.newPage();
+    await register(reader, `Lector ${suffix}`);
+    await followAuthorFromHome(reader, followedName);
+
+    // One followed post is fewer than the interleave interval, so no recommendation
+    // shows up: the stranger's article must be absent.
+    await reader.goto("/");
+    await expect(reader.getByText(`Post seguido ${suffix}`)).toBeVisible();
+    await expect(reader.getByText(`Post ajeno ${suffix}`)).toHaveCount(0);
+    // The carousel is replaced by "Recomendado" posts inside the feed.
+    await expect(reader.getByRole("heading", { name: "Recomendados para ti" })).toHaveCount(0);
+
+    await reader.close();
+    await stranger.close();
+  });
+
+  test("a reader who follows nobody keeps the global feed", async ({ page, browser }) => {
+    const suffix = Date.now();
+    await register(page, `Publica ${suffix}`);
+    await publishPost(page, `Post global ${suffix}`, `e2e-${suffix}`);
+
+    const reader = await browser.newPage();
+    await register(reader, `Sin seguidos ${suffix}`);
+    await reader.goto("/");
+    await expect(reader.getByText(`Post global ${suffix}`)).toBeVisible();
+    await expect(
+      reader.getByText("Las personas que seguís todavía no publicaron nada."),
+    ).toHaveCount(0);
+    await reader.close();
+  });
+
+  test("the tag filter stays global even for a reader who follows someone", async ({
+    page,
+    browser,
+  }) => {
+    const suffix = Date.now();
+    const followedName = `Seguido tag ${suffix}`;
+    const tag = `e2e-tag-${suffix}`;
+    await register(page, followedName);
+    await publishPost(page, `Post seguido tag ${suffix}`, `e2e-a-${suffix}`);
+
+    const stranger = await browser.newPage();
+    await register(stranger, `Ajeno tag ${suffix}`);
+    await publishPost(stranger, `Post ajeno tag ${suffix}`, tag);
+
+    const reader = await browser.newPage();
+    await register(reader, `Lector tag ${suffix}`);
+    await followAuthorFromHome(reader, followedName);
+
+    await reader.goto(`/?tag=${tag}`);
+    await expect(reader.getByText(`Post ajeno tag ${suffix}`)).toBeVisible();
+    await expect(reader.getByText("Recomendado", { exact: true })).toHaveCount(0);
+
+    await reader.close();
+    await stranger.close();
   });
 });
 
