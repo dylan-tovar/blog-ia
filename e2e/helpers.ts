@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
-export const PASSWORD = "e2e-password-123";
+export const PASSWORD = "E2e-Password-123!";
 
 // The feed is the home page: "/" with an optional query string.
 export const HOME_URL = /^https?:\/\/[^/]+\/(\?.*)?$/;

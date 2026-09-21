@@ -52,13 +52,58 @@ test.describe("auth flows", () => {
     await expect(page).toHaveURL(HOME_URL);
   });
 
-  test("rejects mismatched passwords on signup", async ({ page }) => {
+  test("flags mismatched passwords live and blocks the submit", async ({ page }) => {
     await page.goto("/register");
     await page.getByLabel("Email").fill(uniqueEmail());
     await page.getByLabel("Contraseña", { exact: true }).fill(PASSWORD);
-    await page.getByLabel("Confirmar contraseña").fill(`${PASSWORD}-x`);
-    await page.getByRole("button", { name: "Crear cuenta" }).click();
+    const confirm = page.getByLabel("Confirmar contraseña");
+    await confirm.fill(`${PASSWORD}-x`);
+
     await expect(page.getByText("Las contraseñas no coinciden.")).toBeVisible();
+    await expect(confirm).toHaveAttribute("aria-invalid", "true");
+    await expect(page.getByRole("button", { name: "Crear cuenta" })).toBeDisabled();
+
+    await confirm.fill(PASSWORD);
+    await expect(page.getByText("Las contraseñas no coinciden.")).toBeHidden();
+    await expect(page.getByText("Las contraseñas coinciden")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Crear cuenta" })).toBeEnabled();
+  });
+
+  test("ticks the password requirements as they are met", async ({ page }) => {
+    await page.goto("/register");
+    const password = page.getByLabel("Contraseña", { exact: true });
+    const requirements = page.locator("#password-requirements");
+
+    await password.fill("abc");
+    await expect(requirements).toContainText("Pendiente: Al menos 8 caracteres");
+    await expect(requirements).toContainText("Cumplido: Una minúscula");
+    await expect(requirements).toContainText("Pendiente: Una mayúscula");
+    await expect(page.getByText("Débil")).toBeVisible();
+
+    await password.fill("Abcdef1!");
+    await expect(requirements).not.toContainText("Pendiente");
+    await expect(page.getByText("Fuerte")).toBeVisible();
+  });
+
+  test("keeps the submit disabled while the password is weak", async ({ page }) => {
+    await page.goto("/register");
+    await page.getByLabel("Email").fill(uniqueEmail());
+    await page.getByLabel("Contraseña", { exact: true }).fill("password1");
+    await page.getByLabel("Confirmar contraseña").fill("password1");
+
+    await expect(page.getByText("Las contraseñas no coinciden.")).toBeHidden();
+    await expect(page.getByRole("button", { name: "Crear cuenta" })).toBeDisabled();
+  });
+
+  test("shows and hides the passwords", async ({ page }) => {
+    await page.goto("/register");
+    const password = page.getByLabel("Contraseña", { exact: true });
+    await expect(password).toHaveAttribute("type", "password");
+
+    await page.getByRole("button", { name: "Mostrar contraseña" }).click();
+    await expect(password).toHaveAttribute("type", "text");
+    await page.getByRole("button", { name: "Ocultar contraseña" }).click();
+    await expect(password).toHaveAttribute("type", "password");
   });
 
   test("a user without a profile is sent to /onboarding from a protected page", async ({
