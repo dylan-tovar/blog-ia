@@ -2,7 +2,7 @@ import { AUTHOR_EMBED } from "@/features/posts/queries";
 import { excerpt } from "@/features/posts/utils";
 import { createClient } from "@/lib/supabase/server";
 import { CANDIDATE_WINDOW, HISTORY_LIMIT, RECOMMENDATIONS_LIMIT } from "./constants";
-import { buildTagProfile, rankCandidates } from "./scoreByTags";
+import { buildTagProfile, rankCandidates, withInterestTags } from "./scoreByTags";
 
 export type RecommendedPost = {
   id: string;
@@ -14,7 +14,7 @@ export type RecommendedPost = {
 async function loadRecommendations(viewerId: string): Promise<RecommendedPost[]> {
   const supabase = await createClient();
 
-  const [historyResult, candidatesResult] = await Promise.all([
+  const [historyResult, candidatesResult, interestsResult] = await Promise.all([
     supabase
       .from("reading_history")
       .select("post_id, posts(author_id, post_tags(tag_id))")
@@ -30,6 +30,7 @@ async function loadRecommendations(viewerId: string): Promise<RecommendedPost[]>
       .order("published_at", { ascending: false, nullsFirst: false })
       .order("id")
       .limit(CANDIDATE_WINDOW),
+    supabase.from("user_interests").select("tag_id").eq("user_id", viewerId),
   ]);
 
   if (historyResult.error) {
@@ -38,8 +39,16 @@ async function loadRecommendations(viewerId: string): Promise<RecommendedPost[]>
   if (candidatesResult.error) {
     throw new Error(`No pudimos leer los candidatos: ${candidatesResult.error.message}`);
   }
+  // Interests are an extra signal: without them the ranking falls back to history only.
+  if (interestsResult.error) {
+    console.error("Recommendations: could not read interests", interestsResult.error.message);
+  }
 
-  const { readPostIds, tagIds } = buildTagProfile(historyResult.data ?? [], viewerId);
+  const { readPostIds, tagIds: readTagIds } = buildTagProfile(historyResult.data ?? [], viewerId);
+  const tagIds = withInterestTags(
+    readTagIds,
+    (interestsResult.error ? [] : (interestsResult.data ?? [])).map(({ tag_id }) => tag_id),
+  );
   const ranked = rankCandidates({
     tagIds,
     readPostIds,

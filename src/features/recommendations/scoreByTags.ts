@@ -33,6 +33,12 @@ export function buildTagProfile(history: HistoryRow[], viewerId: string) {
   return { readPostIds, tagIds };
 }
 
+// Chosen interests count like read tags: they seed the profile of users with little
+// or no history. Returns a new set.
+export function withInterestTags(tagIds: Set<string>, interestTagIds: string[]) {
+  return new Set([...tagIds, ...interestTagIds]);
+}
+
 function scoreOf(candidate: Candidate, tagIds: Set<string>) {
   const postTagIds = new Set((candidate.post_tags ?? []).map(({ tag_id }) => tag_id));
   let score = 0;
