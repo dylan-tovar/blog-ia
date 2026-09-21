@@ -52,6 +52,10 @@ export function isOwnCoverImage(url: string, supabaseUrl: string, userId: string
   );
 }
 
+export function filterOwnCoverImages(urls: string[], supabaseUrl: string, userId: string): string[] {
+  return urls.filter((url) => isOwnCoverImage(url, supabaseUrl, userId));
+}
+
 const CODE_SPANS = /(```|~~~)[\s\S]*?(?:\1|$)|`[^`\n]*`/g;
 const MARKDOWN_IMAGE =
   /!\[[^\]]*\]\(\s*(?:<([^>\n]+)>|([^)\s]+))(?:\s+(?:"[^"]*"|'[^']*'))?\s*\)/g;

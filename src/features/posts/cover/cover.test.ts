@@ -6,6 +6,7 @@ import {
 } from "@/features/posts/cover/cover-palette";
 import {
   extractImageUrls,
+  filterOwnCoverImages,
   isOwnCoverImage,
   resolveCover,
 } from "@/features/posts/cover/cover";
@@ -147,5 +148,20 @@ describe("isOwnCoverImage", () => {
 
   it("rejects a folder that only shares the user id as a prefix", () => {
     expect(isOwnCoverImage(publicUrl(`${USER}evil`), SUPABASE, USER)).toBe(false);
+  });
+});
+
+describe("filterOwnCoverImages", () => {
+  const mine = publicUrl(USER, "a-10x10.webp");
+  const mine2 = publicUrl(USER, "b-10x10.webp");
+  const theirs = publicUrl(OTHER, "c-10x10.webp");
+
+  it("keeps only images from the author's own folder, in order", () => {
+    expect(filterOwnCoverImages([mine, theirs, mine2], SUPABASE, USER)).toEqual([mine, mine2]);
+  });
+
+  it("returns an empty list when nothing is the author's", () => {
+    expect(filterOwnCoverImages([theirs], SUPABASE, USER)).toEqual([]);
+    expect(filterOwnCoverImages([], SUPABASE, USER)).toEqual([]);
   });
 });
