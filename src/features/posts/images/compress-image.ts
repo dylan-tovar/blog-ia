@@ -1,5 +1,9 @@
 import { ImageUploadError } from "@/features/posts/images/image-errors";
-import { IMAGE_MAX_OUTPUT_BYTES, IMAGE_WEBP_QUALITY } from "@/features/posts/images/image-limits";
+import {
+  IMAGE_MAX_OUTPUT_BYTES,
+  IMAGE_MAX_WIDTH,
+  IMAGE_WEBP_QUALITY,
+} from "@/features/posts/images/image-limits";
 import { computeTargetSize } from "@/features/posts/images/image-utils";
 
 export interface CompressedImage {
@@ -11,9 +15,34 @@ export interface CompressedImage {
 
 const QUALITY_STEPS = [IMAGE_WEBP_QUALITY, 0.6];
 
+function readNaturalWidth(file: File): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const probe = new Image();
+    probe.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(probe.naturalWidth);
+    };
+    probe.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("unreadable image"));
+    };
+    probe.src = url;
+  });
+}
+
+// Decodes with EXIF orientation applied. Huge sources are decoded already downscaled
+// (resizeWidth) so a 12000px photo is never held in memory at full size; the source width
+// comes from an <img> probe, which reads the header without decoding to a full bitmap.
 async function decode(file: File): Promise<ImageBitmap> {
   try {
-    return await createImageBitmap(file, { imageOrientation: "from-image" });
+    const sourceWidth = await readNaturalWidth(file);
+    return await createImageBitmap(file, {
+      imageOrientation: "from-image",
+      ...(sourceWidth > IMAGE_MAX_WIDTH
+        ? { resizeWidth: IMAGE_MAX_WIDTH, resizeQuality: "high" as const }
+        : {}),
+    });
   } catch {
     throw new ImageUploadError("decode");
   }
