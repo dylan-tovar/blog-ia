@@ -42,6 +42,7 @@ Un ADR registra una decisión de arquitectura: qué se decidió, por qué y qué
 | [0021](0021-feed-en-raiz-y-global.md) | El feed es `/` y es global | Aceptada (motivo parcialmente no registrado) |
 | [0022](0022-imagenes-en-supabase-storage.md) | Imágenes de artículos en Supabase Storage, optimizadas en el navegador | Aceptada |
 | [0023](0023-portada-de-articulos.md) | Portada de artículos (imagen o texto sobre color) en el feed | Aceptada |
+| [0024](0024-perfil-en-onboarding.md) | El perfil se crea en `/onboarding`, no al registrarse | Aceptada |
 
 ## Cómo leerlos
 
@@ -49,6 +50,7 @@ Un ADR registra una decisión de arquitectura: qué se decidió, por qué y qué
 | :--- | :--- |
 | Por qué no hay capas ni backend aparte | 0001, 0003 |
 | Cómo se protege la información | 0003, 0007, 0012 |
+| Cómo se registra un usuario y se crea su perfil | 0003, 0007, 0024 |
 | Por qué la IA funciona así | 0011, 0013, 0014, 0017, 0019 |
 | Por qué el modelo de posts y notas es así | 0009, 0015, 0010, 0022, 0023 |
 | Cómo se trabaja con la base y las pruebas | 0016, 0018 |

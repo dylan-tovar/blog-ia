@@ -1,5 +1,14 @@
 import { expect, test, type Page } from "@playwright/test";
-import { HOME_URL, PASSWORD, register, uniqueEmail, uniqueUsername } from "./helpers";
+import {
+  HOME_URL,
+  ONBOARDING_URL,
+  PASSWORD,
+  completeOnboarding,
+  register,
+  signUpAccount,
+  uniqueEmail,
+  uniqueUsername,
+} from "./helpers";
 
 const IDENTIFIER_LABEL = "Email o usuario";
 
@@ -20,6 +29,7 @@ test.describe("route protection", () => {
     "/settings",
     "/posts",
     "/editor/3f2b8c1e-6a4d-4f1b-9c7e-2d5a8b0e1f34",
+    "/onboarding",
   ]) {
     test(`anonymous user is redirected from ${path}`, async ({ page }) => {
       await page.goto(path);
@@ -34,9 +44,47 @@ test.describe("route protection", () => {
 });
 
 test.describe("auth flows", () => {
-  test("registers a new user and lands on the feed", async ({ page }) => {
-    await register(page);
+  test("registers a new user, completes onboarding and lands on the feed", async ({
+    page,
+  }) => {
+    await signUpAccount(page);
+    await completeOnboarding(page);
     await expect(page).toHaveURL(HOME_URL);
+  });
+
+  test("rejects mismatched passwords on signup", async ({ page }) => {
+    await page.goto("/register");
+    await page.getByLabel("Email").fill(uniqueEmail());
+    await page.getByLabel("Contraseña", { exact: true }).fill(PASSWORD);
+    await page.getByLabel("Confirmar contraseña").fill(`${PASSWORD}-x`);
+    await page.getByRole("button", { name: "Crear cuenta" }).click();
+    await expect(page.getByText("Las contraseñas no coinciden.")).toBeVisible();
+  });
+
+  test("a user without a profile is sent to /onboarding from a protected page", async ({
+    page,
+  }) => {
+    await signUpAccount(page);
+    for (const path of ["/", "/settings", "/posts"]) {
+      await page.goto(path);
+      await expect(page).toHaveURL(ONBOARDING_URL);
+    }
+  });
+
+  test("a user with a profile is bounced from /onboarding to the feed", async ({
+    page,
+  }) => {
+    await register(page);
+    await page.goto("/onboarding");
+    await expect(page).toHaveURL(HOME_URL);
+  });
+
+  test("a user without a profile can log out from /onboarding", async ({ page }) => {
+    await signUpAccount(page);
+    await page.getByRole("button", { name: "Cerrar sesión" }).click();
+    await expect(page).toHaveURL(/\/login$/);
+    await page.goto("/onboarding");
+    await expect(page).toHaveURL(/\/login$/);
   });
 
   test("rejects a wrong password with a generic message", async ({ page }) => {
@@ -120,10 +168,9 @@ test.describe("auth flows", () => {
     const { email } = await register(page);
     const other = await browser.newPage();
     await other.goto("/register");
-    await other.getByLabel("Nombre para mostrar").fill("Dup");
-    await other.getByLabel("Nombre de usuario").fill(uniqueUsername());
     await other.getByLabel("Email").fill(email);
-    await other.getByLabel("Contraseña").fill(PASSWORD);
+    await other.getByLabel("Contraseña", { exact: true }).fill(PASSWORD);
+    await other.getByLabel("Confirmar contraseña").fill(PASSWORD);
     await other.getByRole("button", { name: "Crear cuenta" }).click();
     await expect(
       other.getByText("Ya existe una cuenta con este email."),
@@ -131,18 +178,18 @@ test.describe("auth flows", () => {
     await other.close();
   });
 
-  test("duplicate username shows a friendly error", async ({ page, browser }) => {
+  test("duplicate username shows a friendly error at onboarding", async ({
+    page,
+    browser,
+  }) => {
     const { username } = await register(page);
     const other = await browser.newPage();
-    await other.goto("/register");
-    await other.getByLabel("Nombre para mostrar").fill("Dup");
-    await other.getByLabel("Nombre de usuario").fill(username.toUpperCase());
-    await other.getByLabel("Email").fill(uniqueEmail());
-    await other.getByLabel("Contraseña").fill(PASSWORD);
-    await other.getByRole("button", { name: "Crear cuenta" }).click();
+    await signUpAccount(other);
+    await completeOnboarding(other, { username: username.toUpperCase() });
     await expect(
       other.getByText("Ese nombre de usuario ya está en uso."),
     ).toBeVisible();
+    await expect(other).toHaveURL(ONBOARDING_URL);
     await other.close();
   });
 

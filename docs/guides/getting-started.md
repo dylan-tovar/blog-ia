@@ -8,7 +8,7 @@ Para levantar el proyecto hace falta un proyecto de Supabase con las nueve migra
 2. Crear `.env.local` en la raíz con las variables de [la tabla](#variables-de-entorno).
 3. Aplicar las migraciones de `supabase/migrations/` en orden (`0001` a `0009`) en el SQL Editor de Supabase ([procedimiento](#migraciones)). (ESTO SOLO ES LA PRIMERA VEZ, YA ESTAN APLICADAS EN EL PROYECTO DE SUPABASE)
 4. Opcional, para ver el feed con contenido: `pnpm seed:dev`. (YA TIENE CONTENIDO, NO ES NECESARIO EN NUESTRO CASO)
-5. Levantar el servidor: `pnpm dev` y abrir <http://localhost:3000/register>.
+5. Levantar el servidor: `pnpm dev` y abrir <http://localhost:3000/register>. El registro pide email y contraseña; después `/onboarding` pide nombre y username y crea el perfil ([ADR 0024](../adr/0024-perfil-en-onboarding.md)).
 
 ## Requisitos
 

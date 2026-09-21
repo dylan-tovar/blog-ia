@@ -38,7 +38,7 @@ blog-ia/
 ```text
 src/
 ├── app/                      # rutas (App Router)
-│   ├── (auth)/               # login, register (sin AppShell)
+│   ├── (auth)/               # login, register, onboarding (sin AppShell)
 │   ├── (public)/             # /, /explore, /post/[id], /author/[id] (con AppShell)
 │   ├── (dashboard)/          # /posts, /profile, /settings, /activity (con AppShell)
 │   ├── (editor)/             # /editor/[id] (pantalla completa, sin AppShell)
@@ -77,7 +77,7 @@ Los paréntesis no forman parte de la URL: `(dashboard)/posts/page.tsx` responde
 
 | Grupo | Rutas | Acceso |
 | :--- | :--- | :--- |
-| `(auth)` | `/login`, `/register` | Público, sin barra de navegación |
+| `(auth)` | `/login`, `/register`, `/onboarding` | `/login` y `/register` son públicos; `/onboarding` exige sesión y perfil pendiente. Sin barra de navegación |
 | `(public)` | `/` (el feed), `/explore`, `/post/[id]`, `/author/[id]` | Público. El feed, `/explore` y `/post/[id]` solo muestran posts `published`. Seguir, dar like y registrar lecturas requieren sesión (las actions redirigen a `/login`) |
 | `(dashboard)` | `/posts`, `/profile`, `/settings`, `/activity` | Requiere sesión. `/profile` redirige a `/author/<id>` del usuario. `/activity` es hoy una pantalla vacía |
 | `(editor)` | `/editor/[id]` (`new` o el id de un artículo) | Requiere sesión. Layout propio sin `AppShell`; solo desde computadora (`DesktopOnly`) |
@@ -128,8 +128,9 @@ Las funciones de IA del editor van por **Route Handlers** porque las Server Acti
 | Momento | Qué ocurre |
 | :--- | :--- |
 | Cada request (excepto estáticos e imágenes, según `config.matcher`) | `proxy.ts` crea un cliente `@supabase/ssr` con las cookies del request y llama a `auth.getUser()`, lo que refresca la sesión |
-| Ruta que empieza con `/settings`, `/editor` o `/posts` sin usuario | Redirección a `/login` |
-| Registro (`signUp`) | Verifica que el `username` esté libre, `supabase.auth.signUp`, luego inserta la fila en `profiles` desde la action (con un reintento) y redirige a `/`. No hay trigger en la base; si el reintento falla, el usuario completa el perfil en `/settings` |
+| Ruta que empieza con `/settings`, `/editor`, `/posts` o `/onboarding` sin usuario | Redirección a `/login` |
+| `GET` de página con usuario (no `POST`, no `/api`) | Una consulta `select id` a `profiles`: sin fila redirige a `/onboarding`; con fila, `/onboarding` redirige a `/`. Si la consulta falla, deja pasar ([ADR 0024](../adr/0024-perfil-en-onboarding.md)) |
+| Registro (`signUp`) | `supabase.auth.signUp` con email y contraseña (más su confirmación) y redirección a `/onboarding`. La fila de `profiles` (nombre y username) la inserta `completeOnboarding` ([ADR 0024](../adr/0024-perfil-en-onboarding.md)). No hay trigger en la base |
 | Login (`signIn`) | El identificador es email (si contiene `@`) o username. Un username se resuelve a email en el servidor con la secret key ([ADR 0007](../adr/0007-login-por-username-con-secret-key.md)); luego `signInWithPassword`. Ante cualquier fallo de credenciales responde `Credenciales inválidas.` |
 | Logout (`signOut`) | `auth.signOut()` y redirección a `/login` |
 
@@ -236,7 +237,7 @@ Las features de los PRDs 0 a 9 existen en código, con las limitaciones que cada
 | Imágenes en el editor (subida y render a lectores) | No existe almacenamiento | [ADR 0010](../adr/0010-editor-markdown.md) |
 | `/activity` con notificaciones reales | Pantalla vacía | [PRD-9](../prds/PRD-9-explore-activity.md) |
 | Opciones de `PostOptionsDrawer` (Guardar, Seguir, Ocultar, Silenciar, Bloquear, Reportar, "Analizar texto con IA", "Guardar como imagen") | Solo cierran el panel; no hay funcionalidad detrás | [PRD-9](../prds/PRD-9-explore-activity.md) |
-| Ajustes de cuenta: email y teléfono | Solo lectura; el teléfono muestra un valor de relleno si no hay | [PRD-1](../prds/PRD-1-auth.md) |
+| Ajustes de cuenta: email | Solo lectura | [PRD-1](../prds/PRD-1-auth.md) |
 | Pestaña "Subscriptions" del perfil | Siempre vacía; las pestañas tienen etiquetas en inglés | [PRD-3](../prds/PRD-3-feed-follows.md) |
 | Búsqueda por texto y feed de seguidos | No existen | [ADR 0021](../adr/0021-feed-en-raiz-y-global.md) |
 | Avatares | `profiles.avatar_url` existe sin uso; se muestran iniciales | [PRD-1](../prds/PRD-1-auth.md) |

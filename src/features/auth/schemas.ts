@@ -1,17 +1,17 @@
 import { z } from "zod";
-import { usernameSchema } from "@/features/profile/schemas";
 
-export const registerSchema = z.object({
-  email: z.email({ error: "Ingresá un email válido." }),
-  password: z
-    .string()
-    .min(8, { error: "La contraseña debe tener al menos 8 caracteres." }),
-  displayName: z
-    .string()
-    .trim()
-    .min(1, { error: "Ingresá un nombre para mostrar." }),
-  username: usernameSchema,
-});
+export const registerSchema = z
+  .object({
+    email: z.email({ error: "Ingresá un email válido." }),
+    password: z
+      .string()
+      .min(8, { error: "La contraseña debe tener al menos 8 caracteres." }),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    error: "Las contraseñas no coinciden.",
+    path: ["confirmPassword"],
+  });
 
 export const loginSchema = z.object({
   identifier: z

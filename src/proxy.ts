@@ -1,8 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getGateRedirect } from "@/features/auth/onboarding-gate";
 import { env } from "@/lib/env";
 
-const PROTECTED_PATHS = ["/settings", "/editor", "/posts"];
+function isApiPath(pathname: string) {
+  return pathname === "/api" || pathname.startsWith("/api/");
+}
 
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next({ request });
@@ -31,12 +34,40 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isProtectedPath = PROTECTED_PATHS.some((path) =>
-    request.nextUrl.pathname.startsWith(path),
-  );
+  const { pathname } = request.nextUrl;
 
-  if (isProtectedPath && !user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // Server actions are POSTs to the page URL and API routes answer with their
+  // own status codes: only page navigations look for a profile.
+  const isPageNavigation = request.method === "GET" && !isApiPath(pathname);
+
+  // One indexed lookup per navigation of a signed-in user. If it fails we do
+  // not know: let the request through instead of locking people out.
+  let hasProfile: boolean | null = null;
+  if (user && isPageNavigation) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Onboarding gate: profile lookup failed", error.message);
+    } else {
+      hasProfile = data !== null;
+    }
+  }
+
+  const target = getGateRedirect({
+    pathname,
+    isAuthenticated: user !== null,
+    hasProfile,
+  });
+
+  if (target) {
+    const redirect = NextResponse.redirect(new URL(target, request.url));
+    // Keep any session cookies refreshed by getUser().
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    return redirect;
   }
 
   return response;

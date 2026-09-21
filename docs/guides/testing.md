@@ -54,12 +54,12 @@ Convenciones observadas:
 
 | Archivo | Tests | Qué cubre |
 | :--- | :--- | :--- |
-| `e2e/auth.spec.ts` | 15 | Protección de rutas, feed público, registro, login por email y por username (ignora mayúsculas, error genérico en los tres casos de fallo), logout, edición de nombre y username en `/settings`, duplicados de email y de username |
+| `e2e/auth.spec.ts` | 19 | Protección de rutas (incluye `/onboarding`), feed público, registro con onboarding, contraseñas distintas, redirecciones del proxy sin/con perfil, logout sin perfil, login por email y por username (ignora mayúsculas, error genérico en los tres casos de fallo), logout, edición de nombre y username en `/settings`, duplicados de email (en `/register`) y de username (en `/onboarding`) |
 | `e2e/posts.spec.ts` | 8 | Borrador con autoguardado, tags sin duplicados y reutilizables entre usuarios, error al publicar vacío, publicación, 404 para borradores ajenos e ids inválidos |
 | `e2e/feed.spec.ts` | 10 | El feed vive en `/` y `/feed` no existe, filtro por tag por URL, tags que no se muestran a lectores, borradores fuera del feed, página de autor (404), seguir y dejar de seguir |
 | `e2e/shell.spec.ts` | 8 | Barra superior e inferior, botón "+", ausencia de scroll horizontal a 360 px, navegación en escritorio |
 | `e2e/editor-ai-drawer.spec.ts` | 26 | Cajón de IA: atajo `Cmd/Ctrl+I`, foco, persistencia, columna del artículo, streaming, marcador de "pensando", límite con cuenta regresiva, corte del stream, y toda la vida de una propuesta (tarjeta, aplicar, deshacer, descartar, `stale`, selección, "aplicar todo", superposición, insertar en cursor, límite de longitud, sin desborde horizontal) |
-| `e2e/helpers.ts` | — | `register`, `createDraft`, `uniqueEmail`, `uniqueUsername`, `PASSWORD`, `HOME_URL` |
+| `e2e/helpers.ts` | — | `register`, `signUpAccount`, `completeOnboarding`, `createDraft`, `uniqueEmail`, `uniqueUsername`, `PASSWORD`, `HOME_URL`, `ONBOARDING_URL` |
 
 **El cajón de IA se prueba con el stream simulado.** `editor-ai-drawer.spec.ts` intercepta `POST /api/ai/chat` con `page.route` y responde con NDJSON armado a mano (`ndjson(...)`), así no llama a Gemini ni gasta cuota. Lo que sí toca la base real es el registro del usuario y la creación del borrador.
 
@@ -70,7 +70,7 @@ Prerrequisitos:
 
 Convenciones observadas:
 
-- Cada test registra un usuario nuevo con `register(page)` (email y username únicos) para no depender de datos previos.
+- Cada test registra un usuario nuevo con `register(page)` (email y username únicos, pasando por `/onboarding`) para no depender de datos previos.
 - `createDraft(page)` crea un borrador y devuelve el id del post.
 - Los selectores usan el texto de la interfaz en español (`getByLabel`, `getByRole`, `getByText`). Cambiar un texto visible puede romper un test.
 - Cada corrida crea usuarios reales en el proyecto de Supabase configurado.
@@ -85,7 +85,7 @@ Verificados leyendo `e2e/` contra `src/`; los e2e no se ejecutaron al escribir e
 | `createDraft` y `shell.spec.ts` pulsan un botón "Nuevo post" que **ya no existe** (la creación pasó al botón "+" / menú "Crear") | Todo test que use `createDraft`, incluido `beforeEach` de `editor-ai-drawer.spec.ts`, falla | Crear el borrador navegando a `/editor/new` y escribiendo, o pasar por el menú "Crear" |
 | `shell.spec.ts` espera tres destinos (Inicio, Mis posts, Perfil) | La barra inferior tiene hoy cuatro (Inicio, Explorar, Actividad, Perfil) | Actualizar la aserción |
 | `scripts/verify-post-writes.mjs` inicia sesión como `mateo_ia.seed@blog-ia.test`, pero `scripts/seed-dev.mjs` crea a ese usuario como `mateo.seed@blog-ia.test` | Tras un seed nuevo, `pnpm verify:writes` falla con "No pude iniciar sesión como mateo_ia" (no se ejecutó al escribir esto: se detectó comparando los dos scripts) | Unificar el email en uno de los dos scripts |
-| El helper `register` asume que el proyecto de Supabase no exige confirmación de email | Sin verificar; la configuración de Supabase no está en el repositorio | Documentar el ajuste del proyecto |
+| El helper `register` asume que el proyecto de Supabase no exige confirmación de email (con confirmación, `signUp` no devuelve sesión y no se llega a `/onboarding`) | Sin verificar; la configuración de Supabase no está en el repositorio | Documentar el ajuste del proyecto |
 
 ## Scripts de verificación
 
