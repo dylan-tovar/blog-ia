@@ -20,6 +20,7 @@
 | ¿Por qué se configura así Gemini? | Thinking mínimo, sin reintentos, timeouts por función | [0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) |
 | ¿Por qué las migraciones son manuales y no hay CI? | Cero herramientas nuevas para un equipo pequeño; el costo está documentado | [0016](../adr/0016-migraciones-sql-manuales.md), [0018](../adr/0018-sin-ci-gates-manuales.md) |
 | ¿Por qué el feed está en `/` y los tags no se ven? | Decisiones de producto documentadas | [0021](../adr/0021-feed-en-raiz-y-global.md), [0020](../adr/0020-tags-como-metadato-interno.md) |
+| ¿Por qué `/` muestra solo a quienes sigo, con recomendados intercalados? | Seguir tiene efecto visible y el descubrimiento sigue dentro del flujo; el feed global queda para visitantes, sin seguidos y `?tag=` | [0026](../adr/0026-feed-de-seguidos-con-recomendados.md) |
 
 ## Estructura del repositorio
 
@@ -79,7 +80,7 @@ Los paréntesis no forman parte de la URL: `(dashboard)/posts/page.tsx` responde
 | Grupo | Rutas | Acceso |
 | :--- | :--- | :--- |
 | `(auth)` | `/login`, `/register`, `/onboarding` | `/login` y `/register` son públicos; `/onboarding` exige sesión y onboarding pendiente (paso 1: perfil; paso 2: intereses). Sin barra de navegación |
-| `(public)` | `/` (el feed), `/explore`, `/post/[id]`, `/author/[id]` | Público. El feed, `/explore` y `/post/[id]` solo muestran posts `published`. Seguir, dar like y registrar lecturas requieren sesión (las actions redirigen a `/login`) |
+| `(public)` | `/` (el feed), `/explore`, `/post/[id]`, `/author/[id]` | Público. `/` es global para visitantes; con sesión y siguiendo a alguien muestra solo seguidos y propios con recomendados intercalados ([ADR 0026](../adr/0026-feed-de-seguidos-con-recomendados.md)). El feed, `/explore` y `/post/[id]` solo muestran posts `published`. Seguir, dar like y registrar lecturas requieren sesión (las actions redirigen a `/login`) |
 | `(dashboard)` | `/posts`, `/profile`, `/settings`, `/activity` | Requiere sesión. `/profile` redirige a `/author/<id>` del usuario. `/activity` es hoy una pantalla vacía |
 | `(editor)` | `/editor/[id]` (`new` o el id de un artículo) | Requiere sesión. Layout propio sin `AppShell`; solo desde computadora (`DesktopOnly`) |
 | `api/ai` | `POST /api/ai/chat` (stream NDJSON) y `/outline`, `/titles`, `/tone`, `/score` (JSON, deprecadas: [ADR 0019](../adr/0019-rutas-legacy-de-ia-deprecadas.md)) | Autentican dentro del handler; responden 401 en JSON |
@@ -218,7 +219,7 @@ Cada dominio en `src/features/<dominio>/` combina estos archivos según necesite
 | Archivo | Rol | Ejemplo |
 | :--- | :--- | :--- |
 | `actions.ts` | Server Actions (`"use server"`), escrituras | `posts/actions.ts`: `createDraftPost`, `savePostContent`, `publishPost`, `createNote`, `updateNote`, `deleteNote`, `addTag`, `removeTag`, `loadMoreFeed`, `recordRead` |
-| `queries.ts` | Lecturas para Server Components | `posts/queries.ts`: `getFeedPage`, `getOwnPost`, `getOwnPosts`, `getPublishedPost`, `getAllTagNames` |
+| `queries.ts` | Lecturas para Server Components | `posts/queries.ts`: `getFeedPage` (scopes `global` y `following`), `getFeedPostsByIds`, `getOwnPost`, `getOwnPosts`, `getPublishedPost`, `getAllTagNames` |
 | `schemas.ts` | Schemas Zod de entrada | `auth/schemas.ts`: `registerSchema`, `loginSchema` |
 | `utils.ts` | Funciones puras | `posts/utils.ts`: `flattenTags`, `excerpt` |
 | `*.server.ts` | Código que importa `server-only` (Supabase admin, Gemini, límite) | `ai/handlers.server.ts`, `ai/rate-limit.server.ts` |
@@ -241,7 +242,7 @@ Las features de los PRDs 0 a 9 existen en código, con las limitaciones que cada
 | Opciones de `PostOptionsDrawer` (Guardar, Seguir, Ocultar, Silenciar, Bloquear, Reportar, "Analizar texto con IA", "Guardar como imagen") | Solo cierran el panel; no hay funcionalidad detrás | [PRD-9](../prds/PRD-9-explore-activity.md) |
 | Ajustes de cuenta: email | Solo lectura | [PRD-1](../prds/PRD-1-auth.md) |
 | Pestaña "Subscriptions" del perfil | Siempre vacía; las pestañas tienen etiquetas en inglés | [PRD-3](../prds/PRD-3-feed-follows.md) |
-| Búsqueda por texto y feed de seguidos | No existen | [ADR 0021](../adr/0021-feed-en-raiz-y-global.md) |
+| Búsqueda por texto | No existe | [PRD-3](../prds/PRD-3-feed-follows.md) |
 | Avatares | `profiles.avatar_url` existe sin uso; se muestran iniciales | [PRD-1](../prds/PRD-1-auth.md) |
 | CI, hooks y e2e vigentes | Sin CI; los e2e necesitan arreglos | [ADR 0018](../adr/0018-sin-ci-gates-manuales.md) |
 | Migraciones con CLI y tipos generados | Manual | [ADR 0016](../adr/0016-migraciones-sql-manuales.md) |

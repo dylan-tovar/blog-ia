@@ -18,7 +18,7 @@ import {
   savePostSchema,
   tagNameSchema,
 } from "@/features/posts/schemas";
-import { getFeedPage } from "@/features/posts/queries";
+import { getFeedPage, type FeedScope } from "@/features/posts/queries";
 import { buildFinalUpdate, classifyPublishClaim } from "@/features/posts/publish";
 
 export type CreateNoteState = { ok?: boolean; error?: string } | undefined;
@@ -469,7 +469,11 @@ export async function removeTag(postId: string, tagId: string): Promise<{ ok: bo
   return { ok: !error };
 }
 
-export async function loadMoreFeed(input: { tag?: string; offset: number }) {
+export async function loadMoreFeed(input: {
+  tag?: string;
+  offset: number;
+  scope?: FeedScope;
+}) {
   const parsed = feedQuerySchema.safeParse(input);
   if (!parsed.success) {
     return { posts: [], hasMore: false };

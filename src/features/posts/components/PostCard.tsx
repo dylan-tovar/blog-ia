@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { UserAvatar } from "@/components/shared/UserAvatar";
+import { Badge } from "@/components/ui/badge";
 import { FollowButton } from "@/features/subscriptions/components/FollowButton";
 import { LikeButton } from "@/features/likes/components/LikeButton";
 import { ArticleCard } from "@/features/posts/components/ArticleCard";
@@ -18,6 +19,8 @@ interface PostCardProps {
   // Signed-in user id, or null for visitors. Undefined hides the follow control.
   viewerId?: string | null;
   showReplyTo?: boolean;
+  // Marks a post surfaced by the recommendations rather than by who the viewer follows.
+  recommended?: boolean;
   onDeleted?: (postId: string) => void;
 }
 
@@ -61,7 +64,13 @@ function FollowControl({
   );
 }
 
-export function PostCard({ post, viewerId, showReplyTo = true, onDeleted }: PostCardProps) {
+export function PostCard({
+  post,
+  viewerId,
+  showReplyTo = true,
+  recommended = false,
+  onDeleted,
+}: PostCardProps) {
   const [following, setFollowing] = useState(post.viewerFollows);
   // Re-sync when the server value changes. Adjusting state during render avoids
   // the extra render an effect would cause.
@@ -107,6 +116,11 @@ export function PostCard({ post, viewerId, showReplyTo = true, onDeleted }: Post
             >
               {formatRelativeDate(post.publishedAt)}
             </time>
+          )}
+          {recommended && (
+            <Badge variant="secondary" className="shrink-0">
+              Recomendado
+            </Badge>
           )}
           <div className="-my-2 ml-auto flex shrink-0 items-center gap-1">
             <FollowControl

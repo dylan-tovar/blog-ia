@@ -39,11 +39,12 @@ Un ADR registra una decisión de arquitectura: qué se decidió, por qué y qué
 | [0018](0018-sin-ci-gates-manuales.md) | Sin CI ni hooks: verificaciones a mano | Aceptada |
 | [0019](0019-rutas-legacy-de-ia-deprecadas.md) | Herramientas de IA legacy (outline, títulos, tono, score) deprecadas | Propuesta |
 | [0020](0020-tags-como-metadato-interno.md) | Los tags son metadato interno; solo Explorar los muestra | Aceptada (motivo no registrado); reemplazada parcialmente por 0025 |
-| [0021](0021-feed-en-raiz-y-global.md) | El feed es `/` y es global | Aceptada (motivo parcialmente no registrado) |
+| [0021](0021-feed-en-raiz-y-global.md) | El feed es `/` y es global | Aceptada (motivo parcialmente no registrado); reemplazada parcialmente por 0026 |
 | [0022](0022-imagenes-en-supabase-storage.md) | Imágenes de artículos en Supabase Storage, optimizadas en el navegador | Aceptada |
 | [0023](0023-portada-de-articulos.md) | Portada de artículos (imagen o texto sobre color) en el feed | Aceptada |
 | [0024](0024-perfil-en-onboarding.md) | El perfil se crea en `/onboarding`, no al registrarse | Aceptada; reemplazada parcialmente por 0025 |
 | [0025](0025-intereses-en-onboarding.md) | El onboarding tiene un segundo paso obligatorio para elegir intereses | Aceptada |
+| [0026](0026-feed-de-seguidos-con-recomendados.md) | El inicio muestra a quienes seguís, con recomendados intercalados | Aceptada |
 
 ## Cómo leerlos
 
@@ -55,4 +56,5 @@ Un ADR registra una decisión de arquitectura: qué se decidió, por qué y qué
 | Por qué la IA funciona así | 0011, 0013, 0014, 0017, 0019 |
 | Por qué el modelo de posts y notas es así | 0009, 0015, 0010, 0022, 0023 |
 | Cómo se trabaja con la base y las pruebas | 0016, 0018 |
-| Por qué la interfaz es así | 0005, 0008, 0020, 0021 |
+| Por qué la interfaz es así | 0005, 0008, 0020, 0021, 0026 |
+| Qué muestra el inicio y cómo se mezclan seguidos y recomendados | 0004, 0021, 0026 |

@@ -5,16 +5,28 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PostCard } from "@/features/posts/components/PostCard";
 import { loadMoreFeed } from "@/features/posts/actions";
-import type { FeedPost } from "@/features/posts/queries";
+import { interleaveRecommended } from "@/features/posts/interleave";
+import type { FeedPost, FeedScope } from "@/features/posts/queries";
 
 interface FeedListProps {
   tag?: string;
+  scope?: FeedScope;
   viewerId: string | null;
   initialPosts: FeedPost[];
   initialHasMore: boolean;
+  // Finite pool interleaved into the feed (following scope only). It never counts toward
+  // the pagination offset.
+  recommendedPosts?: FeedPost[];
 }
 
-export function FeedList({ tag, viewerId, initialPosts, initialHasMore }: FeedListProps) {
+export function FeedList({
+  tag,
+  scope = "global",
+  viewerId,
+  initialPosts,
+  initialHasMore,
+  recommendedPosts = [],
+}: FeedListProps) {
   // The first page always comes from props so a new note shows up right after
   // revalidation; only the "Cargar más" pages live in client state.
   const [more, setMore] = useState<{ posts: FeedPost[]; hasMore: boolean } | null>(null);
@@ -26,12 +38,16 @@ export function FeedList({ tag, viewerId, initialPosts, initialHasMore }: FeedLi
     ...initialPosts,
     ...(more?.posts ?? []).filter((post) => !firstPageIds.has(post.id)),
   ].filter((post) => !deletedIds.has(post.id));
+  const items = interleaveRecommended(
+    posts,
+    recommendedPosts.filter((post) => !deletedIds.has(post.id)),
+  );
   const hasMore = more ? more.hasMore : initialHasMore;
 
   function handleLoadMore() {
     startTransition(async () => {
       const offset = initialPosts.length + (more?.posts.length ?? 0);
-      const page = await loadMoreFeed({ tag, offset });
+      const page = await loadMoreFeed({ tag, offset, scope });
       setMore((current) => ({
         posts: [...(current?.posts ?? []), ...page.posts],
         hasMore: page.hasMore,
@@ -45,8 +61,14 @@ export function FeedList({ tag, viewerId, initialPosts, initialHasMore }: FeedLi
 
   return (
     <div className="flex flex-col">
-      {posts.map((post) => (
-        <PostCard key={post.id} post={post} viewerId={viewerId} onDeleted={handleDeleted} />
+      {items.map(({ post, recommended }) => (
+        <PostCard
+          key={recommended ? `rec-${post.id}` : post.id}
+          post={post}
+          viewerId={viewerId}
+          recommended={recommended}
+          onDeleted={handleDeleted}
+        />
       ))}
       {hasMore && (
         <div className="p-4">

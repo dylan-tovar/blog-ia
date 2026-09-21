@@ -4,7 +4,10 @@ import { countWords } from "@/features/ai/words";
 import { resolveCover, type ResolvedCover } from "@/features/posts/cover/cover";
 import { idSchema } from "@/features/posts/schemas";
 import { excerpt, flattenTags, type ParentRef } from "@/features/posts/utils";
-import { getFollowedAuthorIds } from "@/features/subscriptions/queries";
+import {
+  getAllFollowedAuthorIds,
+  getFollowedAuthorIds,
+} from "@/features/subscriptions/queries";
 import { getLikedPostIds } from "@/features/likes/queries";
 import { env } from "@/lib/env";
 import { getViewer } from "@/lib/viewer";
@@ -310,13 +313,29 @@ export async function getNotesForPost(postId: string) {
   return posts.filter((post): post is NoteFeedPost => post.type === "note");
 }
 
+export type FeedScope = "global" | "following";
+
 export async function getFeedPage({
   tag,
   offset = 0,
+  scope = "global",
 }: {
   tag?: string;
   offset?: number;
+  scope?: FeedScope;
 }) {
+  // The followed ids are resolved here from the session, never received from the client.
+  // Own posts are included so a freshly published post does not vanish from the home.
+  let authorIds: string[] | null = null;
+  if (scope === "following") {
+    const viewer = await getViewer();
+    const followed = viewer ? await getAllFollowedAuthorIds(viewer.id) : [];
+    if (!viewer || followed.length === 0) {
+      return { posts: [] as FeedPost[], hasMore: false };
+    }
+    authorIds = [...new Set([...followed, viewer.id])];
+  }
+
   const supabase = await createClient();
 
   // RLS also lets owners read their own drafts, so `published` must be explicit.
@@ -326,6 +345,10 @@ export async function getFeedPage({
     .from("posts")
     .select(`${CARD_COLUMNS}, ${AUTHOR_EMBED}, ${LIKES_EMBED}${filterEmbed}`)
     .eq("status", "published");
+
+  if (authorIds) {
+    query = query.in("author_id", authorIds);
+  }
 
   if (tag) {
     query = query.eq("post_tags.tags.name", tag);
@@ -347,6 +370,35 @@ export async function getFeedPage({
     posts: await hydrateFeedPosts(pageRows, { withFollows: true }),
     hasMore: rows.length > FEED_PAGE_SIZE,
   };
+}
+
+// Full feed cards for a list of ids, in the order given (used for ranked recommendations).
+// Ids that are not published or not visible simply do not come back.
+export async function getFeedPostsByIds(ids: string[]): Promise<FeedPost[]> {
+  const uniqueIds = [...new Set(ids)];
+  if (uniqueIds.length === 0) {
+    return [];
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("posts")
+    .select(`${CARD_COLUMNS}, ${AUTHOR_EMBED}, ${LIKES_EMBED}`)
+    .in("id", uniqueIds)
+    .eq("status", "published");
+
+  if (error) {
+    throw new Error(`No pudimos cargar los posts: ${error.message}`);
+  }
+
+  const posts = await hydrateFeedPosts((data ?? []) as unknown as CardRow[], {
+    withFollows: true,
+  });
+  const byId = new Map(posts.map((post) => [post.id, post]));
+  return uniqueIds.flatMap((id) => {
+    const post = byId.get(id);
+    return post ? [post] : [];
+  });
 }
 
 export async function getPublishedPostsByAuthor(authorId: string) {

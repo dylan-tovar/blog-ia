@@ -1,6 +1,6 @@
 # 0021. El feed es la página de inicio (`/`) y es un feed global
 
-- **Estado:** Aceptada. **El motivo de mover el feed de `/feed` a `/` no quedó registrado**, y tampoco el de que el feed no filtre por seguidos: solo consta que el diseño original de PRD-3 lo dejaba fuera del mínimo.
+- **Estado:** Aceptada. **El motivo de mover el feed de `/feed` a `/` no quedó registrado**, y tampoco el de que el feed no filtre por seguidos: solo consta que el diseño original de PRD-3 lo dejaba fuera del mínimo. Reemplazada parcialmente por el [ADR 0026](0026-feed-de-seguidos-con-recomendados.md) (ver la actualización al final).
 - **Fecha:** 2026-09-20 (documenta un estado existente)
 - **Fuentes:** [PRD-3](../prds/PRD-3-feed-follows.md) (sección «Alcance / fuera de alcance»), [PRD-4](../prds/PRD-4-recommendations.md), [ADR 0008](0008-tema-oscuro-y-shell-de-aplicacion.md), `src/app/(public)/page.tsx`, `src/features/auth/actions.ts`, `src/features/posts/queries.ts`
 
@@ -28,3 +28,7 @@ El diseño original de PRD-1 a PRD-4 preveía una ruta `/feed`: el login redirig
 - **A favor:** un visitante anónimo ve contenido al entrar; una sola ruta para "inicio".
 - **En contra:** seguir a alguien no tiene efecto visible en el contenido; los PRDs de la época original hablaban de `/feed` y los documentos o marcadores viejos pueden seguir citándolo; una URL `/feed` guardada da 404.
 - **Cuándo revisar:** al agregar un feed filtrado por seguidos (decidir si reemplaza o convive con el global) o notificaciones reales en `/activity`.
+
+## Actualización (2026-09-21)
+
+Reemplazada parcialmente por el [ADR 0026](0026-feed-de-seguidos-con-recomendados.md): con sesión, sin filtro `?tag=` y siguiendo al menos a un autor, `/` muestra solo los posts de quienes seguís (más los propios) con recomendados intercalados cada 3 posts y etiquetados "Recomendado", y ya no muestra el carrusel. En cualquier otro caso (visitante, sin seguidos o con `?tag=`) el feed sigue siendo global, y `/explore` no cambia. Lo que sigue vigente de este ADR: el feed vive en `/` y `/feed` da 404.

@@ -6,12 +6,12 @@
 | Dificultad / Esfuerzo | B (básica) / S (hasta 1 día) |
 | Dueño sugerido / Mentor | D4 / D2 |
 | Depende de | [PRD-4.1](PRD-4.1-scoring-core.md) (`buildTagProfile`, `rankCandidates`), [PRD-3.2](PRD-3.2-feed-list.md) (la página `/` que la contiene) |
-| Código | `src/features/recommendations/queries.ts`, `src/features/recommendations/components/RecommendedSection.tsx`, `RecommendedCard.tsx`, `RecommendedSkeleton.tsx`, `row-styles.ts`; integración en `src/app/(public)/page.tsx` |
-| ADRs | [0004](../adr/0004-recomendaciones-scoring-determinista.md), [0025](../adr/0025-intereses-en-onboarding.md) |
+| Código | `src/features/recommendations/queries.ts` (`getRecommendedPosts`, `getRecommendedPostIds`), `src/features/recommendations/components/RecommendedSection.tsx`, `RecommendedCard.tsx`, `RecommendedSkeleton.tsx`, `row-styles.ts`; integración en `src/app/(public)/page.tsx` |
+| ADRs | [0004](../adr/0004-recomendaciones-scoring-determinista.md), [0025](../adr/0025-intereses-en-onboarding.md), [0026](../adr/0026-feed-de-seguidos-con-recomendados.md) |
 
 ## Resumen
 
-Conecta el ranking ([4.1](PRD-4.1-scoring-core.md)) con la base de datos y con la pantalla: pide el historial de lectura, los intereses elegidos en el onboarding y los artículos candidatos, calcula el ranking y dibuja una fila horizontal desplazable de tarjetas arriba del feed. La regla de oro: **si algo falla, la sección simplemente no aparece**; nunca rompe la portada.
+Conecta el ranking ([4.1](PRD-4.1-scoring-core.md)) con la base de datos y con la pantalla: pide el historial de lectura, los intereses elegidos en el onboarding y los artículos candidatos, calcula el ranking y dibuja una fila horizontal desplazable de tarjetas arriba del feed. Quien sigue a alguien no ve esa fila: sus recomendados van **intercalados dentro del feed** ([ADR 0026](../adr/0026-feed-de-seguidos-con-recomendados.md), ver más abajo). La regla de oro: **si algo falla, la sección simplemente no aparece**; nunca rompe la portada.
 
 ## Qué necesitás entender antes
 
@@ -26,15 +26,15 @@ Conecta el ranking ([4.1](PRD-4.1-scoring-core.md)) con la base de datos y con l
 
 | Dentro | Fuera |
 | :--- | :--- |
-| `getRecommendedPosts` y las 3 consultas | La fórmula del ranking: [PRD-4.1](PRD-4.1-scoring-core.md) |
-| `RecommendedSection`, `RecommendedCard`, `RecommendedSkeleton` | El resto de la portada y el feed: [PRD-3.2](PRD-3.2-feed-list.md) |
+| `getRecommendedPosts`, `getRecommendedPostIds` y las 3 consultas | La fórmula del ranking: [PRD-4.1](PRD-4.1-scoring-core.md) |
+| `RecommendedSection`, `RecommendedCard`, `RecommendedSkeleton` | El resto de la portada, el feed y el intercalado en la lista (`interleaveRecommended`, etiqueta "Recomendado"): [PRD-3.2](PRD-3.2-feed-list.md) |
 | Cuándo se muestra la sección | Registrar lecturas (`recordRead`): [PRD-2.6](PRD-2.6-post-detail.md) |
 
 ## Cómo funciona
 
 Orden de lectura: `queries.ts` (de abajo hacia arriba: `getRecommendedPosts` → `loadRecommendations`) → `RecommendedSkeleton` → `RecommendedSection` → `RecommendedCard` → el uso en `page.tsx`.
 
-### 1. Las consultas (`loadRecommendations(viewerId)`)
+### 1. Las consultas (`rankRecommendedIds`)
 
 ```text
 en paralelo (Promise.all):
@@ -50,11 +50,17 @@ hidratar: una 3ª consulta trae título, contenido y autor de esos 10 ids
 devolver { id, title, excerpt, author } en el orden del ranking
 ```
 
+El ranking vive en `rankRecommendedIds(supabase, viewerId, { excludeAuthorIds, limit })`, que devuelve solo los ids ordenados; `excludeAuthorIds` se aplica a los candidatos **antes** del `limit`, para que un autor excluido no ocupe un lugar. `loadRecommendations` (carrusel) lo llama con `limit: 10` y sin exclusiones y hace la 3ª consulta de hidratación.
+
 `getRecommendedPosts` envuelve todo en `try/catch`: ante cualquier error hace `console.error` y devuelve `[]`. Por eso su promesa **nunca se rechaza**, y `RecommendedSection` puede esperarla sin manejar errores.
 
-### 2. La sección
+### 2. Recomendados dentro del feed (`getRecommendedPostIds`)
 
-- `page.tsx` solo pide recomendados si hay sesión **y** no hay filtro `?tag=`. Guarda la promesa **sin esperarla** y se la pasa a `RecommendedSection` dentro de `<Suspense fallback={<RecommendedSkeleton />}>`: el feed no espera a las recomendaciones.
+Cuando la persona sigue a alguien y no hay `?tag=`, `page.tsx` llama a `getRecommendedPostIds(viewerId, { excludeAuthorIds: seguidos, limit })` (por defecto `FEED_RECOMMENDATIONS_LIMIT = 15`), que reutiliza `rankRecommendedIds` y tiene el mismo contrato que `getRecommendedPosts`: **nunca rechaza**, ante un error registra y devuelve `[]`. Los ids se convierten en tarjetas completas con `getFeedPostsByIds` (mismo formato que el feed, en el orden del ranking) y `FeedList` los intercala uno cada 3 posts con la etiqueta "Recomendado" ([PRD-3.2](PRD-3.2-feed-list.md)). Se excluye a los autores seguidos para no mostrar un post dos veces. En este modo no se dibuja el carrusel.
+
+### 3. La sección (carrusel)
+
+- `page.tsx` solo pide el carrusel si hay sesión, no hay filtro `?tag=` **y la persona no sigue a nadie**. Guarda la promesa **sin esperarla** y se la pasa a `RecommendedSection` dentro de `<Suspense fallback={<RecommendedSkeleton />}>`: el feed no espera a las recomendaciones.
 - `RecommendedSection` es un Server Component `async`: `await postsPromise`; si la lista está vacía devuelve `null` (no dibuja nada, ni título); si no, un `<section>` con el título "Recomendados para ti" y una lista horizontal.
 - `RecommendedCard`: un `Link` a `/post/<id>` con autor, título (dos líneas máximo) y extracto.
 - `RecommendedSkeleton`: 3 rectángulos animados (`animate-pulse`) con la misma forma que las tarjetas.
@@ -69,11 +75,13 @@ devolver { id, title, excerpt, author } en el orden del ranking
 | Nunca propagar errores | Un fallo del cálculo no debe romper la portada |
 | Los intereses son una señal extra y opcional | Si su lectura falla, el ranking sigue con el historial en vez de descartar toda la sección ([ADR 0025](../adr/0025-intereses-en-onboarding.md)) |
 | Solo artículos publicados de otros | Las notas no tienen tags; los propios no aportan |
+| Recomendados dentro del feed para quien sigue a alguien, carrusel para el resto | Los seguidos ya llenan el feed, así que el descubrimiento va mezclado; el carrusel queda para el arranque en frío sin interfaz nueva ([ADR 0026](../adr/0026-feed-de-seguidos-con-recomendados.md)) |
 | No mostrar la sección con un filtro de tag activo | El usuario ya está viendo un subconjunto elegido †; el motivo no quedó registrado |
 
 ## Criterios de aceptación
 
-- [ ] Sin sesión, o con `?tag=` activo, la sección no aparece.
+- [ ] Sin sesión, con `?tag=` activo o siguiendo a alguien, la sección (carrusel) no aparece.
+- [ ] Siguiendo a alguien, los recomendados aparecen dentro del feed, nunca de un autor seguido ni propio.
 - [ ] Con sesión y sin historial ni intereses, aparecen artículos recientes de otros autores.
 - [ ] Con sesión, sin historial y con intereses, aparecen primero los artículos que comparten tags con ellos.
 - [ ] Un artículo ya leído o propio no aparece.
@@ -84,7 +92,7 @@ devolver { id, title, excerpt, author } en el orden del ranking
 ## Cómo verificarla a mano
 
 1. `pnpm seed:dev` ([PRD-X.2](PRD-X.2-dev-tooling.md)), iniciá sesión con un usuario del seed y abrí `/`: debe verse "Recomendados para ti".
-2. Abrí `/?tag=ia`: la sección desaparece.
+2. Abrí `/?tag=ia`: la sección desaparece. Seguí a un autor: la sección desaparece y los recomendados aparecen dentro del feed con la etiqueta "Recomendado".
 3. Abrí un artículo, volvé a `/` y comprobá que ese artículo ya no está entre los recomendados.
 4. Simulá un fallo: cambiá temporalmente el nombre de una columna en `queries.ts`, recargá `/` (la portada debe verse **sin** la sección y el error sólo en la consola del servidor) y revertí el cambio.
 5. En las herramientas del navegador, achicá la ventana y comprobá el desplazamiento horizontal.

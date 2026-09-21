@@ -14,8 +14,21 @@ import {
 } from "@/features/posts/schemas";
 
 describe("feedQuerySchema", () => {
-  it("defaults offset to 0 and leaves the tag undefined", () => {
-    expect(feedQuerySchema.parse({})).toEqual({ offset: 0 });
+  it("defaults offset to 0, scope to global and leaves the tag undefined", () => {
+    expect(feedQuerySchema.parse({})).toEqual({ offset: 0, scope: "global" });
+  });
+
+  it.each(["global", "following"] as const)("accepts scope %s", (scope) => {
+    expect(feedQuerySchema.parse({ scope }).scope).toBe(scope);
+  });
+
+  it.each(["", "all", "FOLLOWING", null, 1])("rejects scope %j", (scope) => {
+    expect(feedQuerySchema.safeParse({ scope }).success).toBe(false);
+  });
+
+  it("does not accept followed ids from the client", () => {
+    const result = feedQuerySchema.parse({ scope: "following", authorIds: ["x"] });
+    expect(result).not.toHaveProperty("authorIds");
   });
 
   it("normalizes the tag", () => {

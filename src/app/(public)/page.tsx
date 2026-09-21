@@ -1,14 +1,15 @@
 import { Suspense } from "react";
 import { SquarePen } from "lucide-react";
 import { getViewer } from "@/lib/viewer";
-import { getRecommendedPosts } from "@/features/recommendations/queries";
+import { getRecommendedPostIds, getRecommendedPosts } from "@/features/recommendations/queries";
 import { RecommendedSection } from "@/features/recommendations/components/RecommendedSection";
 import { RecommendedSkeleton } from "@/features/recommendations/components/RecommendedSkeleton";
 import { FeedList } from "@/features/posts/components/FeedList";
 import { CreatePostMenu } from "@/features/posts/components/CreatePostMenu";
 import { NoteTriggerBar } from "@/features/posts/components/NoteTriggerBar";
-import { getFeedPage } from "@/features/posts/queries";
+import { getFeedPage, getFeedPostsByIds } from "@/features/posts/queries";
 import { tagNameSchema } from "@/features/posts/schemas";
+import { getAllFollowedAuthorIds } from "@/features/subscriptions/queries";
 
 export default async function HomePage(props: PageProps<"/">) {
   // Tags are not shown anywhere in the UI, but `/?tag=x` still filters the feed.
@@ -16,13 +17,42 @@ export default async function HomePage(props: PageProps<"/">) {
   const parsedTag = tagNameSchema.safeParse(rawTag);
   const tag = parsedTag.success ? parsedTag.data : undefined;
 
-  const feedPromise = getFeedPage({ tag });
-  // Marks the rejection as handled while we await the viewer; the later `await` still throws.
-  feedPromise.catch(() => {});
   const viewer = await getViewer();
-  // Started before the feed resolves so both queries overlap; Suspense keeps it non-blocking.
-  const recommendedPromise = viewer && !tag ? getRecommendedPosts(viewer.id) : null;
-  const { posts, hasMore } = await feedPromise;
+  // Following mode: a signed-in viewer who follows someone, with no tag filter. The feed
+  // query resolves the ids again on the server; this lookup only picks the mode and the
+  // authors to leave out of the recommendations.
+  // A failed read degrades to the global feed instead of breaking the home.
+  const followedIds =
+    viewer && !tag
+      ? await getAllFollowedAuthorIds(viewer.id).catch((error) => {
+          console.error("Followed authors lookup failed", error);
+          return [];
+        })
+      : [];
+  const scope = viewer && followedIds.length > 0 ? "following" : "global";
+
+  const feedPromise = getFeedPage({ tag, scope });
+  // Marks the rejection as handled while the other queries start; the later `await` still throws.
+  feedPromise.catch(() => {});
+
+  // Following mode interleaves recommendations into the feed. They are best effort: a
+  // failure just means no recommended posts.
+  const recommendedPostsPromise =
+    viewer && scope === "following"
+      ? getRecommendedPostIds(viewer.id, { excludeAuthorIds: followedIds })
+          .then(getFeedPostsByIds)
+          .catch((error) => {
+            console.error("Recommendations failed", error);
+            return [];
+          })
+      : Promise.resolve([]);
+  // Global mode keeps the carousel. Started before the feed resolves so both queries
+  // overlap; Suspense keeps it non-blocking.
+  const carouselPromise = viewer && !tag && scope === "global" ? getRecommendedPosts(viewer.id) : null;
+  const [{ posts, hasMore }, recommendedPosts] = await Promise.all([
+    feedPromise,
+    recommendedPostsPromise,
+  ]);
 
   return (
     <>
@@ -42,9 +72,9 @@ export default async function HomePage(props: PageProps<"/">) {
         </section>
       )}
 
-      {recommendedPromise && (
+      {carouselPromise && (
         <Suspense fallback={<RecommendedSkeleton />}>
-          <RecommendedSection postsPromise={recommendedPromise} />
+          <RecommendedSection postsPromise={carouselPromise} />
         </Suspense>
       )}
 
@@ -52,15 +82,21 @@ export default async function HomePage(props: PageProps<"/">) {
         <p className="px-4 py-10 text-center text-sm text-muted-foreground">
           {tag
             ? "No hay publicaciones con ese tag."
-            : "Todavía no hay publicaciones."}
+            : scope === "following"
+              ? "Las personas que seguís todavía no publicaron nada."
+              : "Todavía no hay publicaciones."}
         </p>
       ) : (
         <FeedList
-          key={tag ?? "all"}
+          // The follow count is part of the key: following or unfollowing changes the feed,
+          // so the "Cargar más" pages from the old set must be discarded.
+          key={`${scope}:${tag ?? "all"}:${followedIds.length}`}
           tag={tag}
+          scope={scope}
           viewerId={viewer?.id ?? null}
           initialPosts={posts}
           initialHasMore={hasMore}
+          recommendedPosts={recommendedPosts}
         />
       )}
     </>
