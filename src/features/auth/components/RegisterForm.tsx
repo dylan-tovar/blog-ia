@@ -20,6 +20,7 @@ export function RegisterForm() {
           name="email"
           type="email"
           autoComplete="email"
+          defaultValue={state?.email}
           required
         />
       </div>

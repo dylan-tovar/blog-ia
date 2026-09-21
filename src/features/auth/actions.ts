@@ -6,7 +6,9 @@ import { loginSchema, registerSchema } from "@/features/auth/schemas";
 import { findEmailByUsername } from "@/features/auth/queries";
 import { isEmailIdentifier, resolveAuthRedirect } from "@/features/auth/utils";
 
-export type AuthActionState = { error?: string } | undefined;
+// `email` lets the register form keep what was typed: React resets uncontrolled
+// forms after an action, which would otherwise wipe it on a validation error.
+export type AuthActionState = { error?: string; email?: string } | undefined;
 
 // Reserved TLD (RFC 2606): never resolves to a real account.
 const UNKNOWN_USER_EMAIL = "unknown-user@example.invalid";
@@ -22,7 +24,11 @@ export async function signUp(
   });
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+    const typedEmail = formData.get("email");
+    return {
+      error: parsed.error.issues[0]?.message ?? "Datos inválidos.",
+      email: typeof typedEmail === "string" ? typedEmail : undefined,
+    };
   }
 
   const { email, password } = parsed.data;
