@@ -1,11 +1,21 @@
 import { z } from "zod";
+import {
+  PASSWORD_MAX_LENGTH_MESSAGE,
+  PASSWORD_RULES,
+  isWithinMaxLength,
+} from "@/features/auth/password-rules";
 
 export const registerSchema = z
   .object({
     email: z.email({ error: "Ingresá un email válido." }),
-    password: z
-      .string()
-      .min(8, { error: "La contraseña debe tener al menos 8 caracteres." }),
+    password: z.string().superRefine((password, ctx) => {
+      for (const rule of PASSWORD_RULES) {
+        if (!rule.test(password)) ctx.addIssue({ code: "custom", message: rule.message });
+      }
+      if (!isWithinMaxLength(password)) {
+        ctx.addIssue({ code: "custom", message: PASSWORD_MAX_LENGTH_MESSAGE });
+      }
+    }),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
