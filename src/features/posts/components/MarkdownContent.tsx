@@ -18,7 +18,8 @@ export function MarkdownContent({ children, className }: { children: string; cla
         components={{
           img({ src, alt }) {
             if (typeof src !== "string" || !isAllowedImageUrl(src, env.NEXT_PUBLIC_SUPABASE_URL)) {
-              return null;
+              // Never load a foreign image, but keep its alt text so the content does not vanish.
+              return alt ? <span>{alt}</span> : null;
             }
             // Dimensions are encoded in the file name at upload time, so the browser can
             // reserve the space before the image loads (no layout shift).
