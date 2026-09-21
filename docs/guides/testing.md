@@ -85,7 +85,7 @@ Verificados leyendo `e2e/` contra `src/`; los e2e no se ejecutaron al escribir e
 | `createDraft` y `shell.spec.ts` pulsan un botón "Nuevo post" que **ya no existe** (la creación pasó al botón "+" / menú "Crear") | Todo test que use `createDraft`, incluido `beforeEach` de `editor-ai-drawer.spec.ts`, falla | Crear el borrador navegando a `/editor/new` y escribiendo, o pasar por el menú "Crear" |
 | `shell.spec.ts` espera tres destinos (Inicio, Mis posts, Perfil) | La barra inferior tiene hoy cuatro (Inicio, Explorar, Actividad, Perfil) | Actualizar la aserción |
 | `scripts/verify-post-writes.mjs` inicia sesión como `mateo_ia.seed@blog-ia.test`, pero `scripts/seed-dev.mjs` crea a ese usuario como `mateo.seed@blog-ia.test` | Tras un seed nuevo, `pnpm verify:writes` falla con "No pude iniciar sesión como mateo_ia" (no se ejecutó al escribir esto: se detectó comparando los dos scripts) | Unificar el email en uno de los dos scripts |
-| El helper `register` asume que el proyecto de Supabase no exige confirmación de email (con confirmación, `signUp` no devuelve sesión y no se llega a `/onboarding`) | Sin verificar; la configuración de Supabase no está en el repositorio | Documentar el ajuste del proyecto |
+| El helper `register` asume que el proyecto de Supabase no exige confirmación de email (con confirmación, `signUp` no devuelve sesión y no se llega a `/onboarding`) | Confirmado en el proyecto real: `mailer_autoconfirm` es `false`, así que hay que desactivar "Confirm email" en Supabase para que los e2e lleguen a `/onboarding` | Ajustar el proyecto de Supabase |
 
 ## Scripts de verificación
 

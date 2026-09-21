@@ -165,7 +165,7 @@ Las Server Actions que escriben usan `requireUser()` (`src/lib/auth.ts`), que re
 | Tema | Detalle |
 | :--- | :--- |
 | Email "Edit" | El botón abre un panel informativo; no hay cambio de email |
-| **Confirmación de email de Supabase sin verificar** | Si el proyecto la exige, `signUp` no devuelve sesión y `/onboarding` redirige a `/login`. No se comprobó la configuración ([ADR 0024](../adr/0024-perfil-en-onboarding.md)) |
+| **Confirmación de email de Supabase** | Si el proyecto la exige (en el real estaba activada), `signUp` no devuelve sesión: se muestra un aviso en vez de ir a `/onboarding`. Para el flujo directo hay que desactivar "Confirm email" en el dashboard ([ADR 0024](../adr/0024-perfil-en-onboarding.md)) |
 | Abandono del onboarding | Quien no completa `/onboarding` queda retenido ahí: solo puede completar el perfil o cerrar sesión |
 | Costo del proxy | Una consulta a `profiles` por cada `GET` de página con sesión, incluidos los prefetch |
 | Textos en inglés | `AccountSettings` usa "Account", "Profile", "Edit", "Handle", "Publications" |
