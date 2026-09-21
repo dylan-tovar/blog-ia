@@ -22,7 +22,7 @@ export function PostCover({ cover, className }: { cover: ResolvedCover; classNam
     return (
       <div
         className={cn(
-          "flex min-h-44 flex-col gap-3 p-5 text-white sm:aspect-video sm:min-h-0",
+          "flex min-h-44 flex-col gap-3 p-5 text-white ring-1 ring-white/10 ring-inset sm:aspect-video sm:min-h-0",
           COVER_COLOR_STYLES[cover.color].className,
           className,
         )}
