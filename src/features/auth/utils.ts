@@ -13,6 +13,8 @@ export function resolveAuthRedirect(raw: unknown): string {
     !raw.startsWith("//") &&
     // Browsers treat "\" as "/", so "/\evil.com" would be protocol-relative.
     !raw.includes("\\") &&
+    // URL parsing drops tabs and newlines, so "/\t/evil.com" becomes "//evil.com".
+    !/[\u0000-\u001f]/.test(raw) &&
     !AUTH_ONLY_PATHS.some((path) => raw.startsWith(path))
   ) {
     return raw;

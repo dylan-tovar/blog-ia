@@ -130,6 +130,12 @@ describe("resolveAuthRedirect", () => {
     expect(resolveAuthRedirect("/foo\\bar")).toBe("/");
   });
 
+  it("blocks control characters that URL parsing strips (\"/\\t/evil.com\")", () => {
+    expect(resolveAuthRedirect("/\t/evil.com")).toBe("/");
+    expect(resolveAuthRedirect("/\n/evil.com")).toBe("/");
+    expect(resolveAuthRedirect("/\r/evil.com")).toBe("/");
+  });
+
   it("blocks protocol-relative open redirects", () => {
     expect(resolveAuthRedirect("//evil.com")).toBe("/");
     expect(resolveAuthRedirect("//evil.com/path")).toBe("/");
