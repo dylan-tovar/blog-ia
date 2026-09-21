@@ -1,9 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   HOME_URL,
+  INTERESTS_HEADING,
   ONBOARDING_URL,
   PASSWORD,
+  completeInterests,
   completeOnboarding,
+  interestChips,
   register,
   signUpAccount,
   uniqueEmail,
@@ -44,12 +47,71 @@ test.describe("route protection", () => {
 });
 
 test.describe("auth flows", () => {
-  test("registers a new user, completes onboarding and lands on the feed", async ({
+  test("registers a new user, completes both onboarding steps and lands on the feed", async ({
+    page,
+  }) => {
+    await signUpAccount(page);
+    await expect(page.getByText("Paso 1 de 2")).toBeVisible();
+    await completeOnboarding(page);
+    await expect(page).toHaveURL(ONBOARDING_URL);
+    await expect(page.getByText("Paso 2 de 2")).toBeVisible();
+    await completeInterests(page);
+    await expect(page).toHaveURL(HOME_URL);
+  });
+
+  test("step 2 keeps the button disabled until 3 topics are selected", async ({ page }) => {
+    await signUpAccount(page);
+    await completeOnboarding(page);
+    await expect(page.getByRole("heading", { name: INTERESTS_HEADING })).toBeVisible();
+
+    const chips = interestChips(page);
+    const total = await chips.count();
+    test.skip(total < 3, "needs at least 3 tags on published articles in the database");
+
+    const submit = page.getByRole("button", { name: "Continuar" });
+    await expect(submit).toBeDisabled();
+    await expect(page.getByRole("status")).toContainText("Elegí al menos 3 · 0 elegidos");
+
+    for (const index of [0, 1]) {
+      await chips.nth(index).click();
+      await expect(chips.nth(index)).toHaveAttribute("aria-pressed", "true");
+      await expect(submit).toBeDisabled();
+    }
+    await expect(page.getByRole("status")).toContainText("Elegí al menos 3 · 2 elegidos");
+
+    await chips.nth(2).click();
+    await expect(submit).toBeEnabled();
+    await expect(page.getByRole("status")).toHaveText("3 elegidos");
+
+    // A chip can be deselected again, which blocks the submit once more.
+    await chips.nth(2).click();
+    await expect(chips.nth(2)).toHaveAttribute("aria-pressed", "false");
+    await expect(submit).toBeDisabled();
+  });
+
+  test("a user who finished step 1 is sent back to step 2 from every page", async ({
     page,
   }) => {
     await signUpAccount(page);
     await completeOnboarding(page);
-    await expect(page).toHaveURL(HOME_URL);
+    await expect(page.getByRole("heading", { name: INTERESTS_HEADING })).toBeVisible();
+
+    for (const path of ["/", "/settings", "/posts"]) {
+      await page.goto(path);
+      await expect(page).toHaveURL(ONBOARDING_URL);
+      await expect(page.getByRole("heading", { name: INTERESTS_HEADING })).toBeVisible();
+    }
+  });
+
+  test("a user can log out from step 2", async ({ page }) => {
+    await signUpAccount(page);
+    await completeOnboarding(page);
+    await expect(page.getByRole("heading", { name: INTERESTS_HEADING })).toBeVisible();
+
+    await page.getByRole("button", { name: "Cerrar sesión" }).click();
+    await expect(page).toHaveURL(/\/login$/);
+    await page.goto("/onboarding");
+    await expect(page).toHaveURL(/\/login$/);
   });
 
   test("flags mismatched passwords live and blocks the submit", async ({ page }) => {
@@ -106,7 +168,7 @@ test.describe("auth flows", () => {
     await expect(password).toHaveAttribute("type", "password");
   });
 
-  test("a user without a profile is sent to /onboarding from a protected page", async ({
+  test("a user without a profile is sent to step 1 from a protected page", async ({
     page,
   }) => {
     await signUpAccount(page);
@@ -116,7 +178,7 @@ test.describe("auth flows", () => {
     }
   });
 
-  test("a user with a profile is bounced from /onboarding to the feed", async ({
+  test("a fully onboarded user is bounced from /onboarding to the feed", async ({
     page,
   }) => {
     await register(page);

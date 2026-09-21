@@ -27,6 +27,7 @@ export async function signUpAccount(page: Page, email = uniqueEmail()) {
   return email;
 }
 
+// Step 1 of onboarding (name + username); ends on step 2.
 export async function completeOnboarding(
   page: Page,
   { displayName = "E2E User", username = uniqueUsername() } = {},
@@ -37,10 +38,39 @@ export async function completeOnboarding(
   return { username };
 }
 
-// Signs up and completes onboarding; ends on the home page.
+export const INTERESTS_HEADING = "Elegí tus temas de interés";
+
+export function interestChips(page: Page) {
+  return page.getByRole("group", { name: "Temas de interés" }).getByRole("button");
+}
+
+// Step 2 of onboarding: picks up to 3 chips (as many as exist when there are fewer)
+// and continues. Ends on the home page.
+export async function completeInterests(page: Page) {
+  await expect(page.getByRole("heading", { name: INTERESTS_HEADING })).toBeVisible();
+
+  const chips = interestChips(page);
+  const total = await chips.count();
+
+  for (let index = 0; index < Math.min(3, total); index++) {
+    const chip = chips.nth(index);
+    // Retried as a whole (and never toggled twice) in case the click lands before hydration.
+    await expect(async () => {
+      if ((await chip.getAttribute("aria-pressed")) !== "true") {
+        await chip.click();
+      }
+      await expect(chip).toHaveAttribute("aria-pressed", "true", { timeout: 1000 });
+    }).toPass();
+  }
+
+  await page.getByRole("button", { name: "Continuar" }).click();
+}
+
+// Signs up and completes both onboarding steps; ends on the home page.
 export async function register(page: Page, displayName = "E2E User") {
   const email = await signUpAccount(page);
   const { username } = await completeOnboarding(page, { displayName });
+  await completeInterests(page);
   await expect(page).toHaveURL(HOME_URL);
   return { email, username };
 }
