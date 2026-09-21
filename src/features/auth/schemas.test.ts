@@ -5,8 +5,8 @@ import { isEmailIdentifier, resolveAuthRedirect } from "@/features/auth/utils";
 describe("registerSchema", () => {
   const valid = {
     email: "ana@example.com",
-    password: "12345678",
-    confirmPassword: "12345678",
+    password: "Abcdef1!",
+    confirmPassword: "Abcdef1!",
   };
 
   it("accepts valid input", () => {
@@ -22,8 +22,8 @@ describe("registerSchema", () => {
   it("rejects passwords shorter than 8 characters", () => {
     const result = registerSchema.safeParse({
       ...valid,
-      password: "1234567",
-      confirmPassword: "1234567",
+      password: "Abcde1!",
+      confirmPassword: "Abcde1!",
     });
     expect(result.success).toBe(false);
     expect(result.error?.issues[0].message).toBe(
@@ -32,7 +32,7 @@ describe("registerSchema", () => {
   });
 
   it("rejects mismatched passwords, reporting it on confirmPassword", () => {
-    const result = registerSchema.safeParse({ ...valid, confirmPassword: "87654321" });
+    const result = registerSchema.safeParse({ ...valid, confirmPassword: "Abcdef1?" });
     expect(result.success).toBe(false);
     expect(result.error?.issues[0].message).toBe("Las contraseñas no coinciden.");
     expect(result.error?.issues[0].path).toEqual(["confirmPassword"]);
@@ -56,6 +56,76 @@ describe("registerSchema", () => {
   it("rejects missing fields", () => {
     expect(registerSchema.safeParse({}).success).toBe(false);
   });
+
+  describe("password strength", () => {
+    function firstMessage(password: string) {
+      const result = registerSchema.safeParse({
+        ...valid,
+        password,
+        confirmPassword: password,
+      });
+      expect(result.success).toBe(false);
+      return result.error?.issues[0].message;
+    }
+
+    it("rejects a password without a lowercase letter", () => {
+      expect(firstMessage("ABCDEF1!")).toBe("La contraseña debe incluir una minúscula.");
+    });
+
+    it("rejects a password without an uppercase letter", () => {
+      expect(firstMessage("abcdef1!")).toBe("La contraseña debe incluir una mayúscula.");
+    });
+
+    it("rejects a password without a number", () => {
+      expect(firstMessage("Abcdefg!")).toBe("La contraseña debe incluir un número.");
+    });
+
+    it("rejects a password without a symbol", () => {
+      expect(firstMessage("Abcdefg1")).toBe("La contraseña debe incluir un símbolo.");
+    });
+
+    it("reports one issue per failed rule, length first", () => {
+      const result = registerSchema.safeParse({
+        ...valid,
+        password: "abc",
+        confirmPassword: "abc",
+      });
+      expect(result.error?.issues.map((i) => i.message)).toEqual([
+        "La contraseña debe tener al menos 8 caracteres.",
+        "La contraseña debe incluir una mayúscula.",
+        "La contraseña debe incluir un número.",
+        "La contraseña debe incluir un símbolo.",
+      ]);
+      expect(result.error?.issues.every((i) => i.path[0] === "password")).toBe(true);
+    });
+
+    it("rejects passwords over 72 bytes", () => {
+      const tooLong = `Ab1!${"a".repeat(69)}`;
+      expect(firstMessage(tooLong)).toBe(
+        "La contraseña no puede superar los 72 bytes.",
+      );
+    });
+
+    it("counts bytes, not characters, for the maximum", () => {
+      // 4 ASCII + 35 x 2 bytes = 74 bytes in only 39 characters.
+      expect(firstMessage(`Ab1!${"ñ".repeat(35)}`)).toBe(
+        "La contraseña no puede superar los 72 bytes.",
+      );
+    });
+
+    it("accepts a password of exactly 72 bytes", () => {
+      const password = `Ab1!${"a".repeat(68)}`;
+      expect(
+        registerSchema.safeParse({ ...valid, password, confirmPassword: password })
+          .success,
+      ).toBe(true);
+    });
+
+    it("still reports a mismatch once the password is valid", () => {
+      const result = registerSchema.safeParse({ ...valid, confirmPassword: "Abcdef1?" });
+      expect(result.error?.issues[0].message).toBe("Las contraseñas no coinciden.");
+    });
+  });
 });
 
 describe("loginSchema", () => {
@@ -68,6 +138,12 @@ describe("loginSchema", () => {
   it("accepts a username as identifier and trims it", () => {
     const result = loginSchema.parse({ identifier: "  ana_dev ", password: "x" });
     expect(result.identifier).toBe("ana_dev");
+  });
+
+  it("does not enforce the register password rules, so old accounts can sign in", () => {
+    expect(
+      loginSchema.safeParse({ identifier: "ana_dev", password: "abc" }).success,
+    ).toBe(true);
   });
 
   it("rejects an empty identifier", () => {

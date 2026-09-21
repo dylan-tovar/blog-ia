@@ -154,7 +154,10 @@ async function getParentRefs(parentIds: string[]) {
   return parents;
 }
 
-async function hydrateFeedPosts(rows: CardRow[], { withFollows }: { withFollows: boolean }) {
+async function hydrateFeedPosts(
+  rows: CardRow[],
+  { withFollows = true }: { withFollows?: boolean } = {},
+) {
   const viewer = await getViewer();
   const authorIds = [
     ...new Set(rows.flatMap((row) => (row.author ? [row.author.id] : []))),
@@ -302,7 +305,7 @@ export async function getNotesForPost(postId: string) {
   }
 
   const posts = await hydrateFeedPosts((data ?? []) as unknown as CardRow[], {
-    withFollows: false,
+    withFollows: true,
   });
   return posts.filter((post): post is NoteFeedPost => post.type === "note");
 }
@@ -365,7 +368,7 @@ export async function getPublishedPostsByAuthor(authorId: string) {
     throw new Error(`No pudimos cargar los posts del autor: ${error.message}`);
   }
 
-  return hydrateFeedPosts((data ?? []) as unknown as CardRow[], { withFollows: false });
+  return hydrateFeedPosts((data ?? []) as unknown as CardRow[], { withFollows: true });
 }
 
 export async function getLikedPostsByUser(userId: string) {
@@ -401,7 +404,7 @@ export async function getLikedPostsByUser(userId: string) {
   }
 
   const posts = await hydrateFeedPosts((data ?? []) as unknown as CardRow[], {
-    withFollows: false,
+    withFollows: true,
   });
   const postsMap = new Map(posts.map((p) => [p.id, p]));
   return postIds.map((id) => postsMap.get(id)).filter((p): p is FeedPost => Boolean(p));

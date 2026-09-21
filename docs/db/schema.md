@@ -1,6 +1,6 @@
 # Esquema de la base de datos
 
-Derivado de `supabase/migrations/0001_profiles.sql` a `0009_post_cover.sql`. Todas las tablas están en el esquema `public` y tienen RLS habilitado. Las migraciones se corren a mano en el SQL Editor de Supabase ([ADR 0016](../adr/0016-migraciones-sql-manuales.md)); este documento describe el esquema **resultante de aplicarlas todas**, no el estado de ningún proyecto en particular.
+Derivado de `supabase/migrations/0001_profiles.sql` a `0010_onboarding_interests.sql`. Todas las tablas están en el esquema `public` y tienen RLS habilitado. Las migraciones se corren a mano en el SQL Editor de Supabase ([ADR 0016](../adr/0016-migraciones-sql-manuales.md)); este documento describe el esquema **resultante de aplicarlas todas**, no el estado de ningún proyecto en particular.
 
 | Tabla / objeto | Migración | PRD |
 | :--- | :--- | :--- |
@@ -13,8 +13,9 @@ Derivado de `supabase/migrations/0001_profiles.sql` a `0009_post_cover.sql`. Tod
 | Columnas de caché de IA, trigger, privilegios por columna, `ai_rate_limits` y `ai_rate_limit_hit` | `0007_ai_features.sql` | [PRD-5](../prds/PRD-5-ai-author.md), [PRD-6](../prds/PRD-6-ai-reader.md) |
 | Bucket `post-images` de Storage y sus políticas | `0008_post_images.sql` | [ADR 0022](../adr/0022-imagenes-en-supabase-storage.md) |
 | Portada de artículos (`posts.cover_image_url`, `cover_text`, `cover_color`) | `0009_post_cover.sql` | [ADR 0023](../adr/0023-portada-de-articulos.md) |
+| `profiles.onboarded_at` (con backfill), tabla `user_interests` y función `popular_tags` | `0010_onboarding_interests.sql` | [ADR 0025](../adr/0025-intereses-en-onboarding.md) |
 
-`0001` a `0004` no se pueden repetir. `0005`, `0006` y `0007` solo se repiten como cadena completa y en orden, nunca `0005` sola: recrea las políticas de INSERT y UPDATE de `posts` en su versión original ([db/README](README.md)).
+`0001` a `0004` no se pueden repetir. `0005`, `0006` y `0007` solo se repiten como cadena completa y en orden, nunca `0005` sola: recrea las políticas de INSERT y UPDATE de `posts` en su versión original ([db/README](README.md)). `0008`, `0009` y `0010` se pueden repetir; el backfill de `onboarded_at` de `0010` corre solo la primera vez.
 
 ## Relaciones
 
@@ -30,12 +31,20 @@ erDiagram
   POSTS ||--o{ POSTS : "parent_post_id (set null)"
   PROFILES ||--o{ LIKES : "user_id (cascade)"
   POSTS ||--o{ LIKES : "post_id (cascade)"
+  PROFILES ||--o{ USER_INTERESTS : "user_id (cascade)"
+  TAGS ||--o{ USER_INTERESTS : "tag_id (cascade)"
 
   PROFILES {
     uuid id PK
     text display_name
     text username UK
     text avatar_url
+    timestamptz onboarded_at "null: falta elegir intereses"
+  }
+  USER_INTERESTS {
+    uuid user_id PK
+    uuid tag_id PK
+    timestamptz created_at
   }
   POSTS {
     uuid id PK
@@ -63,8 +72,8 @@ erDiagram
 ```
 
 - `post_tags` resuelve la relación muchos a muchos entre `posts` y `tags`.
-- Borrar un usuario de `auth.users` borra su perfil, sus posts y las filas de `post_tags`, `likes`, `subscriptions` y `reading_history` en cascada.
-- Borrar un tag borra sus filas de `post_tags`, no los posts.
+- Borrar un usuario de `auth.users` borra su perfil, sus posts y las filas de `post_tags`, `likes`, `subscriptions`, `reading_history` y `user_interests` en cascada.
+- Borrar un tag borra sus filas de `post_tags` y de `user_interests`, no los posts.
 - Borrar un post borra sus `likes` y su `reading_history` y deja las notas que colgaban de él sin padre (`set null`).
 - `ai_rate_limits` no tiene relaciones: es un contador por clave y minuto que solo toca el servidor.
 
@@ -81,6 +90,7 @@ erDiagram
 | `subscriptions` | Todos | Como uno mismo | — | Las propias |
 | `reading_history` | Solo el propio usuario | Propio, sobre posts publicados | Propio, sobre posts publicados | — |
 | `likes` | Todos | Propio, sobre posts publicados | — | Los propios |
+| `user_interests` | Solo el propio usuario | Como uno mismo | — | Las propias |
 | `ai_rate_limits` | — (RLS sin políticas) | — | — | — |
 
 Los privilegios de columna sobre `posts` (`0007`) se suman a estas políticas; ver la sección de `posts` y [ADR 0012](../adr/0012-integridad-de-escritura-de-posts.md). El servidor (`service_role`, la secret key) salta RLS: escribe `status`, `published_at`, `rejection_reason`, las columnas `ai_*`, `updated_at` al reclamar un post, y llama a las funciones reservadas.
@@ -93,10 +103,11 @@ Los privilegios de columna sobre `posts` (`0007`) se suman a estas políticas; v
 | `can_attach_note(p_parent_id uuid)` | `0005` | `security definer`, `stable`, `search_path` vacío | `authenticated` (revocada a `public` y `anon`) | Comprobar que el padre de una nota existe, está `published` y no es a su vez una respuesta. Va en una función porque una política de `posts` que consulta `posts` falla con el error `42P17` (recursión infinita de RLS) |
 | `posts_invalidate_ai_cache()` | `0007` | trigger `before update`, `security invoker` | — | Invalidar la caché de IA al cambiar `content` |
 | `ai_rate_limit_hit(p_user_key, p_user_limit, p_global_limit, p_global_key default 'global')` | `0007` | `security definer`, `search_path` vacío | Solo `service_role` | Límite de peticiones a la IA por minuto |
+| `popular_tags(p_limit int default 30)` | `0010` | `security invoker`, `stable`, `search_path` vacío | `authenticated` (revocada a `public` y `anon`) | Tags de artículos `published`, con su cantidad de usos, ordenados por usos y luego por nombre; `p_limit` negativo se trata como 0. Es la oferta del paso 2 del onboarding ([ADR 0025](../adr/0025-intereses-en-onboarding.md)). Al ser `invoker`, las políticas de `posts` y `post_tags` siguen aplicando |
 
 ## Tipos de TypeScript
 
-`src/lib/supabase/database.types.ts` **se mantiene a mano** ([ADR 0016](../adr/0016-migraciones-sql-manuales.md)): declara `profiles`, `posts`, `tags`, `post_tags`, `subscriptions`, `reading_history` y `likes`, y las funciones `ai_rate_limit_hit` y `login_email_for_username`. **No** incluye la tabla `ai_rate_limits` ni la función `can_attach_note` (ninguna se usa desde un cliente con tipos). Al cambiar una columna en SQL hay que actualizar este archivo a mano.
+`src/lib/supabase/database.types.ts` **se mantiene a mano** ([ADR 0016](../adr/0016-migraciones-sql-manuales.md)): declara `profiles`, `posts`, `tags`, `post_tags`, `subscriptions`, `reading_history`, `likes` y `user_interests`, y las funciones `ai_rate_limit_hit`, `login_email_for_username` y `popular_tags`. **No** incluye la tabla `ai_rate_limits` ni la función `can_attach_note` (ninguna se usa desde un cliente con tipos). Al cambiar una columna en SQL hay que actualizar este archivo a mano.
 
 ## `profiles`
 
@@ -107,6 +118,7 @@ Los privilegios de columna sobre `posts` (`0007`) se suman a estas políticas; v
 | `username` | `text` | No | | Identificador para iniciar sesión (`0004_username.sql`). Único y con `check (username ~ '^[a-z0-9_]{3,20}$')`: minúsculas, dígitos y `_`, de 3 a 20 caracteres. Los perfiles anteriores a `0004` reciben `user_<8 hex del id>` |
 | `avatar_url` | `text` | Sí | | Sin uso en la UI todavía |
 | `created_at` | `timestamptz` | No | `now()` | |
+| `onboarded_at` | `timestamptz` | Sí | | `0010`. `null` = el paso 2 del onboarding (intereses) sigue pendiente. La migración la crea y rellena con `created_at` en los perfiles que ya existían; los nuevos nacen en `null` y `saveInterests` la completa ([ADR 0025](../adr/0025-intereses-en-onboarding.md)) |
 
 | Política | Operación | Regla |
 | :--- | :--- | :--- |
@@ -116,7 +128,7 @@ Los privilegios de columna sobre `posts` (`0007`) se suman a estas políticas; v
 
 No hay política de DELETE: nadie puede borrar perfiles desde la API.
 
-La fila la inserta la Server Action `completeOnboarding` cuando la persona completa `/onboarding`, no `signUp` ni un trigger ([ADR 0024](../adr/0024-perfil-en-onboarding.md)): una cuenta de `auth.users` puede existir un rato sin fila en `profiles`, y mientras tanto el proxy la retiene en `/onboarding`.
+La fila la inserta la Server Action `completeOnboarding` cuando la persona completa `/onboarding`, no `signUp` ni un trigger ([ADR 0024](../adr/0024-perfil-en-onboarding.md)): una cuenta de `auth.users` puede existir un rato sin fila en `profiles`, y mientras tanto el proxy la retiene en `/onboarding`. Desde `0010` tener fila tampoco alcanza: sin `onboarded_at` sigue pendiente el paso de intereses y el proxy la retiene igual ([ADR 0025](../adr/0025-intereses-en-onboarding.md)). `onboarded_at` es legible por todos como el resto de `profiles`.
 
 `username` es público como el resto de `profiles`; el email **no** está en esta tabla. La función `public.login_email_for_username(text)` (`security definer`, `search_path` vacío) lee `auth.users` y devuelve el email de un username. Tiene `revoke` a `public`, `anon` y `authenticated`, y `grant execute` solo a `service_role`: únicamente el servidor con la secret key puede llamarla ([ADR 0007](../adr/0007-login-por-username-con-secret-key.md)). Para verificarlo, una llamada RPC con la publishable key debe fallar con `permission denied`.
 
@@ -254,6 +266,26 @@ La condición `published` va más allá del PRD: las claves foráneas se validan
 
 La condición `published` sigue el mismo criterio que `reading_history`: la FK se valida sin RLS y sin ella se podría dar like a un borrador ajeno. No hay política de UPDATE.
 
+## `user_interests`
+
+Temas que cada usuario eligió en el paso 2 del onboarding (`0010`, [ADR 0025](../adr/0025-intereses-en-onboarding.md)). Son **privados**: solo el propio usuario los ve. Alimentan el perfil de tags de las recomendaciones ([PRD-4](../prds/PRD-4-recommendations.md)).
+
+| Columna | Tipo | Nulo | Default | Notas |
+| :--- | :--- | :--- | :--- | :--- |
+| `user_id` | `uuid` | No | | FK a `profiles(id)` con `on delete cascade` |
+| `tag_id` | `uuid` | No | | FK a `tags(id)` con `on delete cascade` |
+| `created_at` | `timestamptz` | No | `now()` | |
+
+PK compuesta `(user_id, tag_id)`: no se repite un interés. El máximo (20) y el mínimo (3, relajado si hay menos tags elegibles) los valida la app, no la base.
+
+| Política | Operación | Regla |
+| :--- | :--- | :--- |
+| Users can view their own interests | SELECT | `user_id = (select auth.uid())` |
+| Users can add their own interests | INSERT | `user_id = (select auth.uid())` |
+| Users can remove their own interests | DELETE | `user_id = (select auth.uid())` |
+
+No hay política de UPDATE: la fila es solo (usuario, tag); cambiar una elección es borrar e insertar. La FK a `tags` se valida sin RLS, así que un `tag_id` cualquiera es válido para la base; la app comprueba que sea uno de los ofrecidos por `popular_tags` antes de guardar.
+
 ## `ai_rate_limits`
 
 Contadores del límite de peticiones a la IA (`0007`). Ventana fija de un minuto. Las claves son `user:<id>` y `global` para las funciones de asistencia, y `moderation:user:<id>` y `moderation:global` para la moderación al publicar (carril separado). `ai_rate_limit_hit(p_user_key, p_user_limit, p_global_limit, p_global_key)` solo la ejecuta `service_role`.
@@ -280,5 +312,6 @@ Bucket público (`0008`) para las imágenes de los artículos, con límite de 2 
 
 - Índices de `0003_feed.sql`: `posts (published_at desc) where status = 'published'` (orden del feed), `post_tags (tag_id)` (filtro por tag; la PK de `post_tags` empieza por `post_id`), `subscriptions (author_id)` y `reading_history (user_id)`.
 - Índices de `0005_post_types_and_likes.sql`: `posts (parent_post_id) where parent_post_id is not null` (notas de un post) y `likes (post_id)` (conteo de likes).
+- Índice de `0010_onboarding_interests.sql`: `user_interests (tag_id)` (la PK empieza por `user_id`; este cubre las búsquedas por tag).
 - Además, los índices implícitos de las claves primarias y de los `unique`.
 - Un solo trigger: `posts_invalidate_ai_cache` (`0007`, ver `posts`). La fila de `profiles` no se crea por trigger: la inserta la action `completeOnboarding` ([ADR 0024](../adr/0024-perfil-en-onboarding.md)).

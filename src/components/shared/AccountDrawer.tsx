@@ -139,7 +139,7 @@ export function AccountDrawer({ viewer }: AccountDrawerProps) {
           <Link
             href="/settings"
             onClick={close}
-            className="px-4 py-2.5 text-[15px] text-foreground transition-colors hover:bg-muted/60 cursor-pointer"
+            className="px-4 py-2.5 text-[15px] text-muted-foreground transition-colors hover:bg-muted/60 cursor-pointer"
           >
             Settings
           </Link>
@@ -147,7 +147,7 @@ export function AccountDrawer({ viewer }: AccountDrawerProps) {
           <Link
             href="/support"
             onClick={close}
-            className="px-4 py-2.5 text-[15px] text-foreground transition-colors hover:bg-muted/60 cursor-pointer"
+            className="px-4 py-2.5 text-[15px] text-muted-foreground transition-colors hover:bg-muted/60 cursor-pointer"
           >
             Support
           </Link>
@@ -156,7 +156,7 @@ export function AccountDrawer({ viewer }: AccountDrawerProps) {
             type="button"
             onClick={handleSignOut}
             disabled={isSigningOut}
-            className="flex items-center gap-2 px-4 py-2.5 text-left text-[15px] text-foreground transition-colors hover:bg-muted/60 cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 text-left text-[15px] text-muted-foreground transition-colors hover:bg-muted/60 cursor-pointer disabled:opacity-50"
           >
             {isSigningOut && <Loader2 className="size-4 animate-spin" />}
             <span>Sign out</span>

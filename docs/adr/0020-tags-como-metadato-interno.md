@@ -1,6 +1,6 @@
 # 0020. Los tags son metadato interno: solo el autor los ve al publicar y Explorar los usa para filtrar
 
-- **Estado:** Aceptada. **El motivo de producto no quedó registrado**: la decisión figuraba como "regla de producto" (ver la sección Implementación de [ADR 0004](0004-recomendaciones-scoring-determinista.md)) sin explicación. Si se conoce el motivo original, conviene agregarlo aquí.
+- **Estado:** Aceptada. **El motivo de producto no quedó registrado**: la decisión figuraba como "regla de producto" (ver la sección Implementación de [ADR 0004](0004-recomendaciones-scoring-determinista.md)) sin explicación. Si se conoce el motivo original, conviene agregarlo aquí. Reemplazada parcialmente por el [ADR 0025](0025-intereses-en-onboarding.md) (ver la actualización al final).
 - **Fecha:** 2026-09-20 (documenta un estado existente)
 - **Fuentes:** [ADR 0004](0004-recomendaciones-scoring-determinista.md) (visibilidad), [PRD-3](../prds/PRD-3-feed-follows.md), [PRD-4](../prds/PRD-4-recommendations.md), [PRD-5](../prds/PRD-5-ai-author.md), `src/app/(public)/page.tsx`, `src/app/(public)/explore/page.tsx`, `src/features/posts/components/editor/PublishDialog.tsx`, `src/features/posts/queries.ts`
 
@@ -34,3 +34,7 @@ Consecuencia sobre el código: `src/app/(public)/page.tsx` contiene el comentari
 - **A favor:** las tarjetas quedan limpias; los tags siguen alimentando recomendaciones y moderación sin ocupar espacio.
 - **En contra:** los lectores no pueden descubrir un tag desde un artículo (solo desde `/explore`); PRD-3 promete un filtro por tag que en la práctica vive solo en `/explore` y en la URL.
 - **Cuándo revisar:** si se quiere navegación por tags desde el contenido, o si el catálogo de tags crece lo suficiente como para que la fila de chips de `/explore` deje de escalar (hoy `getAllTagNames` los trae todos).
+
+## Actualización (2026-09-21)
+
+Reemplazada parcialmente por el [ADR 0025](0025-intereses-en-onboarding.md): el paso 2 del onboarding le muestra a cada usuario nuevo los tags de los artículos publicados (los 30 más usados, `popular_tags`) para que elija sus intereses, y esas elecciones alimentan las recomendaciones. Las tarjetas, el post y el perfil del autor siguen sin mostrar tags. Como los tags son texto libre y sin moderación, el onboarding puede mostrar errores de tipeo o duplicados.

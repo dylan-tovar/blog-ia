@@ -1,6 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { getGateRedirect } from "@/features/auth/onboarding-gate";
+import {
+  getGateRedirect,
+  getOnboardingState,
+  type OnboardingState,
+} from "@/features/auth/onboarding-gate";
 import { env } from "@/lib/env";
 
 function isApiPath(pathname: string) {
@@ -42,25 +46,25 @@ export async function proxy(request: NextRequest) {
 
   // One indexed lookup per navigation of a signed-in user. If it fails we do
   // not know: let the request through instead of locking people out.
-  let hasProfile: boolean | null = null;
+  let onboardingState: OnboardingState = null;
   if (user && isPageNavigation) {
     const { data, error } = await supabase
       .from("profiles")
-      .select("id")
+      .select("id, onboarded_at")
       .eq("id", user.id)
       .maybeSingle();
 
     if (error) {
       console.error("Onboarding gate: profile lookup failed", error.message);
     } else {
-      hasProfile = data !== null;
+      onboardingState = getOnboardingState(data);
     }
   }
 
   const target = getGateRedirect({
     pathname,
     isAuthenticated: user !== null,
-    hasProfile,
+    onboardingState,
   });
 
   if (target) {

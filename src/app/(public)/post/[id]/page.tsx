@@ -13,6 +13,7 @@ import { PostOptionsDrawer } from "@/features/posts/components/PostOptionsDrawer
 import { ReadTracker } from "@/features/posts/components/ReadTracker";
 import { LoginDrawer } from "@/features/auth/components/LoginDrawer";
 import { getNotesForPost, getPublishedPost } from "@/features/posts/queries";
+import { isFollowing } from "@/features/subscriptions/queries";
 import { replyTarget } from "@/features/posts/utils";
 
 export const maxDuration = 30;
@@ -23,9 +24,12 @@ export default async function PublicPostPage(props: PageProps<"/post/[id]">) {
   const isNote = post.type === "note";
   const isReply = isNote && post.parent_post_id !== null;
 
-  const [viewer, notes] = await Promise.all([
-    getViewer(),
+  const viewer = await getViewer();
+  const [notes, following] = await Promise.all([
     isReply ? Promise.resolve([]) : getNotesForPost(post.id),
+    viewer && post.author && viewer.id !== post.author.id
+      ? isFollowing(viewer.id, post.author.id)
+      : Promise.resolve(false),
   ]);
 
   const authorName = post.author?.display_name ?? "Autor desconocido";
@@ -81,6 +85,8 @@ export default async function PublicPostPage(props: PageProps<"/post/[id]">) {
               canDelete={canDelete}
               canEdit={canEdit}
               redirectOnDelete="/"
+              viewerId={viewer?.id ?? null}
+              initialFollowing={following}
             />
           </div>
         </div>

@@ -27,7 +27,7 @@ Cada persona puede cambiar su **nombre para mostrar** y su **nombre de usuario**
 | Dentro | Fuera |
 | :--- | :--- |
 | `/settings`: filas de cuenta y cajón de edición | La vista pública del autor (`AuthorProfileView`, aunque viva en `features/profile/components/`): [PRD-3.3](PRD-3.3-author-profile.md) |
-| `updateProfile`, `getCurrentProfile`, `getPublicProfile` | Crear el perfil (`completeOnboarding` en `/onboarding`): [PRD-1.2](PRD-1.2-auth-security.md) |
+| `updateProfile`, `getCurrentProfile`, `getPublicProfile` | Crear el perfil (`completeOnboarding` en `/onboarding`) y elegir intereses (`saveInterests`): [PRD-1.2](PRD-1.2-auth-security.md). Los intereses no se pueden editar desde `/settings` |
 | `updateProfileSchema` y `usernameSchema` | Subida de avatar (no existe) |
 | `/profile` (redirección) | Cambio real del email (no existe) |
 
@@ -45,10 +45,10 @@ Orden de lectura:
 
 | Función | Qué hace |
 | :--- | :--- |
-| `getCurrentProfile()` | Obtiene el usuario de la sesión (si no hay, redirige a `/login`) y devuelve `{ user, profile }` con `id, display_name, username, avatar_url` |
+| `getCurrentProfile()` | Obtiene el usuario de la sesión (si no hay, redirige a `/login`) y devuelve `{ user, profile }` con `id, display_name, username, avatar_url, onboarded_at` (este último lo usa la página `/onboarding` para decidir el paso; requiere la migración `0010`, [ADR 0025](../adr/0025-intereses-en-onboarding.md)) |
 | `updateProfile(_state, formData)` | Valida con `updateProfileSchema`, exige sesión y hace `upsert` en `profiles` con `id`, `display_name` y `username`. Si el error es `23505` devuelve "Ese nombre de usuario ya está en uso."; otro error, "No pudimos guardar tu perfil. Intentá de nuevo."; si todo sale bien, `{ success: true }` |
 
-Conserva el `upsert` (y no solo `update`) de cuando el perfil podía no crearse al registrarse. Hoy el proxy lleva a `/onboarding` a quien no tiene perfil ([PRD-1.2](PRD-1.2-auth-security.md)), así que `/settings` normalmente ya tiene una fila que actualizar.
+Conserva el `upsert` (y no solo `update`) de cuando el perfil podía no crearse al registrarse. Hoy el proxy lleva a `/onboarding` a quien no terminó el onboarding, es decir, sin perfil o sin `onboarded_at` ([PRD-1.2](PRD-1.2-auth-security.md), [ADR 0025](../adr/0025-intereses-en-onboarding.md)), así que `/settings` normalmente ya tiene una fila que actualizar. `updateProfile` no toca `onboarded_at`.
 
 **3. `queries.ts`.**
 

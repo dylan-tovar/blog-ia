@@ -2,10 +2,10 @@
 
 | Campo | Valor |
 | :--- | :--- |
-| Estado | Implementado. Sin cambios de base de datos |
+| Estado | Implementado. Sin cambios de base de datos propios: desde el [ADR 0025](../adr/0025-intereses-en-onboarding.md) también lee `user_interests` (migración `0010`, de [PRD-1](PRD-1-auth.md)) |
 | Depende de | [PRD 2](PRD-2-posts.md) (posts y tags), [PRD 3](PRD-3-feed-follows.md) (`reading_history`); filtra por tipo según [PRD 7](PRD-7-notes-likes.md) |
-| Migraciones | Ninguna (consume `0002`, `0003` y `0005`) |
-| ADRs relacionados | [0004](../adr/0004-recomendaciones-scoring-determinista.md) |
+| Migraciones | Ninguna propia (consume `0002`, `0003`, `0005` y `0010`) |
+| ADRs relacionados | [0004](../adr/0004-recomendaciones-scoring-determinista.md), [0025](../adr/0025-intereses-en-onboarding.md) |
 | Código | `src/features/recommendations/` (`scoreByTags.ts`, `queries.ts`, `constants.ts`, `components/`), integrado en `src/app/(public)/page.tsx` |
 
 ## Paquetes de trabajo
@@ -19,13 +19,13 @@ Este PRD se reparte en dos paquetes que una persona puede asumir por separado (v
 
 ## Resumen
 
-En la portada (`/`), un usuario con sesión ve una sección **"Recomendados para ti"** con hasta 10 artículos ordenados por cuántos **tags comparten con lo que ya leyó**. No usa IA: es un ranking determinista sobre una ventana acotada de datos, calculado en TypeScript en cada visita a `/`.
+En la portada (`/`), un usuario con sesión ve una sección **"Recomendados para ti"** con hasta 10 artículos ordenados por cuántos **tags comparten con lo que ya leyó y con los temas de interés que eligió en el onboarding**. No usa IA: es un ranking determinista sobre una ventana acotada de datos, calculado en TypeScript en cada visita a `/`.
 
 ## Problema y objetivo
 
-* Mostrar recomendaciones basadas en el historial de lectura del propio usuario.
+* Mostrar recomendaciones basadas en el historial de lectura del propio usuario y en los temas que eligió en el onboarding ([PRD-1](PRD-1-auth.md)).
 * Que el cálculo sea **explicable y determinista**: coincidencia de tags entre lo leído y los candidatos.
-* Que un usuario sin historial siga viendo algo razonable.
+* Que un usuario sin historial siga viendo algo razonable: si eligió intereses, su ranking ya sale personalizado desde el primer día.
 * Que un fallo del cálculo **nunca** rompa el feed.
 
 ## Alcance / fuera de alcance
@@ -54,9 +54,11 @@ En la portada (`/`), un usuario con sesión ve una sección **"Recomendados para
 en paralelo:
   historial  = últimas 1000 lecturas del usuario (reading_history, con los tags de cada post)
   candidatos = 200 artículos publicados más recientes de OTROS autores (con sus tags)
+  intereses  = tag_id de user_interests del usuario (los que eligió en el onboarding)
 
 perfil = conjunto de tag_id de los posts leídos,
-         ignorando los posts de los que el propio usuario es autor
+         ignorando los posts de los que el propio usuario es autor,
+         unido con los tag_id de los intereses (withInterestTags)
 leídos = ids de posts ya leídos
 
 para cada candidato que no esté en "leídos" y no sea del propio usuario:
@@ -76,7 +78,8 @@ hidratar esos 10 (título, extracto, autor) con una tercera consulta
 **Detalles que importan:**
 
 * El puntaje es la **cantidad de tags distintos en común**, no una suma ponderada: un tag leído en 50 artículos vale lo mismo que uno leído en uno.
-* **No hay una rama "fallback" explícita** (el diseño original la pedía). Si el usuario no tiene historial, todos los candidatos puntúan 0 y el desempate por recencia deja **los artículos más recientes de otros autores**: el fallback ocurre de forma implícita.
+* **Los intereses pesan igual que un tag leído**: se suman al conjunto del perfil, sin ponderar. Un usuario nuevo con intereses pero sin historial ya tiene un perfil no vacío. Si la lectura de `user_interests` falla, se registra con `console.error` y el ranking sigue solo con el historial (a diferencia de historial y candidatos, que si fallan hacen fallar el cálculo).
+* **No hay una rama "fallback" explícita** (el diseño original la pedía). Si el usuario no tiene historial **ni intereses** (por ejemplo, los usuarios anteriores a la migración `0010`, que no eligieron), todos los candidatos puntúan 0 y el desempate por recencia deja **los artículos más recientes de otros autores**: el fallback ocurre de forma implícita.
 * Un candidato con score 0 igual entra en la lista si hay lugar, así la sección no queda vacía innecesariamente.
 * Cualquier excepción se captura en `getRecommendedPosts`, se registra con `console.error` y devuelve `[]`.
 
@@ -87,6 +90,7 @@ No se crean tablas. Consume:
 | Tabla | Uso |
 | :--- | :--- |
 | `reading_history` | Historial del usuario (solo artículos leídos con sesión, ver [PRD-3](PRD-3-feed-follows.md)) |
+| `user_interests` | Temas que el usuario eligió en el onboarding (privados, RLS de fila propia; ver [PRD-1](PRD-1-auth.md) y [ADR 0025](../adr/0025-intereses-en-onboarding.md)) |
 | `post_tags` / `tags` | Tags de cada post, para comparar contra el perfil |
 | `posts` | Candidatos: `status = 'published'`, `type = 'article'`, autor distinto del usuario |
 
@@ -104,7 +108,9 @@ No se crean tablas. Consume:
 
 ## Criterios de aceptación
 
-- [x] Un usuario sin historial ve artículos recientes de otros autores.
+- [x] Un usuario sin historial ni intereses ve artículos recientes de otros autores.
+- [x] Un usuario sin historial pero con intereses ve priorizados los artículos que comparten tags con ellos.
+- [x] Si falla la lectura de los intereses, la sección se calcula solo con el historial.
 - [x] Un usuario que leyó varios artículos de un tag ve priorizados otros artículos con ese tag.
 - [x] Un artículo ya leído no vuelve a aparecer.
 - [x] Los artículos propios no aparecen.
@@ -126,5 +132,5 @@ No se crean tablas. Consume:
 
 | Tipo | Archivo | Cubre |
 | :--- | :--- | :--- |
-| Unitarias | `src/features/recommendations/scoreByTags.test.ts` | Construcción del perfil de tags, exclusión de leídos y propios, puntaje, desempate por recencia e id, límite |
+| Unitarias | `src/features/recommendations/scoreByTags.test.ts` | Construcción del perfil de tags, unión con los intereses (`withInterestTags`), exclusión de leídos y propios, puntaje, desempate por recencia e id, límite |
 | e2e | — | La sección de recomendaciones no tiene prueba e2e |

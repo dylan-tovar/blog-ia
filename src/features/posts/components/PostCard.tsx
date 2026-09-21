@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MessageSquare } from "lucide-react";
 import { UserAvatar } from "@/components/shared/UserAvatar";
@@ -18,8 +21,18 @@ interface PostCardProps {
   onDeleted?: (postId: string) => void;
 }
 
-function FollowControl({ post, viewerId }: PostCardProps) {
-  if (!post.author || viewerId === undefined || viewerId === post.author.id) {
+function FollowControl({
+  authorId,
+  viewerId,
+  following,
+  onFollowChange,
+}: {
+  authorId?: string;
+  viewerId?: string | null;
+  following: boolean;
+  onFollowChange: (following: boolean) => void;
+}) {
+  if (!authorId || viewerId === undefined || viewerId === authorId || following) {
     return null;
   }
 
@@ -40,14 +53,21 @@ function FollowControl({ post, viewerId }: PostCardProps) {
 
   return (
     <FollowButton
-      authorId={post.author.id}
-      initialFollowing={post.viewerFollows}
+      authorId={authorId}
+      initialFollowing={following}
+      onFollowChange={onFollowChange}
       variant="text"
     />
   );
 }
 
 export function PostCard({ post, viewerId, showReplyTo = true, onDeleted }: PostCardProps) {
+  const [following, setFollowing] = useState(post.viewerFollows);
+
+  useEffect(() => {
+    setFollowing(post.viewerFollows);
+  }, [post.viewerFollows]);
+
   const authorName = post.author?.display_name ?? "Autor desconocido";
   const isOwn = !!viewerId && viewerId === post.author?.id;
   const canDelete = post.type === "note" && isOwn;
@@ -86,13 +106,21 @@ export function PostCard({ post, viewerId, showReplyTo = true, onDeleted }: Post
             </time>
           )}
           <div className="-my-2 ml-auto flex shrink-0 items-center gap-1">
-            <FollowControl post={post} viewerId={viewerId} />
+            <FollowControl
+              authorId={post.author?.id}
+              viewerId={viewerId}
+              following={following}
+              onFollowChange={setFollowing}
+            />
             <PostOptionsDrawer
               post={post}
               isOwn={isOwn}
               canDelete={canDelete}
               canEdit={canEdit}
               onDeleted={onDeleted}
+              viewerId={viewerId}
+              initialFollowing={following}
+              onFollowChange={setFollowing}
             />
           </div>
         </div>

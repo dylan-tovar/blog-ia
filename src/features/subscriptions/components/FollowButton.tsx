@@ -9,38 +9,44 @@ interface FollowButtonProps {
   authorId: string;
   initialFollowing: boolean;
   variant?: "button" | "text";
+  onFollowChange?: (following: boolean) => void;
 }
 
 export function FollowButton({
   authorId,
   initialFollowing,
   variant = "button",
+  onFollowChange,
 }: FollowButtonProps) {
   const [following, setFollowing] = useOptimistic(initialFollowing);
   const [isPending, startTransition] = useTransition();
 
   function handleClick() {
     startTransition(async () => {
-      setFollowing(!following);
+      const nextFollowing = !following;
+      setFollowing(nextFollowing);
+      onFollowChange?.(nextFollowing);
       await (following ? unfollowAuthor(authorId) : followAuthor(authorId));
     });
   }
 
   if (variant === "text") {
+    if (following) {
+      return null;
+    }
+
     return (
       <button
         type="button"
         disabled={isPending}
         onClick={handleClick}
-        aria-label={following ? "Dejar de seguir" : "Seguir"}
+        aria-label="Seguir"
         className={cn(
           "inline-flex h-auto min-h-0 items-center justify-center rounded-lg py-1 px-2 text-sm font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50",
-          following
-            ? "text-muted-foreground hover:bg-muted/50"
-            : "text-blue-500 hover:bg-blue-500/15 hover:text-blue-400",
+          "text-blue-500 hover:bg-blue-500/15 hover:text-blue-400 cursor-pointer",
         )}
       >
-        {following ? "Siguiendo" : "Seguir"}
+        Seguir
       </button>
     );
   }

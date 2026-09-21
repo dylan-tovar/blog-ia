@@ -36,3 +36,7 @@ Código en `src/features/recommendations/`; no requiere migraciones.
 - **Límites:** ventana de 200 artículos publicados más recientes (`CANDIDATE_WINDOW`) y 1000 lecturas (`HISTORY_LIMIT`), en `constants.ts`. Un artículo fuera de la ventana no se recomienda. Si el catálogo la supera, el siguiente paso es mover el ranking a una función SQL `security invoker` (respeta RLS sin recibir el id de usuario como parámetro).
 - **Errores:** `getRecommendedPosts` nunca lanza; ante un fallo registra el error y devuelve una lista vacía, y la sección no se muestra. Va dentro de `<Suspense>` para no bloquear el feed.
 - **Visibilidad:** solo para usuarios con sesión y sin filtro `?tag=`. No se muestran tags (regla de producto).
+
+## Actualización (2026-09-21)
+
+El perfil de tags ya no sale solo del historial: `loadRecommendations` también lee `user_interests` (los temas elegidos en el paso 2 del onboarding) y `withInterestTags` los une al perfil, con el mismo peso que un tag leído. Así un usuario nuevo tiene ranking personalizado sin historial. Si esa lectura falla, se sigue solo con el historial. Ver [ADR 0025](0025-intereses-en-onboarding.md). El resto de la decisión (scoring determinista, ranking en TypeScript, ventanas y errores) no cambia.

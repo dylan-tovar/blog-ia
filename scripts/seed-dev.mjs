@@ -140,7 +140,9 @@ for (const user of USERS) {
   ids[user.username] = id;
   clients[user.username] = client;
 
-  const profile = await client.from("profiles").upsert({ id, display_name: user.displayName, username: user.username });
+  const profile = await client.from("profiles").upsert({
+    id, display_name: user.displayName, username: user.username, onboarded_at: new Date().toISOString(),
+  });
   if (profile.error) throw new Error(`profile ${user.username}: ${profile.error.message}`);
 
   const existing = await client.from("posts").select("id, title").eq("author_id", id).eq("type", "article");

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildTagProfile,
+  withInterestTags,
   rankCandidates,
   type Candidate,
   type HistoryRow,
@@ -253,5 +254,91 @@ describe("rankCandidates", () => {
     rankCandidates({ ...base, ...profile([]), candidates });
 
     expect(candidates.map((entry) => entry.id)).toEqual(["a", "b"]);
+  });
+});
+
+describe("withInterestTags", () => {
+  it("returns the same tags when there are no interests", () => {
+    const tagIds = new Set(["t1", "t2"]);
+
+    expect([...withInterestTags(tagIds, [])].sort()).toEqual(["t1", "t2"]);
+  });
+
+  it("unions interests with the tags of the history", () => {
+    const { tagIds } = buildTagProfile([read("p1", "a", ["t1", "t2"])], VIEWER);
+
+    expect([...withInterestTags(tagIds, ["t2", "t3"])].sort()).toEqual(["t1", "t2", "t3"]);
+  });
+
+  it("does not mutate the history profile", () => {
+    const tagIds = new Set(["t1"]);
+
+    withInterestTags(tagIds, ["t2"]);
+
+    expect([...tagIds]).toEqual(["t1"]);
+  });
+
+  it("gives a cold-start user with only interests a personalised ranking", () => {
+    const result = rankCandidates({
+      viewerId: VIEWER,
+      limit: 10,
+      readPostIds: new Set(),
+      tagIds: withInterestTags(buildTagProfile([], VIEWER).tagIds, ["arq", "ts"]),
+      candidates: [
+        candidate("recent-no-match", "2026-03-01T00:00:00Z", ["design"]),
+        candidate("one-match", "2026-01-02T00:00:00Z", ["arq"]),
+        candidate("two-matches", "2026-01-01T00:00:00Z", ["arq", "ts"]),
+      ],
+    });
+
+    expect(result.map((entry) => entry.id)).toEqual(["two-matches", "one-match", "recent-no-match"]);
+  });
+
+  it("adds interests on top of the read tags when scoring", () => {
+    const { tagIds, readPostIds } = buildTagProfile([read("seen", "a", ["ts"])], VIEWER);
+
+    const result = rankCandidates({
+      viewerId: VIEWER,
+      limit: 10,
+      readPostIds,
+      tagIds: withInterestTags(tagIds, ["arq"]),
+      candidates: [
+        candidate("only-read-tag", "2026-03-01T00:00:00Z", ["ts"]),
+        candidate("both", "2026-01-01T00:00:00Z", ["ts", "arq"]),
+      ],
+    });
+
+    expect(result).toEqual([
+      { id: "both", score: 2 },
+      { id: "only-read-tag", score: 1 },
+    ]);
+  });
+
+  it("ranks exactly as before when the user has no interests", () => {
+    const candidates = [
+      candidate("a", "2026-01-01T00:00:00Z", ["arq"]),
+      candidate("b", "2026-02-01T00:00:00Z", ["x"]),
+    ];
+    const { tagIds, readPostIds } = buildTagProfile([read("seen", "a", ["arq"])], VIEWER);
+    const args = { viewerId: VIEWER, limit: 10, readPostIds, candidates };
+
+    expect(rankCandidates({ ...args, tagIds: withInterestTags(tagIds, []) })).toEqual(
+      rankCandidates({ ...args, tagIds }),
+    );
+  });
+
+  it("still excludes the viewer's own posts even when they match an interest", () => {
+    const result = rankCandidates({
+      viewerId: VIEWER,
+      limit: 10,
+      readPostIds: new Set(),
+      tagIds: withInterestTags(new Set(), ["arq"]),
+      candidates: [
+        candidate("mine", "2026-03-01T00:00:00Z", ["arq"], VIEWER),
+        candidate("theirs", "2026-01-01T00:00:00Z", ["arq"]),
+      ],
+    });
+
+    expect(result.map((entry) => entry.id)).toEqual(["theirs"]);
   });
 });
