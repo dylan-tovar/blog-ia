@@ -19,6 +19,7 @@ import { createEditorBridge } from "@/features/posts/components/editor/editor-br
 import { EditorToolbar } from "@/features/posts/components/editor/EditorToolbar";
 import { EditorTopBar } from "@/features/posts/components/editor/EditorTopBar";
 import { PublishDialog } from "@/features/posts/components/editor/PublishDialog";
+import type { CoverValue } from "@/features/posts/cover/cover-schema";
 import { useArticleEditor } from "@/features/posts/components/editor/use-article-editor";
 import { useAutosave } from "@/features/posts/components/editor/use-autosave";
 import { MarkdownContent } from "@/features/posts/components/MarkdownContent";
@@ -50,6 +51,7 @@ interface PostEditorProps {
   initialTitle: string;
   initialContent: string;
   initialTags: Tag[];
+  initialCover: CoverValue;
   allTagNames: string[];
   rejectionReason: string | null;
 }
@@ -60,6 +62,7 @@ export function PostEditor({
   initialTitle,
   initialContent,
   initialTags,
+  initialCover,
   allTagNames,
   rejectionReason: initialRejection,
 }: PostEditorProps) {
@@ -268,6 +271,7 @@ export function PostEditor({
         open={publishOpen}
         onOpenChange={setPublishOpen}
         canPublish={canPublish}
+        initialCover={initialCover}
         tags={tags}
         onTagsChange={setTags}
         allTagNames={allTagNames}

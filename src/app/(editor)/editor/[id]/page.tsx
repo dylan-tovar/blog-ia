@@ -1,3 +1,4 @@
+import { isCoverColor } from "@/features/posts/cover/cover-palette";
 import { getAllTagNames, getOwnPost } from "@/features/posts/queries";
 import { DesktopOnly } from "@/features/posts/components/DesktopOnly";
 import { PostEditor } from "@/features/posts/components/PostEditor";
@@ -17,6 +18,9 @@ export default async function EditorPage(props: PageProps<"/editor/[id]">) {
           content: "",
           tags: [] as { id: string; name: string }[],
           rejection_reason: null,
+          cover_image_url: null,
+          cover_text: null,
+          cover_color: null,
         })
       : getOwnPost(id),
     getAllTagNames(),
@@ -30,6 +34,11 @@ export default async function EditorPage(props: PageProps<"/editor/[id]">) {
         initialTitle={post.title ?? ""}
         initialContent={post.content}
         initialTags={post.tags}
+        initialCover={{
+          imageUrl: post.cover_image_url,
+          text: post.cover_text,
+          color: isCoverColor(post.cover_color) ? post.cover_color : null,
+        }}
         allTagNames={allTagNames}
         rejectionReason={post.rejection_reason}
       />
