@@ -52,6 +52,7 @@ src/
 ├── features/                 # código por dominio (ADR 0006)
 │   ├── ai/                   # Gemini, chat, moderación, límite por minuto, caché, resumen
 │   ├── auth/
+│   ├── interests/            # paso 2 del onboarding: elegir temas de interés (ADR 0025)
 │   ├── likes/
 │   ├── posts/                # incluye el editor Tiptap y el motor de aplicar ediciones
 │   ├── profile/
@@ -77,7 +78,7 @@ Los paréntesis no forman parte de la URL: `(dashboard)/posts/page.tsx` responde
 
 | Grupo | Rutas | Acceso |
 | :--- | :--- | :--- |
-| `(auth)` | `/login`, `/register`, `/onboarding` | `/login` y `/register` son públicos; `/onboarding` exige sesión y perfil pendiente. Sin barra de navegación |
+| `(auth)` | `/login`, `/register`, `/onboarding` | `/login` y `/register` son públicos; `/onboarding` exige sesión y onboarding pendiente (paso 1: perfil; paso 2: intereses). Sin barra de navegación |
 | `(public)` | `/` (el feed), `/explore`, `/post/[id]`, `/author/[id]` | Público. El feed, `/explore` y `/post/[id]` solo muestran posts `published`. Seguir, dar like y registrar lecturas requieren sesión (las actions redirigen a `/login`) |
 | `(dashboard)` | `/posts`, `/profile`, `/settings`, `/activity` | Requiere sesión. `/profile` redirige a `/author/<id>` del usuario. `/activity` es hoy una pantalla vacía |
 | `(editor)` | `/editor/[id]` (`new` o el id de un artículo) | Requiere sesión. Layout propio sin `AppShell`; solo desde computadora (`DesktopOnly`) |
@@ -129,8 +130,9 @@ Las funciones de IA del editor van por **Route Handlers** porque las Server Acti
 | :--- | :--- |
 | Cada request (excepto estáticos e imágenes, según `config.matcher`) | `proxy.ts` crea un cliente `@supabase/ssr` con las cookies del request y llama a `auth.getUser()`, lo que refresca la sesión |
 | Ruta que empieza con `/settings`, `/editor`, `/posts` o `/onboarding` sin usuario | Redirección a `/login` |
-| `GET` de página con usuario (no `POST`, no `/api`) | Una consulta `select id` a `profiles`: sin fila redirige a `/onboarding`; con fila, `/onboarding` redirige a `/`. Si la consulta falla, deja pasar ([ADR 0024](../adr/0024-perfil-en-onboarding.md)) |
-| Registro (`signUp`) | `supabase.auth.signUp` con email y contraseña (fuerte, más su confirmación; reglas en `password-rules.ts`) y redirección a `/onboarding`. La fila de `profiles` (nombre y username) la inserta `completeOnboarding` ([ADR 0024](../adr/0024-perfil-en-onboarding.md)). No hay trigger en la base |
+| `GET` de página con usuario (no `POST`, no `/api`) | Una consulta `select id, onboarded_at` a `profiles` que da el estado del onboarding (`none`, `interests`, `done`): si no es `done` redirige a `/onboarding`; con `done`, `/onboarding` redirige a `/`. Si la consulta falla, deja pasar ([ADR 0024](../adr/0024-perfil-en-onboarding.md), [ADR 0025](../adr/0025-intereses-en-onboarding.md)) |
+| Registro (`signUp`) | `supabase.auth.signUp` con email y contraseña (fuerte, más su confirmación; reglas en `password-rules.ts`) y redirección a `/onboarding`. La fila de `profiles` (nombre y username) la inserta `completeOnboarding` ([ADR 0024](../adr/0024-perfil-en-onboarding.md)), que redirige a `/onboarding` para el paso 2. No hay trigger en la base |
+| Intereses (`saveInterests`) | Paso 2 de `/onboarding`: valida un mínimo de 3 temas (relajado si hay menos tags) contra los de `popular_tags`, guarda la diferencia en `user_interests` y marca `profiles.onboarded_at` ([ADR 0025](../adr/0025-intereses-en-onboarding.md)). Los intereses alimentan las recomendaciones |
 | Login (`signIn`) | El identificador es email (si contiene `@`) o username. Un username se resuelve a email en el servidor con la secret key ([ADR 0007](../adr/0007-login-por-username-con-secret-key.md)); luego `signInWithPassword`. Ante cualquier fallo de credenciales responde `Credenciales inválidas.` `loginSchema` no exige la fortaleza de contraseña del registro, a propósito |
 | Logout (`signOut`) | `auth.signOut()` y redirección a `/login` |
 

@@ -9,10 +9,10 @@ El producto completo, su filosofía KISS y la lista de qué se cortó y qué se 
 | PRD | Título | Qué cubre | Estado |
 | :--- | :--- | :--- | :--- |
 | [PRD-0](PRD-0-design-system.md) | Sistema de diseño y fundación | Convenciones de carpetas, primitivas de UI, tema oscuro, shell | Implementado (tema solo oscuro) |
-| [PRD-1](PRD-1-auth.md) | Autenticación, perfiles y modelo base | Registro, onboarding de perfil, login por **email o username**, perfil, `/settings`, rutas privadas, RLS de `profiles` | Implementado |
+| [PRD-1](PRD-1-auth.md) | Autenticación, perfiles y modelo base | Registro, onboarding en dos pasos (perfil e intereses), login por **email o username**, perfil, `/settings`, rutas privadas, RLS de `profiles` | Implementado |
 | [PRD-2](PRD-2-posts.md) | Posts: artículos, editor y publicación | Editor markdown, autoguardado, tags, ciclo de estados, vista pública | Implementado (publica vía moderación de PRD-5) |
 | [PRD-3](PRD-3-feed-follows.md) | Feed, seguimiento e historial de lectura | Feed en `/`, seguir autores, `reading_history`, perfil público de autor | Implementado con limitaciones |
-| [PRD-4](PRD-4-recommendations.md) | Motor de recomendaciones | "Recomendados para ti" por scoring determinista de tags | Implementado |
+| [PRD-4](PRD-4-recommendations.md) | Motor de recomendaciones | "Recomendados para ti" por scoring determinista de tags (historial e intereses del onboarding) | Implementado |
 | [PRD-5](PRD-5-ai-author.md) | IA para el autor | Moderación y auto-tagging al publicar; las herramientas de asistencia pasaron al chat | Reemplazado parcialmente (moderación vigente; asistencia pasó a PRD-8) |
 | [PRD-6](PRD-6-ai-reader.md) | IA para el lector | Resumen bajo demanda de artículos largos, guardado en el post | Implementado |
 | [PRD-7](PRD-7-notes-likes.md) | Notas, artículos y me gusta | Notas cortas, respuestas, likes, feed diferenciado | Implementado |
@@ -132,7 +132,7 @@ Los PRDs 0 a 4 se escribieron **antes** de construir. Estas son las diferencias 
 | Lo que decía el diseño original | Lo que hay hoy | Dónde |
 | :--- | :--- | :--- |
 | El feed vive en `/feed` | Vive en `/`; `/feed` devuelve 404 | [PRD-3](PRD-3-feed-follows.md) |
-| Registro con email, contraseña y nombre | El registro pide email y una contraseña fuerte (con confirmación); el nombre y un **username** único se piden después en `/onboarding`. Se inicia sesión con email o username | [PRD-1](PRD-1-auth.md) |
+| Registro con email, contraseña y nombre | El registro pide email y una contraseña fuerte (con confirmación); el nombre, un **username** único y al menos 3 temas de interés se piden después en `/onboarding` (dos pasos). Se inicia sesión con email o username | [PRD-1](PRD-1-auth.md) |
 | Los tags se ven en tarjetas, post y perfil, y filtran el feed con chips | No se muestran en tarjetas ni en el post; se guardan, alimentan las recomendaciones, se filtran por URL y hay chips solo en `/explore` | [PRD-2](PRD-2-posts.md), [PRD-3](PRD-3-feed-follows.md), [PRD-9](PRD-9-explore-activity.md) |
 | "Nuevo post" crea la fila y abre el editor | La fila se crea en el **primer autoguardado con contenido** | [PRD-2](PRD-2-posts.md) |
 | Publicar pasa el post a `pending_review` y queda pendiente de IA | Publicar **reserva**, **modera con Gemini** y termina en `published` o `rejected` (o no publica si hay límite de peticiones) | [PRD-2](PRD-2-posts.md), [PRD-5](PRD-5-ai-author.md) |

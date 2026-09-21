@@ -17,7 +17,7 @@ El proyecto trabaja con Strict TDD: primero el test que falla, luego el código 
 | :--- | :--- |
 | Configuración | `vitest.config.mts`: entorno `node`, incluye `src/**/*.test.ts`, alias `@` a `src/` |
 | Ubicación | Junto al archivo probado (`src/features/<dominio>/schemas.test.ts`, `apply-action.test.ts`…) |
-| Cantidad | 41 archivos |
+| Cantidad | 45 archivos |
 | Ejecución | `pnpm test` (una vez) o `pnpm test:watch` |
 
 Los archivos por área:
@@ -30,7 +30,7 @@ Los archivos por área:
 | Posts (5, en `src/features/posts/`) | `schemas`, `utils`, `limits`, `link-safety`, `publish` | Esquemas (incluye `feedQuerySchema`), `excerpt`, límites de longitud, enlaces seguros y el reclamo de publicación |
 | Imágenes (2, en `src/features/posts/images/`) | `image-utils`, `image-markdown` | Validación y tamaño de origen, dimensiones de destino, rutas, dimensiones en el nombre, allow-list de URLs, texto alternativo y la ida y vuelta de `![alt](url)` por Tiptap |
 | Portada (3, en `src/features/posts/cover/`) | `cover`, `cover-schema`, `cover-draft` | Paleta, elección imagen/texto/nada, extracción de imágenes del markdown, propiedad de la imagen por carpeta del autor, esquema de la portada y borrador del diálogo |
-| Otros dominios (4) | `auth/schemas`, `profile/schemas`, `likes/schemas`, `recommendations/scoreByTags` | Validaciones y el ranking de tags |
+| Otros dominios (8) | `auth/schemas`, `auth/password-rules`, `auth/onboarding-gate`, `profile/schemas`, `interests/schemas`, `interests/selection`, `likes/schemas`, `recommendations/scoreByTags` | Validaciones, las reglas de contraseña, la puerta del onboarding (estados `none`/`interests`/`done`), la selección de intereses (validación, mínimo relajado, contador, diferencias) y el ranking de tags (incluye `withInterestTags`) |
 | Transversal (2) | `lib/format`, `components/shared/navigation` | `getInitials`, `formatShortDate`, títulos y ruta activa |
 
 Convenciones observadas:
@@ -50,27 +50,27 @@ Convenciones observadas:
 | Configuración | `playwright.config.ts`: `testDir: ./e2e`, proyecto `chromium` (Desktop Chrome), `baseURL` `http://localhost:3000`, `fullyParallel` |
 | Servidor | Playwright arranca `pnpm dev` y lo reutiliza si ya está corriendo (salvo en CI) |
 | Reintentos | 2 en CI (`process.env.CI`), 0 en local; `forbidOnly` en CI |
-| Cantidad | 67 tests en 5 specs |
+| Cantidad | 77 tests declarados (`test(`) en 5 specs; el bucle de protección de rutas de `auth.spec.ts` ejecuta cuatro, así que Playwright informa 80 |
 
 | Archivo | Tests | Qué cubre |
 | :--- | :--- | :--- |
-| `e2e/auth.spec.ts` | 22 | Protección de rutas (incluye `/onboarding`), feed público, registro con onboarding, contraseñas distintas (aviso en vivo y botón deshabilitado), requisitos de contraseña, mostrar/ocultar, redirecciones del proxy sin/con perfil, logout sin perfil, login por email y por username (ignora mayúsculas, error genérico en los tres casos de fallo), logout, edición de nombre y username en `/settings`, duplicados de email (en `/register`) y de username (en `/onboarding`) |
+| `e2e/auth.spec.ts` | 25 | Protección de rutas (incluye `/onboarding`), feed público, registro con onboarding en dos pasos (perfil e intereses), botón del paso 2 deshabilitado hasta elegir 3 temas (se omite si hay menos de 3 tags en artículos publicados), retorno al paso 2 desde cualquier página, logout desde el paso 2, contraseñas distintas (aviso en vivo y botón deshabilitado), requisitos de contraseña, mostrar/ocultar, redirecciones del proxy sin perfil (al paso 1) y con el onboarding terminado (de `/onboarding` al feed), logout sin perfil, login por email y por username (ignora mayúsculas, error genérico en los tres casos de fallo), logout, edición de nombre y username en `/settings`, duplicados de email (en `/register`) y de username (en `/onboarding`) |
 | `e2e/posts.spec.ts` | 8 | Borrador con autoguardado, tags sin duplicados y reutilizables entre usuarios, error al publicar vacío, publicación, 404 para borradores ajenos e ids inválidos |
 | `e2e/feed.spec.ts` | 10 | El feed vive en `/` y `/feed` no existe, filtro por tag por URL, tags que no se muestran a lectores, borradores fuera del feed, página de autor (404), seguir y dejar de seguir |
 | `e2e/shell.spec.ts` | 8 | Barra superior e inferior, botón "+", ausencia de scroll horizontal a 360 px, navegación en escritorio |
 | `e2e/editor-ai-drawer.spec.ts` | 26 | Cajón de IA: atajo `Cmd/Ctrl+I`, foco, persistencia, columna del artículo, streaming, marcador de "pensando", límite con cuenta regresiva, corte del stream, y toda la vida de una propuesta (tarjeta, aplicar, deshacer, descartar, `stale`, selección, "aplicar todo", superposición, insertar en cursor, límite de longitud, sin desborde horizontal) |
-| `e2e/helpers.ts` | — | `register`, `signUpAccount`, `completeOnboarding`, `createDraft`, `uniqueEmail`, `uniqueUsername`, `PASSWORD`, `HOME_URL`, `ONBOARDING_URL` |
+| `e2e/helpers.ts` | — | `register`, `signUpAccount`, `completeOnboarding`, `completeInterests`, `interestChips`, `createDraft`, `uniqueEmail`, `uniqueUsername`, `PASSWORD`, `HOME_URL`, `ONBOARDING_URL`, `INTERESTS_HEADING` |
 
 **El cajón de IA se prueba con el stream simulado.** `editor-ai-drawer.spec.ts` intercepta `POST /api/ai/chat` con `page.route` y responde con NDJSON armado a mano (`ndjson(...)`), así no llama a Gemini ni gasta cuota. Lo que sí toca la base real es el registro del usuario y la creación del borrador.
 
 Prerrequisitos:
 
-1. `.env.local` configurado, incluida `SUPABASE_SECRET_KEY` ([getting-started](getting-started.md)), y las migraciones `0001` a `0007` aplicadas en un proyecto de **desarrollo**.
+1. `.env.local` configurado, incluida `SUPABASE_SECRET_KEY` ([getting-started](getting-started.md)), y las migraciones `0001` a `0010` aplicadas en un proyecto de **desarrollo**. Para que el paso 2 del onboarding ofrezca temas hace falta que haya artículos publicados con tags (`pnpm seed:dev` los carga); con menos de 3, el mínimo se relaja y `completeInterests` elige los que haya.
 2. Navegador de Playwright instalado. Si falta: `pnpm exec playwright install chromium`.
 
 Convenciones observadas:
 
-- Cada test registra un usuario nuevo con `register(page)` (email y username únicos, pasando por `/onboarding`) para no depender de datos previos.
+- Cada test registra un usuario nuevo con `register(page)` (email y username únicos) para no depender de datos previos. `register` = `signUpAccount` (email y contraseña; termina en `/onboarding`) + `completeOnboarding` (paso 1: nombre y username) + `completeInterests` (paso 2: elige hasta 3 chips y continúa) y espera el feed. Los tests del onboarding usan los pasos por separado.
 - `createDraft(page)` crea un borrador y devuelve el id del post.
 - Los selectores usan el texto de la interfaz en español (`getByLabel`, `getByRole`, `getByText`). Cambiar un texto visible puede romper un test.
 - Cada corrida crea usuarios reales en el proyecto de Supabase configurado.

@@ -55,14 +55,15 @@ Lo que existe en el código hoy. Las limitaciones y pendientes están en la [tab
 | Área | Estado | Dónde |
 | :--- | :--- | :--- |
 | Autenticación (registro, onboarding de perfil, login por email o username, logout) | Implementado ([ADR 0007](adr/0007-login-por-username-con-secret-key.md)) | `src/features/auth/` |
-| Protección de rutas privadas | Implementado: `proxy.ts` para `/settings`, `/editor`, `/posts` y `/onboarding` (y lleva a `/onboarding` a quien no tiene perfil, [ADR 0024](adr/0024-perfil-en-onboarding.md)); `/profile` y `/activity` se protegen solas | `src/proxy.ts` |
+| Onboarding en dos pasos: perfil y elección de al menos 3 intereses | Implementado ([ADR 0025](adr/0025-intereses-en-onboarding.md)); requiere la migración `0010` | `src/features/profile/`, `src/features/interests/` |
+| Protección de rutas privadas | Implementado: `proxy.ts` para `/settings`, `/editor`, `/posts` y `/onboarding` (y lleva a `/onboarding` a quien no terminó el onboarding, es decir, sin perfil o sin intereses elegidos, [ADR 0024](adr/0024-perfil-en-onboarding.md), [ADR 0025](adr/0025-intereses-en-onboarding.md)); `/profile` y `/activity` se protegen solas | `src/proxy.ts` |
 | Perfil (nombre y username editables) y perfil público de autor | Implementado; el email de `/settings` es solo lectura; sin avatar | `src/features/profile/` |
 | Interfaz: tema oscuro, barra superior e inferior, botón "+" | Implementado ([ADR 0008](adr/0008-tema-oscuro-y-shell-de-aplicacion.md)) | `src/components/shared/` |
 | Artículos: editor Tiptap con markdown, autoguardado, tags, publicar con moderación de IA | Implementado ([ADR 0010](adr/0010-editor-markdown.md), [ADR 0011](adr/0011-ia-con-gemini.md)) | `src/features/posts/`, `src/app/(editor)/` |
 | Notas (crear, editar, borrar, responder) y me gusta | Implementado ([ADR 0009](adr/0009-tipos-de-post-y-likes.md), [ADR 0015](adr/0015-notas-editables.md)) | `src/features/posts/`, `src/features/likes/` |
 | Feed en `/` (global, cronológico, "Cargar más") y `/explore` con filtro por tag | Implementado ([ADR 0021](adr/0021-feed-en-raiz-y-global.md), [ADR 0020](adr/0020-tags-como-metadato-interno.md)) | `src/app/(public)/` |
 | Seguir y dejar de seguir; lecturas (`reading_history`) | Implementado; seguir no cambia el feed | `src/features/subscriptions/` |
-| Recomendaciones por tags | Implementado ([ADR 0004](adr/0004-recomendaciones-scoring-determinista.md)) | `src/features/recommendations/` |
+| Recomendaciones por tags (historial de lectura e intereses elegidos) | Implementado ([ADR 0004](adr/0004-recomendaciones-scoring-determinista.md), [ADR 0025](adr/0025-intereses-en-onboarding.md)) | `src/features/recommendations/` |
 | Chat de IA del editor (propuestas aplicables, análisis) | Implementado ([ADR 0013](adr/0013-chat-ia-protocolo-ndjson-y-function-calling.md), [ADR 0014](adr/0014-aplicacion-de-ediciones-en-el-cliente-con-fingerprints.md)) | `src/features/ai/`, `src/features/posts/components/editor/` |
 | Imágenes en el editor (subir, arrastrar, pegar) y verlas en el lector | Implementado ([ADR 0022](adr/0022-imagenes-en-supabase-storage.md)) | `src/features/posts/images/` |
 | Portada del artículo (imagen o texto sobre color) en las tarjetas del feed | Implementado con limitaciones: el texto de la portada no se modera ([ADR 0023](adr/0023-portada-de-articulos.md)) | `src/features/posts/cover/` |
