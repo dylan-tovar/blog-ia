@@ -17,7 +17,7 @@ El proyecto trabaja con Strict TDD: primero el test que falla, luego el código 
 | :--- | :--- |
 | Configuración | `vitest.config.mts`: entorno `node`, incluye `src/**/*.test.ts`, alias `@` a `src/` |
 | Ubicación | Junto al archivo probado (`src/features/<dominio>/schemas.test.ts`, `apply-action.test.ts`…) |
-| Cantidad | 38 archivos |
+| Cantidad | 41 archivos |
 | Ejecución | `pnpm test` (una vez) o `pnpm test:watch` |
 
 Los archivos por área:
@@ -29,6 +29,7 @@ Los archivos por área:
 | Editor y motor de aplicar (3, en `src/features/posts/components/editor/`) | `editor-context`, `apply-action`, `action-overlap` | Bloques, fingerprints, localización, aplicar, límites, superposición ([ADR 0014](../adr/0014-aplicacion-de-ediciones-en-el-cliente-con-fingerprints.md)) |
 | Posts (5, en `src/features/posts/`) | `schemas`, `utils`, `limits`, `link-safety`, `publish` | Esquemas (incluye `feedQuerySchema`), `excerpt`, límites de longitud, enlaces seguros y el reclamo de publicación |
 | Imágenes (2, en `src/features/posts/images/`) | `image-utils`, `image-markdown` | Validación y tamaño de origen, dimensiones de destino, rutas, dimensiones en el nombre, allow-list de URLs, texto alternativo y la ida y vuelta de `![alt](url)` por Tiptap |
+| Portada (3, en `src/features/posts/cover/`) | `cover`, `cover-schema`, `cover-draft` | Paleta, elección imagen/texto/nada, extracción de imágenes del markdown, propiedad de la imagen por carpeta del autor, esquema de la portada y borrador del diálogo |
 | Otros dominios (4) | `auth/schemas`, `profile/schemas`, `likes/schemas`, `recommendations/scoreByTags` | Validaciones y el ranking de tags |
 | Transversal (2) | `lib/format`, `components/shared/navigation` | `getInitials`, `formatShortDate`, títulos y ruta activa |
 

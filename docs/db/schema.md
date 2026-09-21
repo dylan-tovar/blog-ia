@@ -1,6 +1,6 @@
 # Esquema de la base de datos
 
-Derivado de `supabase/migrations/0001_profiles.sql` a `0008_post_images.sql`. Todas las tablas están en el esquema `public` y tienen RLS habilitado. Las migraciones se corren a mano en el SQL Editor de Supabase ([ADR 0016](../adr/0016-migraciones-sql-manuales.md)); este documento describe el esquema **resultante de aplicarlas todas**, no el estado de ningún proyecto en particular.
+Derivado de `supabase/migrations/0001_profiles.sql` a `0009_post_cover.sql`. Todas las tablas están en el esquema `public` y tienen RLS habilitado. Las migraciones se corren a mano en el SQL Editor de Supabase ([ADR 0016](../adr/0016-migraciones-sql-manuales.md)); este documento describe el esquema **resultante de aplicarlas todas**, no el estado de ningún proyecto en particular.
 
 | Tabla / objeto | Migración | PRD |
 | :--- | :--- | :--- |
@@ -12,6 +12,7 @@ Derivado de `supabase/migrations/0001_profiles.sql` a `0008_post_images.sql`. To
 | Política de UPDATE de `posts` sin restricción a artículos (notas editables) | `0006_allow_note_updates.sql` | [ADR 0015](../adr/0015-notas-editables.md) |
 | Columnas de caché de IA, trigger, privilegios por columna, `ai_rate_limits` y `ai_rate_limit_hit` | `0007_ai_features.sql` | [PRD-5](../prds/PRD-5-ai-author.md), [PRD-6](../prds/PRD-6-ai-reader.md) |
 | Bucket `post-images` de Storage y sus políticas | `0008_post_images.sql` | [ADR 0022](../adr/0022-imagenes-en-supabase-storage.md) |
+| Portada de artículos (`posts.cover_image_url`, `cover_text`, `cover_color`) | `0009_post_cover.sql` | [ADR 0023](../adr/0023-portada-de-articulos.md) |
 
 `0001` a `0004` no se pueden repetir. `0005`, `0006` y `0007` solo se repiten como cadena completa y en orden, nunca `0005` sola: recrea las políticas de INSERT y UPDATE de `posts` en su versión original ([db/README](README.md)).
 
@@ -48,6 +49,9 @@ erDiagram
     text ai_generated_summary
     jsonb ai_generated_titles "sin uso"
     jsonb content_score "sin uso"
+    text cover_image_url "portada: imagen propia"
+    text cover_text "portada: texto"
+    text cover_color "portada: color de la paleta"
     timestamptz updated_at "ultimo cambio de contenido"
     timestamptz published_at
   }
@@ -129,6 +133,9 @@ No hay política de DELETE: nadie puede borrar perfiles desde la API.
 | `ai_generated_summary` | `text` | Sí | | Resumen para lectores ([PRD-6](../prds/PRD-6-ai-reader.md)). Caché: solo lo escribe el servidor (`0007`) |
 | `ai_generated_titles` | `jsonb` | Sí | | Últimos títulos sugeridos por la ruta `/api/ai/titles`. **Sin uso efectivo:** ninguna pantalla llama a esa ruta ([ADR 0019](../adr/0019-rutas-legacy-de-ia-deprecadas.md)). Caché: solo la escribe el servidor (`0007`) |
 | `content_score` | `jsonb` | Sí | | Último Content Score de la ruta `/api/ai/score`. **Sin uso efectivo**, igual que la anterior; el análisis del chat no se guarda. Caché: solo la escribe el servidor (`0007`) |
+| `cover_image_url` | `text` | Sí | | Portada de artículo: URL pública de una imagen del bucket `post-images`. `check` (`0009`): máximo 500 caracteres y la ruta debe contener `/storage/v1/object/public/post-images/<author_id>/`, es decir, la carpeta del propio autor ([ADR 0023](../adr/0023-portada-de-articulos.md)) |
+| `cover_text` | `text` | Sí | | Portada de artículo cuando no hay imagen: texto de 1 a 200 caracteres (`0009`) |
+| `cover_color` | `text` | Sí | | Color de fondo del texto de portada: una de `slate`, `olive`, `wine`, `forest`, `navy`, `plum`, `rust`, `teal` (`check`, `0009`). Solo los artículos tienen portada: en una nota las tres columnas `cover_*` son `null` |
 | `created_at` | `timestamptz` | No | `now()` | |
 | `updated_at` | `timestamptz` | No | `now()` | Fecha del último cambio de **contenido**: lo mueve solo el trigger (`0007`) cuando cambia `content` (y el servidor al reclamar un post para moderarlo). El cliente no tiene privilegio de escribirla, así que un cambio de título no la mueve. Sirve de versión para la caché de IA y la moderación |
 | `published_at` | `timestamptz` | Sí | | Lo completa `publishPost` al publicar (ver nota del ciclo de estados) |
@@ -142,7 +149,7 @@ No hay política de DELETE: nadie puede borrar perfiles desde la API.
 
 Ciclo de estados de un artículo (PRD-5): `draft` a `pending_review` (mientras se modera; el reclamo es un compare-and-set sobre `status` y `updated_at`) y de ahí a `published` o `rejected`; un `rejected` se puede volver a publicar, y un `pending_review` que quedó colgado también una vez pasados 2 minutos. Si el proveedor de IA falla, se publica igual sin tags automáticos; si se alcanza el límite de peticiones, **no** se publica: se libera el reclamo y el autor reintenta. Una nota nace `published`. Las transiciones las hace solo el servidor (`publishPost`, con `service_role`).
 
-Privilegios por columna (`0007`, [ADR 0012](../adr/0012-integridad-de-escritura-de-posts.md)): `anon` y `authenticated` no tienen `insert` ni `update` a nivel de tabla. El cliente solo puede insertar `author_id, type, title, content, status, published_at, parent_post_id` y actualizar `title, content`. `status`, `published_at` (al publicar), `rejection_reason` y las columnas de IA solo las escribe el servidor. `0006` había dejado que cualquier autor pudiera escribir `status` desde el navegador.
+Privilegios por columna (`0007`, [ADR 0012](../adr/0012-integridad-de-escritura-de-posts.md)): `anon` y `authenticated` no tienen `insert` ni `update` a nivel de tabla. El cliente solo puede insertar `author_id, type, title, content, status, published_at, parent_post_id` y actualizar `title, content`. Desde `0009` también puede actualizar `cover_image_url, cover_text, cover_color` (la portada se elige al publicar, nunca al crear el borrador). `status`, `published_at` (al publicar), `rejection_reason` y las columnas de IA solo las escribe el servidor. `0006` había dejado que cualquier autor pudiera escribir `status` desde el navegador.
 
 Trigger `posts_invalidate_ai_cache` (`before update`, `security invoker`): si cambia `content`, pone en `NULL` `ai_generated_summary`, `ai_generated_titles` y `content_score` y sube `updated_at`. El servidor guarda cada resultado de IA con compare-and-set sobre el `updated_at` que leyó.
 
