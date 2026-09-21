@@ -21,6 +21,7 @@ interface CoverPickerProps {
   onDraftChange: Dispatch<SetStateAction<CoverDraft>>;
   contentImages: string[];
   disabled: boolean;
+  onUploadingChange: (uploading: boolean) => void;
 }
 
 const MODES: { value: CoverMode; label: string }[] = [
@@ -29,9 +30,16 @@ const MODES: { value: CoverMode; label: string }[] = [
   { value: "text", label: "Texto" },
 ];
 
-export function CoverPicker({ draft, onDraftChange, contentImages, disabled }: CoverPickerProps) {
+export function CoverPicker({
+  draft,
+  onDraftChange,
+  contentImages,
+  disabled,
+  onUploadingChange,
+}: CoverPickerProps) {
   const fileInput = useRef<HTMLInputElement>(null);
-  const [uploaded, setUploaded] = useState<string[]>([]);
+  // Seeded with the current cover so a previously uploaded image stays selectable after reopening.
+  const [uploaded, setUploaded] = useState<string[]>(() => (draft.imageUrl ? [draft.imageUrl] : []));
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string>();
 
@@ -49,6 +57,7 @@ export function CoverPicker({ draft, onDraftChange, contentImages, disabled }: C
     }
     setUploadError(undefined);
     setUploading(true);
+    onUploadingChange(true);
     try {
       const { url } = await uploadPostImage(file);
       setUploaded((current) => [url, ...current.filter((item) => item !== url)]);
@@ -57,6 +66,7 @@ export function CoverPicker({ draft, onDraftChange, contentImages, disabled }: C
       setUploadError(describeImageError(error));
     } finally {
       setUploading(false);
+      onUploadingChange(false);
     }
   }
 
@@ -119,7 +129,7 @@ export function CoverPicker({ draft, onDraftChange, contentImages, disabled }: C
                     <button
                       type="button"
                       aria-pressed={draft.imageUrl === url}
-                      aria-label={`Usar la imagen ${index + 1} como portada`}
+                      aria-label={`Usar imagen ${index + 1} de ${candidates.length} como portada`}
                       onClick={() => update({ imageUrl: url })}
                       className={cn(
                         "block w-full cursor-pointer overflow-hidden rounded-md border-2 transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",

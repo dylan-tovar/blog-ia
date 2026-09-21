@@ -19,7 +19,7 @@ import { formatRetry } from "@/features/ai/components/ai-ui";
 import { useCountdown } from "@/features/ai/components/use-countdown";
 import { addTag, publishPost, removeTag, savePostCover } from "@/features/posts/actions";
 import { CoverPicker } from "@/features/posts/components/editor/CoverPicker";
-import { extractImageUrls } from "@/features/posts/cover/cover";
+import { extractImageUrls, filterOwnCoverImages } from "@/features/posts/cover/cover";
 import {
   coverValuesEqual,
   draftToCoverValue,
@@ -34,6 +34,7 @@ interface PublishDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   canPublish: boolean;
+  userId: string;
   initialCover: CoverValue;
   tags: Tag[];
   onTagsChange: Dispatch<SetStateAction<Tag[]>>;
@@ -72,6 +73,7 @@ export function PublishDialog({
   open,
   onOpenChange,
   canPublish,
+  userId,
   initialCover,
   tags,
   onTagsChange,
@@ -93,7 +95,15 @@ export function PublishDialog({
   const [savedCover, setSavedCover] = useState(initialCover);
   const coverValue = draftToCoverValue(coverDraft);
   const coverDirty = !coverValuesEqual(coverValue, savedCover);
-  const contentImages = open ? extractImageUrls(getContent(), env.NEXT_PUBLIC_SUPABASE_URL) : [];
+  const [coverUploading, setCoverUploading] = useState(false);
+  const locked = isPending || coverUploading;
+  const contentImages = open
+    ? filterOwnCoverImages(
+        extractImageUrls(getContent(), env.NEXT_PUBLIC_SUPABASE_URL),
+        env.NEXT_PUBLIC_SUPABASE_URL,
+        userId,
+      )
+    : [];
 
   async function persistCover(postId: string): Promise<boolean> {
     if (!coverDirty) {
@@ -212,7 +222,7 @@ export function PublishDialog({
   }
 
   function handleOpenChange(next: boolean) {
-    if (!next && isPending) {
+    if (!next && locked) {
       return;
     }
     if (!next) {
@@ -306,6 +316,7 @@ export function PublishDialog({
           onDraftChange={setCoverDraft}
           contentImages={contentImages}
           disabled={isPending}
+          onUploadingChange={setCoverUploading}
         />
 
         {error && (
@@ -357,11 +368,11 @@ export function PublishDialog({
             </>
           ) : (
             <>
-              <Button type="button" variant="ghost" onClick={handleDone} disabled={isPending}>
+              <Button type="button" variant="ghost" onClick={handleDone} disabled={locked}>
                 {canPublish ? "Seguir editando" : "Listo"}
               </Button>
               {canPublish && (
-                <Button type="button" onClick={handlePublish} disabled={isPending}>
+                <Button type="button" onClick={handlePublish} disabled={locked}>
                   {isPending && <Loader2 className="animate-spin" aria-hidden />}
                   {isPending ? "Revisando contenido…" : "Publicar"}
                 </Button>

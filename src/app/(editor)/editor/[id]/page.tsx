@@ -1,13 +1,20 @@
+import { redirect } from "next/navigation";
 import { isCoverColor } from "@/features/posts/cover/cover-palette";
 import { getAllTagNames, getOwnPost } from "@/features/posts/queries";
 import { DesktopOnly } from "@/features/posts/components/DesktopOnly";
 import { PostEditor } from "@/features/posts/components/PostEditor";
+import { getViewer } from "@/lib/viewer";
 
 export const maxDuration = 30;
 
 export default async function EditorPage(props: PageProps<"/editor/[id]">) {
   const { id } = await props.params;
   const isNew = id === "new";
+
+  const viewer = await getViewer();
+  if (!viewer) {
+    redirect("/login");
+  }
 
   const [post, allTagNames] = await Promise.all([
     isNew
@@ -30,6 +37,7 @@ export default async function EditorPage(props: PageProps<"/editor/[id]">) {
     <DesktopOnly>
       <PostEditor
         postId={post.id}
+        userId={viewer.id}
         status={post.status}
         initialTitle={post.title ?? ""}
         initialContent={post.content}

@@ -47,6 +47,7 @@ function writeDrawerOpen(open: boolean) {
 
 interface PostEditorProps {
   postId: string;
+  userId: string;
   status: string;
   initialTitle: string;
   initialContent: string;
@@ -58,6 +59,7 @@ interface PostEditorProps {
 
 export function PostEditor({
   postId,
+  userId,
   status: initialStatus,
   initialTitle,
   initialContent,
@@ -271,6 +273,7 @@ export function PostEditor({
         open={publishOpen}
         onOpenChange={setPublishOpen}
         canPublish={canPublish}
+        userId={userId}
         initialCover={initialCover}
         tags={tags}
         onTagsChange={setTags}
