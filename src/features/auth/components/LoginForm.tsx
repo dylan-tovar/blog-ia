@@ -37,6 +37,14 @@ export function LoginForm({ redirectTo, onRegisterClick, inDrawer = false }: Log
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="password">Contraseña</Label>
         <Input id="password" name="password" type="password" required />
+        {!inDrawer && (
+          <Link
+            href="/forgot-password"
+            className="self-end text-sm text-muted-foreground hover:text-primary hover:underline"
+          >
+            ¿Olvidaste tu contraseña?
+          </Link>
+        )}
       </div>
       {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
       <FooterWrapper className={inDrawer ? "px-0 pt-1 pb-0 gap-3" : "flex flex-col gap-4"}>

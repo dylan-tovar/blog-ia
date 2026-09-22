@@ -31,3 +31,24 @@ export const loginSchema = z.object({
     .max(254, { error: "Ingresá tu email o usuario." }),
   password: z.string().min(1, { error: "Ingresá tu contraseña." }),
 });
+
+export const forgotPasswordSchema = z.object({
+  email: z.email({ error: "Ingresá un email válido." }),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    password: z.string().superRefine((password, ctx) => {
+      for (const rule of PASSWORD_RULES) {
+        if (!rule.test(password)) ctx.addIssue({ code: "custom", message: rule.message });
+      }
+      if (!isWithinMaxLength(password)) {
+        ctx.addIssue({ code: "custom", message: PASSWORD_MAX_LENGTH_MESSAGE });
+      }
+    }),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    error: "Las contraseñas no coinciden.",
+    path: ["confirmPassword"],
+  });

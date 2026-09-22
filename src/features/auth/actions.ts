@@ -2,7 +2,13 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { loginSchema, registerSchema } from "@/features/auth/schemas";
+import { env } from "@/lib/env";
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  resetPasswordSchema,
+} from "@/features/auth/schemas";
 import { findEmailByUsername } from "@/features/auth/queries";
 import { isEmailIdentifier, resolveAuthRedirect } from "@/features/auth/utils";
 
@@ -111,5 +117,56 @@ export async function signIn(
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  redirect("/login");
+}
+
+// Always the same generic notice, whether or not the email is registered:
+// leaking that would let anyone probe which emails have an account.
+const FORGOT_PASSWORD_NOTICE =
+  "Si existe una cuenta con ese email, te enviamos un correo para restablecer tu contraseña.";
+
+export async function requestPasswordReset(
+  _state: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const parsed = forgotPasswordSchema.safeParse({ email: formData.get("email") });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: `${env.NEXT_PUBLIC_SITE_URL}/auth/confirm?type=recovery&next=/reset-password`,
+  });
+
+  if (error) {
+    console.error("[requestPasswordReset] failed", error);
+  }
+
+  // Same message either way (see FORGOT_PASSWORD_NOTICE above).
+  return { notice: FORGOT_PASSWORD_NOTICE };
+}
+
+export async function resetPassword(
+  _state: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const parsed = resetPasswordSchema.safeParse({
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+
+  if (error) {
+    return { error: "No pudimos actualizar tu contraseña. Pedí un nuevo enlace e intentá de nuevo." };
+  }
+
   redirect("/login");
 }

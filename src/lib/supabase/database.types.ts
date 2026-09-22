@@ -24,6 +24,8 @@ export type Database = {
           avatar_url: string | null;
           created_at: string;
           onboarded_at: string | null;
+          notify_new_article_email: boolean;
+          unsubscribe_token: string;
         };
         Insert: {
           id: string;
@@ -32,6 +34,8 @@ export type Database = {
           avatar_url?: string | null;
           created_at?: string;
           onboarded_at?: string | null;
+          notify_new_article_email?: boolean;
+          unsubscribe_token?: string;
         };
         Update: {
           id?: string;
@@ -40,6 +44,8 @@ export type Database = {
           avatar_url?: string | null;
           created_at?: string;
           onboarded_at?: string | null;
+          notify_new_article_email?: boolean;
+          unsubscribe_token?: string;
         };
         Relationships: [];
       };
@@ -372,6 +378,10 @@ export type Database = {
       ai_rate_limit_hit: {
         Args: { p_user_key: string; p_user_limit: number; p_global_limit: number; p_global_key?: string };
         Returns: { allowed: boolean; scope: string | null; retry_after: number }[];
+      };
+      follower_emails_for_author: {
+        Args: { p_author_id: string };
+        Returns: { follower_id: string; email: string | null; unsubscribe_token: string }[];
       };
       login_email_for_username: {
         Args: { p_username: string };

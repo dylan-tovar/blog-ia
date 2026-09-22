@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+import { sendEmail } from "@/lib/email/send";
+import { welcomeEmail } from "@/lib/email/templates/welcome";
 import {
   onboardingSchema,
   updateProfileSchema,
@@ -81,6 +83,15 @@ export async function completeOnboarding(
       return { error: "Ese nombre de usuario ya está en uso." };
     }
     return { error: "No pudimos guardar tu perfil. Intentá de nuevo." };
+  }
+
+  // Fresh profile only (not the 23505 double-submit path above): send once.
+  // Best-effort — sendEmail never throws, so this can't break onboarding.
+  if (user.email) {
+    void sendEmail({
+      to: user.email,
+      ...welcomeEmail({ displayName: parsed.data.displayName }),
+    });
   }
 
   redirect("/onboarding");

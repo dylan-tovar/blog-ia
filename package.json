@@ -39,6 +39,8 @@
     "react-markdown": "^10.1.0",
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",
+    "remark-html": "^16.0.1",
+    "resend": "^6.28.1",
     "server-only": "^0.0.1",
     "shadcn": "^4.21.0",
     "strip-markdown": "^6.0.0",
