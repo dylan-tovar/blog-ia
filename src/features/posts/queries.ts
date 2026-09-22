@@ -16,7 +16,7 @@ import type { PostType } from "@/lib/supabase/database.types";
 const COVER_COLUMNS = "cover_image_url, cover_text, cover_color";
 const POST_COLUMNS = `id, author_id, title, content, status, rejection_reason, created_at, updated_at, published_at, ${COVER_COLUMNS}`;
 const TAGS_EMBED = "tags:post_tags(tag:tags(id, name))";
-const CARD_COLUMNS = `id, type, title, content, published_at, parent_post_id, ${COVER_COLUMNS}`;
+const CARD_COLUMNS = `id, type, title, content, published_at, parent_post_id, reply_to_post_id, ${COVER_COLUMNS}`;
 export const AUTHOR_EMBED = "author:profiles(id, display_name)";
 const LIKES_EMBED = "likes(count)";
 
@@ -47,6 +47,7 @@ export type NoteFeedPost = FeedPostBase & {
   type: "note";
   content: string;
   parent: ParentRef | null;
+  replyTo: ParentRef | null;
 };
 
 export type FeedPost = ArticleFeedPost | NoteFeedPost;
@@ -58,6 +59,7 @@ type CardRow = {
   content: string;
   published_at: string | null;
   parent_post_id: string | null;
+  reply_to_post_id: string | null;
   cover_image_url: string | null;
   cover_text: string | null;
   cover_color: string | null;
@@ -89,6 +91,7 @@ function toFeedPost(row: CardRow, ctx: HydrationContext): FeedPost {
       type: "note",
       content: row.content,
       parent: row.parent_post_id ? (ctx.parents.get(row.parent_post_id) ?? null) : null,
+      replyTo: row.reply_to_post_id ? (ctx.parents.get(row.reply_to_post_id) ?? null) : null,
     };
   }
 
@@ -169,7 +172,12 @@ async function hydrateFeedPosts(
   const [followedIds, likedIds, parents, notesCounts] = await Promise.all([
     withFollows && viewer ? getFollowedAuthorIds(viewer.id, authorIds) : [],
     viewer ? getLikedPostIds(viewer.id, rows.map((row) => row.id)) : [],
-    getParentRefs(rows.flatMap((row) => (row.parent_post_id ? [row.parent_post_id] : []))),
+    getParentRefs(
+      rows.flatMap((row) => [
+        ...(row.parent_post_id ? [row.parent_post_id] : []),
+        ...(row.reply_to_post_id ? [row.reply_to_post_id] : []),
+      ]),
+    ),
     getNotesCounts(rows.map((row) => row.id)),
   ]);
 
@@ -259,7 +267,7 @@ export async function getPublishedPost(id: string) {
   const { data: post } = await supabase
     .from("posts")
     .select(
-      `id, type, title, content, status, created_at, updated_at, published_at, parent_post_id, ai_generated_summary, ${AUTHOR_EMBED}, ${LIKES_EMBED}`,
+      `id, type, title, content, status, created_at, updated_at, published_at, parent_post_id, reply_to_post_id, ai_generated_summary, ${AUTHOR_EMBED}, ${LIKES_EMBED}`,
     )
     .eq("id", id)
     .eq("status", "published")
@@ -272,7 +280,10 @@ export async function getPublishedPost(id: string) {
   const viewer = await getViewer();
   const [likedIds, parents, notesCounts] = await Promise.all([
     viewer ? getLikedPostIds(viewer.id, [post.id]) : [],
-    getParentRefs(post.parent_post_id ? [post.parent_post_id] : []),
+    getParentRefs([
+      ...(post.parent_post_id ? [post.parent_post_id] : []),
+      ...(post.reply_to_post_id ? [post.reply_to_post_id] : []),
+    ]),
     getNotesCounts([post.id]),
   ]);
 
@@ -283,6 +294,7 @@ export async function getPublishedPost(id: string) {
     viewerLiked: likedIds.length > 0,
     notesCount: notesCounts.get(post.id) ?? 0,
     parent: post.parent_post_id ? (parents.get(post.parent_post_id) ?? null) : null,
+    replyTo: post.reply_to_post_id ? (parents.get(post.reply_to_post_id) ?? null) : null,
     wordCount: post.type === "article" ? countWords(post.content) : 0,
   };
 }

@@ -55,6 +55,7 @@ export type Database = {
           author_id: string;
           type: PostType;
           parent_post_id: string | null;
+          reply_to_post_id: string | null;
           title: string | null;
           content: string;
           status: PostStatus;
@@ -74,6 +75,7 @@ export type Database = {
           author_id: string;
           type?: PostType;
           parent_post_id?: string | null;
+          reply_to_post_id?: string | null;
           title?: string | null;
           content?: string;
           status?: PostStatus;
@@ -93,6 +95,7 @@ export type Database = {
           author_id?: string;
           type?: PostType;
           parent_post_id?: string | null;
+          reply_to_post_id?: string | null;
           title?: string | null;
           content?: string;
           status?: PostStatus;
@@ -118,6 +121,13 @@ export type Database = {
           {
             foreignKeyName: "posts_parent_post_id_fkey";
             columns: ["parent_post_id"];
+            isOneToOne: false;
+            referencedRelation: "posts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "posts_reply_to_post_id_fkey";
+            columns: ["reply_to_post_id"];
             isOneToOne: false;
             referencedRelation: "posts";
             referencedColumns: ["id"];

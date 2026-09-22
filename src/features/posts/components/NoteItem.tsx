@@ -8,13 +8,18 @@ interface NoteItemProps {
 }
 
 export function NoteItem({ post, showReplyTo = true }: NoteItemProps) {
-  const target = showReplyTo ? replyTarget(post.parent) : null;
+  // `replyTo` (reply to another note) is always worth showing — it's the
+  // whole point of this feature. `parent` alone (reply to the root post) is
+  // only shown when `showReplyTo` says it's not redundant with the context
+  // (e.g. hidden inside that root post's own notes section).
+  const replyReference = post.replyTo ?? (showReplyTo ? post.parent : null);
+  const target = replyReference ? replyTarget(replyReference) : null;
 
   return (
     <div className="mt-1">
-      {post.parent && target && (
+      {replyReference && target && (
         <Link
-          href={`/post/${post.parent.id}`}
+          href={`/post/${replyReference.id}`}
           className="mb-1 block truncate text-[13px] text-muted-foreground hover:underline"
         >
           En respuesta a <span className="font-medium">{target}</span>

@@ -39,4 +39,5 @@ export const createNoteSchema = z.object({
       error: `La nota no puede superar los ${NOTE_MAX_LENGTH} caracteres.`,
     }),
   parentPostId: idSchema.optional(),
+  replyToPostId: idSchema.optional(),
 });

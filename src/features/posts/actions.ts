@@ -32,16 +32,18 @@ export async function createNote(
   const { supabase, user } = await requireUser();
 
   const rawParent = formData.get("parentPostId");
+  const rawReplyTo = formData.get("replyToPostId");
   const parsed = createNoteSchema.safeParse({
     content: formData.get("content"),
     parentPostId: typeof rawParent === "string" && rawParent ? rawParent : undefined,
+    replyToPostId: typeof rawReplyTo === "string" && rawReplyTo ? rawReplyTo : undefined,
   });
 
   if (!parsed.success) {
     return { error: parsed.error.issues[0].message };
   }
 
-  const { content, parentPostId } = parsed.data;
+  const { content, parentPostId, replyToPostId } = parsed.data;
 
   const { error } = await supabase.from("posts").insert({
     author_id: user.id,
@@ -50,6 +52,7 @@ export async function createNote(
     status: "published",
     published_at: new Date().toISOString(),
     parent_post_id: parentPostId ?? null,
+    reply_to_post_id: replyToPostId ?? null,
   });
 
   if (error) {

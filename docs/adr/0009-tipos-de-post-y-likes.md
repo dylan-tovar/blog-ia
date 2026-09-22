@@ -35,3 +35,7 @@ En la aplicación: `setLike(postId, liked)` recibe el estado deseado (idempotent
 ## Actualización (2026-09-20)
 
 La condición de revisión "edición de notas" se cumplió: la migración `0006` quitó la restricción de UPDATE a artículos y existe `updateNote`. Ver [ADR 0015](0015-notas-editables.md). Sigue vigente el resto: una sola tabla, invariantes en la base, likes idempotentes, `DesktopOnly`. El texto de arriba se conserva como registro de lo decidido entonces.
+
+## Actualización (2026-09-22)
+
+La otra condición de revisión, "hilos anidados", también se cumplió: ahora se puede responder a una respuesta. No se adoptó un árbol real — se mantiene `parent_post_id` siempre apuntando a la raíz (esta ADR sigue vigente en ese punto) y se agregó `reply_to_post_id`, un campo aparte solo de visualización. Ver [ADR 0029](0029-respuestas-a-respuestas.md).

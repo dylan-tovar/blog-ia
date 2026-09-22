@@ -9,19 +9,24 @@ import { cn } from "@/lib/utils";
 
 interface NoteComposerProps {
   parentPostId?: string;
+  replyToPostId?: string;
   placeholder?: string;
+  onPublished?: () => void;
 }
 
 export function NoteComposer({
   parentPostId,
+  replyToPostId,
   placeholder = "Escribí una nota…",
+  onPublished,
 }: NoteComposerProps) {
   const { content, setContent, state, formAction, isPending, remaining, showCounter, canSubmit } =
-    useNoteForm();
+    useNoteForm(onPublished);
 
   return (
     <form action={formAction} className="flex flex-col gap-2">
       {parentPostId && <input type="hidden" name="parentPostId" value={parentPostId} />}
+      {replyToPostId && <input type="hidden" name="replyToPostId" value={replyToPostId} />}
       <Textarea
         name="content"
         value={content}

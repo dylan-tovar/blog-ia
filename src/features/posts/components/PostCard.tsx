@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { FollowButton } from "@/features/subscriptions/components/FollowButton";
 import { LikeButton } from "@/features/likes/components/LikeButton";
 import { ArticleCard } from "@/features/posts/components/ArticleCard";
+import { NoteComposer } from "@/features/posts/components/NoteComposer";
 import { NoteItem } from "@/features/posts/components/NoteItem";
 import { PostOptionsDrawer } from "@/features/posts/components/PostOptionsDrawer";
 import { LoginDrawer } from "@/features/auth/components/LoginDrawer";
@@ -72,6 +73,7 @@ export function PostCard({
   onDeleted,
 }: PostCardProps) {
   const [following, setFollowing] = useState(post.viewerFollows);
+  const [replying, setReplying] = useState(false);
   // Re-sync when the server value changes. Adjusting state during render avoids
   // the extra render an effect would cause.
   const [syncedViewerFollows, setSyncedViewerFollows] = useState(post.viewerFollows);
@@ -85,6 +87,12 @@ export function PostCard({
   const canDelete = post.type === "note" && isOwn;
   const canEdit = isOwn;
   const isReply = post.type === "note" && post.parent !== null;
+  // A reply's own composer must hang off the thread root, not off the reply
+  // itself, to keep the flat-thread invariant (parent_post_id always points
+  // to the root; reply_to_post_id is only for display).
+  const replyParentPostId = post.type === "article" ? post.id : post.parent?.id;
+  const canReply = Boolean(replyParentPostId);
+  const replyToPostId = post.type === "note" ? post.id : undefined;
 
   return (
     <article className="grid grid-cols-[auto_1fr] gap-3 border-b px-4 py-4">
@@ -165,7 +173,40 @@ export function PostCard({
               <span className="tabular-nums">{post.notesCount}</span>
             </Link>
           )}
+          {canReply &&
+            (viewerId === null ? (
+              <LoginDrawer
+                trigger={
+                  <button
+                    type="button"
+                    className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+                  >
+                    Responder
+                  </button>
+                }
+              />
+            ) : viewerId !== undefined ? (
+              <button
+                type="button"
+                onClick={() => setReplying((current) => !current)}
+                aria-expanded={replying}
+                className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+              >
+                Responder
+              </button>
+            ) : null)}
         </div>
+
+        {replying && viewerId && (
+          <div className="mt-2">
+            <NoteComposer
+              parentPostId={replyParentPostId}
+              replyToPostId={replyToPostId}
+              placeholder={`Responder a ${authorName}…`}
+              onPublished={() => setReplying(false)}
+            />
+          </div>
+        )}
       </div>
     </article>
   );
