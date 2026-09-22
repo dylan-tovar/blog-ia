@@ -25,12 +25,37 @@ export default async function PublicPostPage(props: PageProps<"/post/[id]">) {
   const isReply = isNote && post.parent_post_id !== null;
 
   const viewer = await getViewer();
+  // Under the flat-thread model every note in a thread — no matter how deep —
+  // shares the same root `parent_post_id`, so fetching that root's notes once
+  // already brings back the whole thread. From there the reply chain (who
+  // replies to whom) is reconstructed in memory via `replyTo`.
   const [notes, following] = await Promise.all([
-    isReply ? Promise.resolve([]) : getNotesForPost(post.id),
+    isReply ? getNotesForPost(post.parent_post_id!) : getNotesForPost(post.id),
     viewer && post.author && viewer.id !== post.author.id
       ? isFollowing(viewer.id, post.author.id)
       : Promise.resolve(false),
   ]);
+
+  const notesById = new Map(notes.map((note) => [note.id, note]));
+
+  function buildAncestorChain(startId: string | null | undefined) {
+    const chain: typeof notes = [];
+    const seen = new Set<string>();
+    let currentId = startId ?? null;
+    while (currentId && !seen.has(currentId)) {
+      seen.add(currentId);
+      const note = notesById.get(currentId);
+      if (!note) break; // Deleted or not (yet) loaded: the chain just stops there.
+      chain.push(note);
+      currentId = note.replyTo?.id ?? null;
+    }
+    return chain.reverse(); // Root-most ancestor first, like X's thread view.
+  }
+
+  const ancestors = isReply ? buildAncestorChain(post.replyTo?.id) : [];
+  // On a reply's own page, "Respuestas" means direct replies to THIS note —
+  // not the whole thread (that's `notes`, used only to resolve `ancestors`).
+  const children = isReply ? notes.filter((note) => note.replyTo?.id === post.id) : notes;
 
   const authorName = post.author?.display_name ?? "Autor desconocido";
   const replyReference = post.replyTo ?? post.parent;
@@ -41,6 +66,21 @@ export default async function PublicPostPage(props: PageProps<"/post/[id]">) {
 
   return (
     <>
+      {ancestors.length > 0 && (
+        <div className="flex flex-col border-b">
+          {ancestors.map((note, index) => (
+            // Only the top-most ancestor shows "En respuesta a X" (the root):
+            // the rest are already stacked in reply order, so repeating it on
+            // every card would just be noise.
+            <PostCard
+              key={note.id}
+              post={note}
+              viewerId={viewer?.id ?? null}
+              showReplyTo={index === 0}
+            />
+          ))}
+        </div>
+      )}
       <article className="px-4 py-6">
         {viewer && !isNote && <ReadTracker postId={post.id} />}
 
@@ -92,7 +132,7 @@ export default async function PublicPostPage(props: PageProps<"/post/[id]">) {
           </div>
         </div>
 
-        {replyReference && target && (
+        {ancestors.length === 0 && replyReference && target && (
           <Link
             href={`/post/${replyReference.id}`}
             className="mt-4 block truncate text-sm text-muted-foreground hover:underline"
@@ -124,95 +164,58 @@ export default async function PublicPostPage(props: PageProps<"/post/[id]">) {
             initialCount={post.likeCount}
             viewerId={viewer?.id ?? null}
           />
-          {!isReply && (
-            <a
-              href="#notes"
-              aria-label={notes.length === 1 ? "1 nota" : `${notes.length} notas`}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <MessageSquare className="size-[18px]" aria-hidden />
-              <span className="tabular-nums">{notes.length}</span>
-            </a>
-          )}
+          <a
+            href="#notes"
+            aria-label={children.length === 1 ? "1 nota" : `${children.length} notas`}
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <MessageSquare className="size-[18px]" aria-hidden />
+            <span className="tabular-nums">{children.length}</span>
+          </a>
         </div>
       </article>
 
-      {isReply ? (
-        // A reply's own page never lists its own sub-notes: under the flat
-        // thread model, every reply already lives in the root's notes list.
-        // This is just a shortcut to keep replying without navigating back.
-        <section aria-labelledby="reply-heading" className="border-t">
-          <h2 id="reply-heading" className="px-4 pt-4 text-base font-semibold text-foreground">
-            Responder
-          </h2>
-          <div className="px-4 py-3">
-            {viewer ? (
-              <NoteComposer
-                parentPostId={post.parent_post_id ?? undefined}
-                replyToPostId={post.id}
-                placeholder={`Responder a ${authorName}…`}
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                <LoginDrawer
-                  trigger={
-                    <button
-                      type="button"
-                      className="font-medium text-blue-400 hover:underline cursor-pointer"
-                    >
-                      Iniciá sesión
-                    </button>
-                  }
-                />{" "}
-                para responder.
-              </p>
-            )}
-          </div>
-        </section>
-      ) : (
-        <section id="notes" aria-labelledby="notes-heading" className="border-t">
-          <h2 id="notes-heading" className="px-4 pt-4 text-base font-semibold text-foreground">
-            Notas ({notes.length})
-          </h2>
+      <section id="notes" aria-labelledby="notes-heading" className="border-t">
+        <h2 id="notes-heading" className="px-4 pt-4 text-base font-semibold text-foreground">
+          {isReply ? `Respuestas (${children.length})` : `Notas (${children.length})`}
+        </h2>
 
-          <div className="px-4 py-3">
-            {viewer ? (
-              <NoteComposer parentPostId={post.id} placeholder="Dejá una nota sobre este post…" />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                <LoginDrawer
-                  trigger={
-                    <button
-                      type="button"
-                      className="font-medium text-blue-400 hover:underline cursor-pointer"
-                    >
-                      Iniciá sesión
-                    </button>
-                  }
-                />{" "}
-                para dejar una nota.
-              </p>
-            )}
-          </div>
-
-          {notes.length === 0 ? (
-            <p className="px-4 pb-6 text-sm text-muted-foreground">
-              Todavía no hay notas sobre este post.
-            </p>
+        <div className="px-4 py-3">
+          {viewer ? (
+            <NoteComposer
+              parentPostId={isReply ? (post.parent_post_id ?? undefined) : post.id}
+              replyToPostId={isReply ? post.id : undefined}
+              placeholder={isReply ? `Responder a ${authorName}…` : "Dejá una nota sobre este post…"}
+            />
           ) : (
-            <div className="flex flex-col border-t">
-              {notes.map((note) => (
-                <PostCard
-                  key={note.id}
-                  post={note}
-                  viewerId={viewer?.id ?? null}
-                  showReplyTo={false}
-                />
-              ))}
-            </div>
+            <p className="text-sm text-muted-foreground">
+              <LoginDrawer
+                trigger={
+                  <button
+                    type="button"
+                    className="font-medium text-blue-400 hover:underline cursor-pointer"
+                  >
+                    Iniciá sesión
+                  </button>
+                }
+              />{" "}
+              para {isReply ? "responder" : "dejar una nota"}.
+            </p>
           )}
-        </section>
-      )}
+        </div>
+
+        {children.length === 0 ? (
+          <p className="px-4 pb-6 text-sm text-muted-foreground">
+            {isReply ? "Todavía no hay respuestas." : "Todavía no hay notas sobre este post."}
+          </p>
+        ) : (
+          <div className="flex flex-col border-t">
+            {children.map((note) => (
+              <PostCard key={note.id} post={note} viewerId={viewer?.id ?? null} showReplyTo={false} />
+            ))}
+          </div>
+        )}
+      </section>
     </>
   );
 }
