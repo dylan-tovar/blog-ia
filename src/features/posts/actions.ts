@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireUser } from "@/lib/auth";
 import { env } from "@/lib/env";
+import { notifyFollowersOfNewArticle } from "@/features/subscriptions/notify-followers";
 import { createCoverSchema } from "@/features/posts/cover/cover-schema";
 import { MAX_TAGS_PER_POST } from "@/features/ai/constants";
 import type { AiErrorKind } from "@/features/ai/errors";
@@ -418,6 +420,16 @@ export async function publishPost(postId: string): Promise<PublishPostResult> {
     if (decision.status === "rejected") {
       return { ok: true, status: "rejected", reason: decision.reason };
     }
+
+    // after(), not a bare void: on serverless a fire-and-forget promise can
+    // be cut off as soon as the response is sent, while after() runs it to
+    // completion without delaying that response. Sync/best-effort by design
+    // (no queue) — see ADR-0028.
+    after(() =>
+      notifyFollowersOfNewArticle({ authorId: user.id, postId: post.id }).catch((error) =>
+        console.error("[new-article-email] fanout failed", error),
+      ),
+    );
 
     return {
       ok: true,

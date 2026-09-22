@@ -14,6 +14,7 @@ Derivado de `supabase/migrations/0001_profiles.sql` a `0010_onboarding_interests
 | Bucket `post-images` de Storage y sus políticas | `0008_post_images.sql` | [ADR 0022](../adr/0022-imagenes-en-supabase-storage.md) |
 | Portada de artículos (`posts.cover_image_url`, `cover_text`, `cover_color`) | `0009_post_cover.sql` | [ADR 0023](../adr/0023-portada-de-articulos.md) |
 | `profiles.onboarded_at` (con backfill), tabla `user_interests` y función `popular_tags` | `0010_onboarding_interests.sql` | [ADR 0025](../adr/0025-intereses-en-onboarding.md) |
+| `profiles.notify_new_article_email`, `profiles.unsubscribe_token` y función `follower_emails_for_author` | `0012_email_preferences.sql` | [PRD-11.3](../prds/PRD-11.3-nuevo-articulo-seguidos.md), [ADR 0028](../adr/0028-emails-transaccionales-resend.md) |
 
 `0001` a `0004` no se pueden repetir. `0005`, `0006` y `0007` solo se repiten como cadena completa y en orden, nunca `0005` sola: recrea las políticas de INSERT y UPDATE de `posts` en su versión original ([db/README](README.md)). `0008`, `0009` y `0010` se pueden repetir; el backfill de `onboarded_at` de `0010` corre solo la primera vez.
 
@@ -104,10 +105,11 @@ Los privilegios de columna sobre `posts` (`0007`) se suman a estas políticas; v
 | `posts_invalidate_ai_cache()` | `0007` | trigger `before update`, `security invoker` | — | Invalidar la caché de IA al cambiar `content` |
 | `ai_rate_limit_hit(p_user_key, p_user_limit, p_global_limit, p_global_key default 'global')` | `0007` | `security definer`, `search_path` vacío | Solo `service_role` | Límite de peticiones a la IA por minuto |
 | `popular_tags(p_limit int default 30)` | `0010` | `security invoker`, `stable`, `search_path` vacío | `authenticated` (revocada a `public` y `anon`) | Tags de artículos `published`, con su cantidad de usos, ordenados por usos y luego por nombre; `p_limit` negativo se trata como 0. Es la oferta del paso 2 del onboarding ([ADR 0025](../adr/0025-intereses-en-onboarding.md)). Al ser `invoker`, las políticas de `posts` y `post_tags` siguen aplicando |
+| `follower_emails_for_author(p_author_id uuid)` | `0012` | `security definer`, `stable`, `search_path` vacío | Solo `service_role` | Email y token de baja de cada seguidor de un autor con `notify_new_article_email = true`, para el correo de nuevo artículo ([PRD-11.3](../prds/PRD-11.3-nuevo-articulo-seguidos.md), [ADR 0028](../adr/0028-emails-transaccionales-resend.md)) |
 
 ## Tipos de TypeScript
 
-`src/lib/supabase/database.types.ts` **se mantiene a mano** ([ADR 0016](../adr/0016-migraciones-sql-manuales.md)): declara `profiles`, `posts`, `tags`, `post_tags`, `subscriptions`, `reading_history`, `likes` y `user_interests`, y las funciones `ai_rate_limit_hit`, `login_email_for_username` y `popular_tags`. **No** incluye la tabla `ai_rate_limits` ni la función `can_attach_note` (ninguna se usa desde un cliente con tipos). Al cambiar una columna en SQL hay que actualizar este archivo a mano.
+`src/lib/supabase/database.types.ts` **se mantiene a mano** ([ADR 0016](../adr/0016-migraciones-sql-manuales.md)): declara `profiles`, `posts`, `tags`, `post_tags`, `subscriptions`, `reading_history`, `likes` y `user_interests`, y las funciones `ai_rate_limit_hit`, `login_email_for_username`, `popular_tags` y `follower_emails_for_author`. **No** incluye la tabla `ai_rate_limits` ni la función `can_attach_note` (ninguna se usa desde un cliente con tipos). Al cambiar una columna en SQL hay que actualizar este archivo a mano.
 
 ## `profiles`
 
@@ -119,6 +121,8 @@ Los privilegios de columna sobre `posts` (`0007`) se suman a estas políticas; v
 | `avatar_url` | `text` | Sí | | Sin uso en la UI todavía |
 | `created_at` | `timestamptz` | No | `now()` | |
 | `onboarded_at` | `timestamptz` | Sí | | `0010`. `null` = el paso 2 del onboarding (intereses) sigue pendiente. La migración la crea y rellena con `created_at` en los perfiles que ya existían; los nuevos nacen en `null` y `saveInterests` la completa ([ADR 0025](../adr/0025-intereses-en-onboarding.md)) |
+| `notify_new_article_email` | `boolean` | No | `true` | `0012`. Si un autor que seguís publica, controla si te llega el correo con el artículo. Independiente de dejar de seguir ([PRD-11.3](../prds/PRD-11.3-nuevo-articulo-seguidos.md)) |
+| `unsubscribe_token` | `uuid` | No | `gen_random_uuid()` | `0012`. Identifica la fila en el link de baja sin login del correo de nuevo artículo; único, sin firma ni expiración a propósito (solo puede apagar `notify_new_article_email`, ver [ADR 0028](../adr/0028-emails-transaccionales-resend.md)) |
 
 | Política | Operación | Regla |
 | :--- | :--- | :--- |

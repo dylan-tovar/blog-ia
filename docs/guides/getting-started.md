@@ -34,8 +34,19 @@ Para levantar el proyecto hace falta un proyecto de Supabase con las diez migrac
 | `AI_RATE_LIMIT_USER_PER_MIN` | No | `5` | Entero de 1 a 600 | Peticiones por usuario y por minuto, en cada carril (asistencia y moderación cuentan por separado) |
 | `AI_RATE_LIMIT_GLOBAL_PER_MIN` | No | `6` | Entero de 1 a 6000 | Peticiones de asistencia (chat, resumen) de todo el proyecto por minuto. Ajustar al RPM que muestre AI Studio para la clave: los límites de la capa gratuita no se publican |
 | `AI_RATE_LIMIT_MODERATION_GLOBAL_PER_MIN` | No | `4` | Entero de 1 a 6000 | Moderaciones al publicar de todo el proyecto por minuto (carril separado para que la asistencia no lo agote). La suma con el anterior debería quedar por debajo del RPM del proyecto |
+| `NEXT_PUBLIC_SITE_URL` | Sí | — | URL válida | Navegador y servidor. Base de los links de confirmación, recuperación, bienvenida y baja de correo ([PRD-11](../prds/PRD-11-emails-transaccionales.md)) |
+| `RESEND_API_KEY` | Para mandar correos | — | Texto no vacío | Solo servidor (`src/lib/email/`) |
+| `RESEND_FROM_EMAIL` | Para mandar correos | — | Texto no vacío (ej. `Blog IA <no-reply@tu-dominio.com>`) | Solo servidor |
 
-Sin `GEMINI_API_KEY`: las funciones de IA responden "La IA no está configurada en este entorno", y publicar sigue funcionando (sin tags automáticos). En la capa gratuita de Gemini, Google puede usar el texto enviado para mejorar sus productos ([ADR 0011](../adr/0011-ia-con-gemini.md)); la interfaz lo avisa.
+Sin `GEMINI_API_KEY`: las funciones de IA responden "La IA no está configurada en este entorno", y publicar sigue funcionando (sin tags automáticos). En la capa gratuita de Gemini, Google puede usar el texto enviado para mejorar sus productos ([ADR 0011](../adr/0011-ia-con-gemini.md)); la interfaz lo avisa. Sin `RESEND_API_KEY`, `sendEmail` falla en silencio (logueado, nunca lanza): la confirmación/recuperación de contraseña dependen del SMTP de Supabase, no de esta variable (ver más abajo).
+
+## Correo con Resend (fuera del repo)
+
+Estos tres pasos son configuración del dashboard de Supabase, no viven en `supabase/migrations/` ni en ningún archivo versionado — hay que repetirlos en cada proyecto de Supabase nuevo ([PRD-11.1](../prds/PRD-11.1-confirmacion-y-recuperacion.md), [ADR 0028](../adr/0028-emails-transaccionales-resend.md)):
+
+1. **Authentication → Emails → SMTP Settings**: activar SMTP custom apuntando al relay de Resend, con el dominio ya verificado por DNS.
+2. **Authentication → Sign In / Providers → Email**: reactivar "Confirm email".
+3. **Authentication → Emails → Templates**: en "Confirm signup" y "Reset password", apuntar el link a `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type={{ .Type }}&next=<path>` en vez del endpoint default de GoTrue.
 
 `SUPABASE_SECRET_KEY` no lleva el prefijo `NEXT_PUBLIC_`, no se sube al repositorio y no se pega en el navegador. Se obtiene en Project Settings → API Keys → Secret keys.
 
