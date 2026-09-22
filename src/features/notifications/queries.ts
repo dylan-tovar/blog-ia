@@ -1,8 +1,12 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { excerpt } from "@/features/posts/utils";
 import type { NotificationType } from "@/lib/supabase/database.types";
 
-const ACTOR_EMBED = "actor:profiles(id, display_name)";
+// `notifications` has two FKs to `profiles` (recipient_id, actor_id): PostgREST
+// needs the FK name to disambiguate which one `actor` embeds, or it rejects the
+// query with PGRST201.
+const ACTOR_EMBED = "actor:profiles!notifications_actor_id_fkey(id, display_name)";
 const NOTE_EXCERPT_MAX_LENGTH = 140;
 
 export const NOTIFICATIONS_PAGE_SIZE = 20;
@@ -93,7 +97,10 @@ export async function getNotificationsPage(userId: string, offset = 0) {
   };
 }
 
-export async function getUnreadNotificationCount(userId: string) {
+// AppShell (mobile bottom nav) and HeaderAccount (desktop nav) both resolve the
+// initial unread count for the same viewer on every request: `cache()` dedupes
+// that into a single query, same reasoning as `getViewer` in `lib/viewer.ts`.
+export const getUnreadNotificationCount = cache(async (userId: string) => {
   const supabase = await createClient();
   const { count, error } = await supabase
     .from("notifications")
@@ -106,4 +113,4 @@ export async function getUnreadNotificationCount(userId: string) {
   }
 
   return count ?? 0;
-}
+});

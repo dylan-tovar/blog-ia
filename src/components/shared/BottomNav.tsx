@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { House, Search, User, type LucideIcon } from "lucide-react";
+import { Bell, House, Search, User, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isNavItemActive, NAV_ITEMS } from "@/components/shared/navigation";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 
-const ICONS: Partial<Record<(typeof NAV_ITEMS)[number]["href"], LucideIcon>> = {
+// Unused for "/activity" (NotificationBell renders instead), but kept exhaustive
+// so a future NAV_ITEMS entry without an icon fails the build, not silently.
+const ICONS: Record<(typeof NAV_ITEMS)[number]["href"], LucideIcon> = {
   "/": House,
   "/explore": Search,
+  "/activity": Bell,
   "/profile": User,
 };
 
@@ -37,9 +40,13 @@ export function BottomNav({ initialUnreadCount = 0 }: { initialUnreadCount?: num
                 )}
               >
                 {item.href === "/activity" ? (
-                  <NotificationBell initialCount={initialUnreadCount} className="size-6" />
+                  <NotificationBell
+                    initialCount={initialUnreadCount}
+                    className="size-6"
+                    pollQuery="(max-width: 767.98px)"
+                  />
                 ) : (
-                  Icon && <Icon className="size-6" aria-hidden />
+                  <Icon className="size-6" aria-hidden />
                 )}
               </Link>
             </li>

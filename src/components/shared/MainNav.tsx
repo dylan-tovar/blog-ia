@@ -44,7 +44,11 @@ export function MainNav({
             )}
           >
             {item.href === "/activity" ? (
-              <NotificationBell initialCount={initialUnreadCount} className="size-5" />
+              <NotificationBell
+                initialCount={initialUnreadCount}
+                className="size-5"
+                pollQuery="(min-width: 768px)"
+              />
             ) : (
               Icon && <Icon className="size-5" aria-hidden />
             )}

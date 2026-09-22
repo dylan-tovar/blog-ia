@@ -11,22 +11,45 @@ const POLL_INTERVAL_MS = 45_000;
 export function NotificationBell({
   initialCount,
   className,
+  pollQuery,
 }: {
   initialCount: number;
   className?: string;
+  // BottomNav y MainNav están siempre montados (solo se ocultan por CSS en el
+  // breakpoint contrario), así que sin esto ambas instancias harían polling en
+  // paralelo por la misma badge, siempre invisible en algún lado. Solo la
+  // instancia cuyo `pollQuery` matchea hace polling.
+  pollQuery: string;
 }) {
   const [count, setCount] = useState(initialCount);
   const [, startTransition] = useTransition();
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      startTransition(async () => {
-        const next = await getUnreadCount();
-        setCount(next);
-      });
-    }, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, []);
+    const media = window.matchMedia(pollQuery);
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    function sync() {
+      if (media.matches && !interval) {
+        interval = setInterval(() => {
+          startTransition(async () => {
+            setCount(await getUnreadCount());
+          });
+        }, POLL_INTERVAL_MS);
+      } else if (!media.matches && interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    }
+
+    sync();
+    media.addEventListener("change", sync);
+    return () => {
+      media.removeEventListener("change", sync);
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [pollQuery]);
 
   return (
     <span className="relative inline-flex">

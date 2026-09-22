@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
 import { notificationsQuerySchema } from "@/features/notifications/schemas";
@@ -9,6 +8,10 @@ import {
   getUnreadNotificationCount,
 } from "@/features/notifications/queries";
 
+// Called directly from `activity/page.tsx`'s render, not from a client
+// interaction: no `revalidatePath` here, since Next rejects it outside the
+// "action" work-unit phase. The layout badge catches up on the next hard
+// navigation or the next poll tick (see NotificationBell).
 export async function markAllNotificationsRead(): Promise<{ ok: boolean }> {
   const { supabase, user } = await requireUser();
 
@@ -18,7 +21,6 @@ export async function markAllNotificationsRead(): Promise<{ ok: boolean }> {
     .eq("recipient_id", user.id)
     .is("read_at", null);
 
-  revalidatePath("/activity");
   return { ok: !error };
 }
 
