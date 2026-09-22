@@ -33,7 +33,8 @@ export default async function PublicPostPage(props: PageProps<"/post/[id]">) {
   ]);
 
   const authorName = post.author?.display_name ?? "Autor desconocido";
-  const target = replyTarget(post.parent);
+  const replyReference = post.replyTo ?? post.parent;
+  const target = replyTarget(replyReference);
   const isOwn = !!viewer && viewer.id === post.author?.id;
   const canDelete = isOwn && post.type === "note";
   const canEdit = isOwn;
@@ -91,9 +92,9 @@ export default async function PublicPostPage(props: PageProps<"/post/[id]">) {
           </div>
         </div>
 
-        {post.parent && target && (
+        {replyReference && target && (
           <Link
-            href={`/post/${post.parent.id}`}
+            href={`/post/${replyReference.id}`}
             className="mt-4 block truncate text-sm text-muted-foreground hover:underline"
           >
             En respuesta a <span className="font-medium">{target}</span>
@@ -136,7 +137,39 @@ export default async function PublicPostPage(props: PageProps<"/post/[id]">) {
         </div>
       </article>
 
-      {!isReply && (
+      {isReply ? (
+        // A reply's own page never lists its own sub-notes: under the flat
+        // thread model, every reply already lives in the root's notes list.
+        // This is just a shortcut to keep replying without navigating back.
+        <section aria-labelledby="reply-heading" className="border-t">
+          <h2 id="reply-heading" className="px-4 pt-4 text-base font-semibold text-foreground">
+            Responder
+          </h2>
+          <div className="px-4 py-3">
+            {viewer ? (
+              <NoteComposer
+                parentPostId={post.parent_post_id ?? undefined}
+                replyToPostId={post.id}
+                placeholder={`Responder a ${authorName}…`}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                <LoginDrawer
+                  trigger={
+                    <button
+                      type="button"
+                      className="font-medium text-blue-400 hover:underline cursor-pointer"
+                    >
+                      Iniciá sesión
+                    </button>
+                  }
+                />{" "}
+                para responder.
+              </p>
+            )}
+          </div>
+        </section>
+      ) : (
         <section id="notes" aria-labelledby="notes-heading" className="border-t">
           <h2 id="notes-heading" className="px-4 pt-4 text-base font-semibold text-foreground">
             Notas ({notes.length})

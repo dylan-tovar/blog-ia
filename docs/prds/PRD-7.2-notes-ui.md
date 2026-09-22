@@ -64,7 +64,7 @@ Lo usan `NoteDialog` y `NoteComposer`; así el comportamiento no se duplica. `No
 
 | Acción | Qué valida | Qué hace |
 | :--- | :--- | :--- |
-| `createNote` | `createNoteSchema`: texto recortado, 1 a 500 caracteres, `parentPostId` opcional (uuid) | Inserta `type: 'note'`, `status: 'published'`, `published_at: ahora`, `parent_post_id`; **sin revisión de IA**. Revalida `/`, el perfil del autor y, si es respuesta, el post padre |
+| `createNote` | `createNoteSchema`: texto recortado, 1 a 500 caracteres, `parentPostId` y `replyToPostId` opcionales (uuid) | Inserta `type: 'note'`, `status: 'published'`, `published_at: ahora`, `parent_post_id`, `reply_to_post_id`; **sin revisión de IA**. Revalida `/`, el perfil del autor y, si es respuesta, el post padre |
 | `updateNote` | id válido, texto no vacío, hasta 500 caracteres | `UPDATE content` filtrando `author_id = yo` y `type = 'note'`. Revalida las mismas rutas |
 | `deleteNote` | id válido | `DELETE` filtrando `author_id = yo` y `type = 'note'`; devuelve el `parent_post_id` para revalidar el padre |
 
@@ -74,7 +74,8 @@ Las tres usan `requireUser` (sin sesión, redirige a `/login`) y **el filtro por
 
 - **Editar:** `EditNoteDialog` (mismo diseño que `NoteDialog`) llama a `updateNote`, cierra, hace `router.refresh()` y avisa con `onEdited`. Las notas son editables desde la migración `0006` ([ADR 0015](../adr/0015-notas-editables.md)); el motivo de producto no quedó registrado †.
 - **Borrar:** el botón vive en `PostOptionsDrawer` ([PRD-9.3](PRD-9.3-post-options-drawer.md)) y pide un **segundo toque** ("Tocá de nuevo para eliminar") antes de llamar a `deleteNote`.
-- **Responder a un post:** una nota puede colgar de un post publicado que no sea una respuesta; lo hace cumplir la base ([PRD-7.1](PRD-7.1-post-types-db.md)).
+- **Responder a un post:** una nota puede colgar de un post publicado; `parent_post_id` siempre apunta a la raíz del hilo, lo hace cumplir la base ([PRD-7.1](PRD-7.1-post-types-db.md)).
+- **Responder a una respuesta:** `PostCard` (feed, perfil de autor y lista de notas de un post) muestra un botón "Responder" en toda nota, no solo en artículos. Al tocarlo despliega un `NoteComposer` inline con `parentPostId` = raíz del hilo (`post.parent.id`) y `replyToPostId` = la nota respondida; se colapsa solo al publicar (`onPublished`). `NoteItem` prioriza `replyTo` sobre `parent` para el texto "En respuesta a X", así una respuesta de 2º nivel muestra el autor inmediato en vez de la raíz. Ver [ADR 0029](../adr/0029-respuestas-a-respuestas.md).
 
 ## Decisiones y por qué
 
@@ -122,6 +123,6 @@ Las tres usan `requireUser` (sin sesión, redirige a `/login`) y **el filtro por
 1. ¿Por qué `createNote` valida con Zod si el `<textarea>` ya tiene `maxLength`?
 2. ¿Qué hace `useActionState` y qué devuelve?
 3. ¿Por qué `updateNote` y `deleteNote` filtran `author_id` y `type` si RLS ya lo controla?
-4. ¿Cómo sabe la nota que es una respuesta? ¿Quién impide responder a una respuesta?
+4. ¿Cómo sabe la nota que es una respuesta? ¿Qué diferencia hay entre `parent_post_id` y `reply_to_post_id`?
 5. ¿Por qué `useIsDesktop` devuelve `null` en el servidor y qué evita eso?
 6. ¿Por qué en móvil el "+" abre la nota directo pero en escritorio abre un menú?

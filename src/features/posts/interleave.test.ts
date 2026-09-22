@@ -8,6 +8,7 @@ function post(id: string): FeedPost {
     type: "note",
     content: id,
     parent: null,
+    replyTo: null,
     publishedAt: null,
     author: null,
     viewerFollows: false,

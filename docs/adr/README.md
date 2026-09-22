@@ -45,6 +45,7 @@ Un ADR registra una decisión de arquitectura: qué se decidió, por qué y qué
 | [0024](0024-perfil-en-onboarding.md) | El perfil se crea en `/onboarding`, no al registrarse | Aceptada; reemplazada parcialmente por 0025 |
 | [0025](0025-intereses-en-onboarding.md) | El onboarding tiene un segundo paso obligatorio para elegir intereses | Aceptada |
 | [0026](0026-feed-de-seguidos-con-recomendados.md) | El inicio muestra a quienes seguís, con recomendados intercalados | Aceptada |
+| [0029](0029-respuestas-a-respuestas.md) | Se puede responder a una respuesta, con hilo plano y no árbol real | Aceptada |
 
 ## Cómo leerlos
 
@@ -54,7 +55,7 @@ Un ADR registra una decisión de arquitectura: qué se decidió, por qué y qué
 | Cómo se protege la información | 0003, 0007, 0012 |
 | Cómo se registra un usuario y se crea su perfil | 0003, 0007, 0024, 0025 |
 | Por qué la IA funciona así | 0011, 0013, 0014, 0017, 0019 |
-| Por qué el modelo de posts y notas es así | 0009, 0015, 0010, 0022, 0023 |
+| Por qué el modelo de posts y notas es así | 0009, 0015, 0010, 0022, 0023, 0029 |
 | Cómo se trabaja con la base y las pruebas | 0016, 0018 |
 | Por qué la interfaz es así | 0005, 0008, 0020, 0021, 0026 |
 | Qué muestra el inicio y cómo se mezclan seguidos y recomendados | 0004, 0021, 0026 |
