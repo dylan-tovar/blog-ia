@@ -1,6 +1,6 @@
 # Reparto de tareas del equipo (12 personas)
 
-El proyecto está construido y documentado. Este documento lo **reparte en 35 paquetes de trabajo** para que cada integrante sea dueño de una parte concreta: que la entienda, la pueda explicar, la verifique a mano y la mejore. El reparto es **desigual a propósito**: la carga sigue el nivel de cada persona y el riesgo de cada pieza, no un número igual de tareas.
+El proyecto está construido y documentado. Este documento lo **reparte en 37 paquetes de trabajo** para que cada integrante sea dueño de una parte concreta: que la entienda, la pueda explicar, la verifique a mano y la mejore. El reparto es **desigual a propósito**: la carga sigue el nivel de cada persona y el riesgo de cada pieza, no un número igual de tareas.
 
 ## 1. Cómo usar este documento
 
@@ -40,23 +40,25 @@ Los puntos son una estimación del esfuerzo de **entender, verificar, presentar 
 
 | Rol | Paquetes | Nº | Puntos | % de 71 | Dificultad (A / M / B) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| D1 | 1.2, 2.1, 5.1, 5.2, 5.3, 8.1 | 6 | 22 | 31,0 % | 6 / 0 / 0 |
-| D2 | 2.2, 4.1, 5.4, 7.1, 8.2, 8.3 | 6 | 16 | 22,5 % | 4 / 2 / 0 |
-| D3 | 2.3, 2.4, 3.1, 6.1 | 4 | 7 | 9,9 % | 0 / 4 / 0 |
-| D4 | 0.1, 4.2, X.2 | 3 | 3 | 4,2 % | 0 / 0 / 3 |
-| D5 | 0.2, 6.2 | 2 | 3 | 4,2 % | 0 / 0 / 2 |
-| D6 | 0.3, 7.2 | 2 | 4 | 5,6 % | 0 / 2 / 0 |
-| D7 | 1.1, 7.3 | 2 | 3 | 4,2 % | 0 / 0 / 2 |
-| D8 | 1.3, 8.4 | 2 | 3 | 4,2 % | 0 / 1 / 1 |
-| D9 | 2.5, 9.1 | 2 | 2 | 2,8 % | 0 / 0 / 2 |
-| D10 | 2.6, 9.2 | 2 | 2 | 2,8 % | 0 / 0 / 2 |
-| D11 | 3.2, 9.3 | 2 | 3 | 4,2 % | 0 / 1 / 1 |
-| D12 | 3.3, X.1 | 2 | 3 | 4,2 % | 0 / 1 / 1 |
-| **Total** | | **35** | **71** | **100 %** | **10 / 11 / 14** |
+| D1 | 1.2, 2.1, 5.1, 5.2, 5.3, 8.1 | 6 | 22 | 28,6 % | 6 / 0 / 0 |
+| D2 | 2.2, 4.1, 5.4, 7.1, 8.2, 8.3, 10.1 | 7 | 20 | 26,0 % | 5 / 2 / 0 |
+| D3 | 2.3, 2.4, 3.1, 6.1 | 4 | 7 | 9,1 % | 0 / 4 / 0 |
+| D4 | 0.1, 4.2, X.2 | 3 | 3 | 3,9 % | 0 / 0 / 3 |
+| D5 | 0.2, 6.2 | 2 | 3 | 3,9 % | 0 / 0 / 2 |
+| D6 | 0.3, 7.2 | 2 | 4 | 5,2 % | 0 / 2 / 0 |
+| D7 | 1.1, 7.3 | 2 | 3 | 3,9 % | 0 / 0 / 2 |
+| D8 | 1.3, 8.4 | 2 | 3 | 3,9 % | 0 / 1 / 1 |
+| D9 | 2.5, 9.1, 10.2 | 3 | 4 | 5,2 % | 0 / 1 / 2 |
+| D10 | 2.6, 9.2 | 2 | 2 | 2,6 % | 0 / 0 / 2 |
+| D11 | 3.2, 9.3 | 2 | 3 | 3,9 % | 0 / 1 / 1 |
+| D12 | 3.3, X.1 | 2 | 3 | 3,9 % | 0 / 1 / 1 |
+| **Total** | | **37** | **77** | **100 %** | **11 / 12 / 14** |
 
-Comprobación de la aritmética: 22 + 16 + 7 + 3 + 3 + 4 + 3 + 3 + 2 + 2 + 3 + 3 = 71; 6 + 6 + 4 + 3 + 8 × 2 = 35 paquetes (D4 tiene 3; de D5 a D12, 2 cada uno); la suma de porcentajes es 100 %.
+Comprobación de la aritmética: 22 + 20 + 7 + 3 + 3 + 4 + 3 + 3 + 4 + 2 + 3 + 3 = 77; 6 + 7 + 4 + 3 + 2 + 2 + 2 + 2 + 3 + 2 + 2 + 2 = 37 paquetes; la suma de porcentajes es 100 %.
 
-> **Mentoría (no cuenta en los puntos).** Según el catálogo, D2 acompaña 9 paquetes (0.1, 0.2, 0.3, 2.3, 2.5, 2.6, 4.2, 8.4 y X.1, de D3, D4, D5, D6, D8, D9, D10 y D12), D1 acompaña 6 (2.4, 3.1, 5.4, 6.1, 7.1 y X.2, de D2, D3 y D4) y D3 acompaña 6 (1.1, 1.3, 3.2, 3.3, 6.2 y 7.2, de D5, D6, D7, D8, D11 y D12). Son 21 paquetes con mentor formal. Además, D6 da **apoyo entre pares** (no es mentoría formal) en 4 paquetes básicos: 7.3, 9.1, 9.2 y 9.3, de D7, D9, D10 y D11. Los 10 paquetes avanzados o de D2 sin mentor (1.2, 2.1, 2.2, 4.1, 5.1, 5.2, 5.3, 8.1, 8.2 y 8.3) completan los 35: 21 + 4 + 10 = 35. Es carga real de tiempo: por eso la diferencia entre D1 y D2 no debe ampliarse y D3 necesita el chequeo del [riesgo R2](#10-riesgos-y-mitigaciones). D1 y D2 siguen siendo la vía de escalada de todos.
+> **PRD-10 (imágenes y portada).** Ambos paquetes ya están implementados por D1 en producción ([PRD-10](../prds/PRD-10-post-images-cover.md)): no hay construcción pendiente, pero sí quedan por estudiar, presentar y revisar como el resto del catálogo. Para no ampliar la carga de D1, se reparten entre D2 (10.1, avanzado, ya lleva otros paquetes de Storage/RLS-adyacentes como 7.1) y D9 (10.2, medio, mentor D3 por su cercanía con 2.4 el diálogo de publicar). D1 sigue siendo revisor obligatorio de 10.1 por tocar `supabase/migrations/`.
+
+> **Mentoría (no cuenta en los puntos).** Según el catálogo, D2 acompaña 9 paquetes (0.1, 0.2, 0.3, 2.3, 2.5, 2.6, 4.2, 8.4 y X.1, de D3, D4, D5, D6, D8, D9, D10 y D12), D1 acompaña 6 (2.4, 3.1, 5.4, 6.1, 7.1 y X.2, de D2, D3 y D4) y D3 acompaña 7 (1.1, 1.3, 3.2, 3.3, 6.2, 7.2 y 10.2, de D5, D6, D7, D8, D9, D11 y D12). Son 22 paquetes con mentor formal. Además, D6 da **apoyo entre pares** (no es mentoría formal) en 4 paquetes básicos: 7.3, 9.1, 9.2 y 9.3, de D7, D9, D10 y D11. Los 11 paquetes avanzados o de D2 sin mentor (1.2, 2.1, 2.2, 4.1, 5.1, 5.2, 5.3, 8.1, 8.2, 8.3 y 10.1) completan los 37: 22 + 4 + 11 = 37. Es carga real de tiempo: por eso la diferencia entre D1 y D2 no debe ampliarse y D3 necesita el chequeo del [riesgo R2](#10-riesgos-y-mitigaciones). D1 y D2 siguen siendo la vía de escalada de todos.
 
 ## 5. Catálogo de paquetes
 
@@ -97,6 +99,8 @@ La columna **Ola** indica en qué momento conviene estudiar y presentar cada paq
 | 9.1 | [Página Explorar](../prds/PRD-9.1-explore-page.md) | B | S | D9 | D6 (pares) | 3 |
 | 9.2 | [Actividad y navegación](../prds/PRD-9.2-activity-nav.md) | B | S | D10 | D6 (pares) | 2 |
 | 9.3 | [Menú de opciones del post](../prds/PRD-9.3-post-options-drawer.md) | B | S | D11 | D6 (pares) | 3 |
+| 10.1 | [Imágenes en el editor](../prds/PRD-10.1-post-images.md) | A | L | D2 | — | 2 |
+| 10.2 | [Portada del feed](../prds/PRD-10.2-post-cover.md) | M | M | D9 | D3 | 3 |
 | X.1 | [Tests e2e y unitarios](../prds/PRD-X.1-testing-e2e.md) | M | M | D12 | D2 | 4 |
 | X.2 | [Herramientas de desarrollo](../prds/PRD-X.2-dev-tooling.md) | B | S | D4 | D1 | 1 |
 
@@ -116,15 +120,15 @@ Todos empiezan igual: [`docs/README.md`](../README.md) (mapa y [glosario](../REA
 | **Revisa obligatoriamente** | Todo cambio que toque migraciones, RLS, `proxy.ts`, el cliente admin (secret key) o la publicación |
 | **Entrega** | Los seis paquetes explicados, más el mapa de seguridad del proyecto (qué protege cada capa) |
 
-### D2 — (16 puntos)
+### D2 — (20 puntos)
 
 | | |
 | :--- | :--- |
-| **Paquetes** | [2.2](../prds/PRD-2.2-editor-tiptap.md) editor Tiptap · [4.1](../prds/PRD-4.1-scoring-core.md) scoring · [5.4](../prds/PRD-5.4-ai-route-runner.md) route runner y caché · [7.1](../prds/PRD-7.1-post-types-db.md) tipos de post en la base · [8.2](../prds/PRD-8.2-chat-drawer-ui.md) interfaz del cajón · [8.3](../prds/PRD-8.3-editor-context-apply.md) contexto y aplicar ediciones |
-| **Leer, en orden** | [PRD-2](../prds/PRD-2-posts.md), [ADR 0010](../adr/0010-editor-markdown.md) → [PRD-4](../prds/PRD-4-recommendations.md), [ADR 0004](../adr/0004-recomendaciones-scoring-determinista.md) → [PRD-7](../prds/PRD-7-notes-likes.md), [ADR 0009](../adr/0009-tipos-de-post-y-likes.md), [ADR 0015](../adr/0015-notas-editables.md) → [PRD-8](../prds/PRD-8-ai-chat.md), [ADR 0014](../adr/0014-aplicacion-de-ediciones-en-el-cliente-con-fingerprints.md), [ADR 0013](../adr/0013-chat-ia-protocolo-ndjson-y-function-calling.md) |
+| **Paquetes** | [2.2](../prds/PRD-2.2-editor-tiptap.md) editor Tiptap · [4.1](../prds/PRD-4.1-scoring-core.md) scoring · [5.4](../prds/PRD-5.4-ai-route-runner.md) route runner y caché · [7.1](../prds/PRD-7.1-post-types-db.md) tipos de post en la base · [8.2](../prds/PRD-8.2-chat-drawer-ui.md) interfaz del cajón · [8.3](../prds/PRD-8.3-editor-context-apply.md) contexto y aplicar ediciones · [10.1](../prds/PRD-10.1-post-images.md) imágenes en el editor |
+| **Leer, en orden** | [PRD-2](../prds/PRD-2-posts.md), [ADR 0010](../adr/0010-editor-markdown.md) → [PRD-4](../prds/PRD-4-recommendations.md), [ADR 0004](../adr/0004-recomendaciones-scoring-determinista.md) → [PRD-7](../prds/PRD-7-notes-likes.md), [ADR 0009](../adr/0009-tipos-de-post-y-likes.md), [ADR 0015](../adr/0015-notas-editables.md) → [PRD-8](../prds/PRD-8-ai-chat.md), [ADR 0014](../adr/0014-aplicacion-de-ediciones-en-el-cliente-con-fingerprints.md), [ADR 0013](../adr/0013-chat-ia-protocolo-ndjson-y-function-calling.md) → [PRD-10](../prds/PRD-10-post-images-cover.md), [ADR 0022](../adr/0022-imagenes-en-supabase-storage.md) |
 | **Mentorea** | D4 (0.1, 4.2), D5 (0.2), D6 (0.3), D8 (8.4), D9 (2.5), D10 (2.6), D12 (X.1) y D3 (2.3): 9 paquetes |
-| **Revisa obligatoriamente** | Los paquetes avanzados de D1 (revisión cruzada) y todo cambio en el editor o en el motor de aplicar |
-| **Entrega** | Los seis paquetes explicados, incluida una demo del motor de aplicar ediciones |
+| **Revisa obligatoriamente** | Los paquetes avanzados de D1 (revisión cruzada) y todo cambio en el editor, el motor de aplicar o la subida de imágenes |
+| **Entrega** | Los siete paquetes explicados, incluida una demo del motor de aplicar ediciones y otra de la subida de imágenes |
 
 ### D3 — (7 puntos)
 
@@ -133,7 +137,7 @@ Todos empiezan igual: [`docs/README.md`](../README.md) (mapa y [glosario](../REA
 | **Paquetes** | [2.3](../prds/PRD-2.3-autosave-drafts.md) autoguardado · [2.4](../prds/PRD-2.4-publish-dialog-tags.md) diálogo de publicar y tags · [3.1](../prds/PRD-3.1-follow-system.md) seguimiento · [6.1](../prds/PRD-6.1-summary-backend.md) resumen, servidor |
 | **Leer, en orden** | [PRD-2](../prds/PRD-2-posts.md), [ADR 0010](../adr/0010-editor-markdown.md) → [PRD-3](../prds/PRD-3-feed-follows.md), [ADR 0021](../adr/0021-feed-en-raiz-y-global.md) → [PRD-6](../prds/PRD-6-ai-reader.md), [ADR 0011](../adr/0011-ia-con-gemini.md), [ADR 0020](../adr/0020-tags-como-metadato-interno.md) |
 | **Es mentorado por** | D2 (2.3) y D1 (2.4, 3.1, 6.1) |
-| **Mentorea (primera línea)** | D5 (6.2), D6 (7.2), D7 (1.1), D8 (1.3), D11 (3.2) y D12 (3.3): 6 paquetes. Cuando una duda lo supere, la escala a D2 o D1 ([riesgo R2](#10-riesgos-y-mitigaciones)) |
+| **Mentorea (primera línea)** | D5 (6.2), D6 (7.2), D7 (1.1), D8 (1.3), D9 (10.2), D11 (3.2) y D12 (3.3): 7 paquetes. Cuando una duda lo supere, la escala a D2 o D1 ([riesgo R2](#10-riesgos-y-mitigaciones)) |
 | **Entrega** | Los cuatro paquetes explicados y, en la primera semana, una explicación de uno de ellos a D2 para calibrar el nivel |
 
 ### D4 a D12
@@ -147,7 +151,7 @@ Cada uno lee, en este orden: el PRD padre de su paquete, su sub-PRD (`PRD-N.M`),
 | **D6** | [0.3](../prds/PRD-0.3-app-shell.md) shell · [7.2](../prds/PRD-7.2-notes-ui.md) notas, UI | D2 (0.3), D3 (7.2). **Da apoyo entre pares** a D7 (7.3), D9 (9.1), D10 (9.2) y D11 (9.3) | [PRD-0](../prds/PRD-0-design-system.md), [ADR 0008](../adr/0008-tema-oscuro-y-shell-de-aplicacion.md), [PRD-7](../prds/PRD-7-notes-likes.md), [ADR 0015](../adr/0015-notas-editables.md) | Layouts de Next.js, Server vs. Client Components |
 | **D7** | [1.1](../prds/PRD-1.1-auth-forms.md) formularios de auth · [7.3](../prds/PRD-7.3-likes.md) me gusta | D3 (1.1), D6 apoyo entre pares (7.3) | [PRD-1](../prds/PRD-1-auth.md), [ADR 0007](../adr/0007-login-por-username-con-secret-key.md), [PRD-7](../prds/PRD-7-notes-likes.md), [ADR 0009](../adr/0009-tipos-de-post-y-likes.md) | Formularios, Zod y Server Actions |
 | **D8** | [1.3](../prds/PRD-1.3-profile-settings.md) perfil y ajustes · [8.4](../prds/PRD-8.4-action-cards-analysis.md) tarjetas y análisis | D3 (1.3), D2 (8.4) | [PRD-1](../prds/PRD-1-auth.md), [PRD-8](../prds/PRD-8-ai-chat.md), [ADR 0014](../adr/0014-aplicacion-de-ediciones-en-el-cliente-con-fingerprints.md) | Formularios de edición y estado en el cliente |
-| **D9** | [2.5](../prds/PRD-2.5-my-posts-page.md) Mis posts · [9.1](../prds/PRD-9.1-explore-page.md) Explorar | D2 (2.5), D6 apoyo entre pares (9.1) | [PRD-2](../prds/PRD-2-posts.md), [PRD-9](../prds/PRD-9-explore-activity.md), [ADR 0020](../adr/0020-tags-como-metadato-interno.md) | Server Components y consultas a Supabase |
+| **D9** | [2.5](../prds/PRD-2.5-my-posts-page.md) Mis posts · [9.1](../prds/PRD-9.1-explore-page.md) Explorar · [10.2](../prds/PRD-10.2-post-cover.md) portada del feed | D2 (2.5), D6 apoyo entre pares (9.1), D3 (10.2) | [PRD-2](../prds/PRD-2-posts.md), [PRD-9](../prds/PRD-9-explore-activity.md), [ADR 0020](../adr/0020-tags-como-metadato-interno.md), [PRD-10](../prds/PRD-10-post-images-cover.md), [ADR 0023](../adr/0023-portada-de-articulos.md) | Server Components, consultas a Supabase y el diálogo de publicar |
 | **D10** | [2.6](../prds/PRD-2.6-post-detail.md) detalle de post · [9.2](../prds/PRD-9.2-activity-nav.md) Actividad y navegación | D2 (2.6), D6 apoyo entre pares (9.2) | [PRD-2](../prds/PRD-2-posts.md), [PRD-9](../prds/PRD-9-explore-activity.md), [ADR 0008](../adr/0008-tema-oscuro-y-shell-de-aplicacion.md) | Rutas dinámicas y renderizado de markdown |
 | **D11** | [3.2](../prds/PRD-3.2-feed-list.md) lista del feed · [9.3](../prds/PRD-9.3-post-options-drawer.md) menú de opciones | D3 (3.2), D6 apoyo entre pares (9.3) | [PRD-3](../prds/PRD-3-feed-follows.md), [ADR 0021](../adr/0021-feed-en-raiz-y-global.md), [PRD-9](../prds/PRD-9-explore-activity.md) | Paginación ("Cargar más") y componentes con opciones reales y opciones sin efecto |
 | **D12** | [3.3](../prds/PRD-3.3-author-profile.md) perfil de autor · [X.1](../prds/PRD-X.1-testing-e2e.md) tests | D3 (3.3), D2 (X.1) | [PRD-3](../prds/PRD-3-feed-follows.md), [`guides/testing.md`](../guides/testing.md), [ADR 0018](../adr/0018-sin-ci-gates-manuales.md) | Pestañas, y cómo se prueba una aplicación (unitario vs. e2e) |
@@ -182,6 +186,7 @@ flowchart LR
     N52["5.2 Límite de peticiones"]
     N73["7.3 Me gusta"]
     N92["9.2 Actividad y navegación"]
+    N101["10.1 Imágenes en el editor"]
   end
   subgraph O3["Ola 3 · Piezas que combinan otras"]
     N24["2.4 Publicar y tags"]
@@ -192,6 +197,7 @@ flowchart LR
     N72["7.2 Notas UI"]
     N91["9.1 Explorar"]
     N93["9.3 Opciones del post"]
+    N102["10.2 Portada del feed"]
   end
   subgraph O4["Ola 4 · IA avanzada y calidad"]
     N61["6.1 Resumen servidor"] --> N62["6.2 Resumen UI"]
@@ -230,7 +236,7 @@ flowchart LR
 | Tipo de paquete | Revisor obligatorio |
 | :--- | :--- |
 | Avanzado de D1 (1.2, 2.1, 5.1, 5.2, 5.3, 8.1) | D2 |
-| Avanzado de D2 (2.2, 5.4, 7.1, 8.3) | D1 |
+| Avanzado de D2 (2.2, 5.4, 7.1, 8.3, 10.1) | D1 |
 | Medio de D2 (4.1, 8.2) | D1 |
 | Medio de D3 (2.3, 2.4, 3.1, 6.1) | Su mentor (D2 para 2.3, D1 para el resto) |
 | Básico o medio de D4 a D12 | Su mentor; en los cuatro paquetes con apoyo entre pares de D6 (7.3, 9.1, 9.2, 9.3), **D2**. **Además D1**, si el cambio toca migraciones, RLS, Server Actions, `proxy.ts` o el cliente admin |
