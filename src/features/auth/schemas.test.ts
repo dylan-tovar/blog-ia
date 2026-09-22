@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { loginSchema, registerSchema } from "@/features/auth/schemas";
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  resetPasswordSchema,
+} from "@/features/auth/schemas";
 import { isEmailIdentifier, resolveAuthRedirect } from "@/features/auth/utils";
 
 describe("registerSchema", () => {
@@ -168,6 +173,41 @@ describe("loginSchema", () => {
     expect(
       loginSchema.safeParse({ email: "ana@example.com", password: "x" }).success,
     ).toBe(false);
+  });
+});
+
+describe("forgotPasswordSchema", () => {
+  it("accepts a valid email", () => {
+    expect(forgotPasswordSchema.safeParse({ email: "ana@example.com" }).success).toBe(true);
+  });
+
+  it("rejects an invalid email", () => {
+    const result = forgotPasswordSchema.safeParse({ email: "not-an-email" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe("Ingresá un email válido.");
+  });
+});
+
+describe("resetPasswordSchema", () => {
+  const valid = { password: "Abcdef1!", confirmPassword: "Abcdef1!" };
+
+  it("accepts a valid, matching password", () => {
+    expect(resetPasswordSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("enforces the same password rules as registerSchema", () => {
+    const result = resetPasswordSchema.safeParse({ password: "abc", confirmPassword: "abc" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe(
+      "La contraseña debe tener al menos 8 caracteres.",
+    );
+  });
+
+  it("rejects mismatched passwords, reporting it on confirmPassword", () => {
+    const result = resetPasswordSchema.safeParse({ ...valid, confirmPassword: "Abcdef1?" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe("Las contraseñas no coinciden.");
+    expect(result.error?.issues[0].path).toEqual(["confirmPassword"]);
   });
 });
 
