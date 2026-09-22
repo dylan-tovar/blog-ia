@@ -71,7 +71,7 @@ src/
 └── proxy.ts                  # refresco de sesión y redirección de rutas privadas
 ```
 
-`lib/supabase/client.ts` existe pero hoy ningún componente lo importa.
+`lib/supabase/client.ts` lo usa `uploadPostImage` (`features/posts/images/upload-post-image.ts`) para subir imágenes de portada desde el navegador.
 
 ## Grupos de ruta
 
@@ -142,7 +142,7 @@ Clientes de Supabase:
 | Cliente | Uso |
 | :--- | :--- |
 | `lib/supabase/server.ts` | Server Components y actions; lee y escribe cookies. Es el que aplica RLS como el usuario |
-| `lib/supabase/client.ts` | Navegador. Existe, pero hoy ningún componente lo usa |
+| `lib/supabase/client.ts` | Navegador. Lo usa `uploadPostImage` para subir imágenes de portada desde el editor |
 | `lib/supabase/admin.ts` | Secret key: **salta RLS**, `server-only`. Lo usan el login por username, `publishPost` (transiciones de estado), el guardado de la caché de IA y el límite por minuto. El navegador nunca lo ve |
 
 ## Publicar: moderación con reclamo
@@ -239,8 +239,9 @@ Las features de los PRDs 0 a 9 existen en código, con las limitaciones que cada
 | Re-moderar artículos ya publicados al editarlos | No se hace | [ADR 0011](../adr/0011-ia-con-gemini.md) |
 | Imágenes en el editor (subida y render a lectores) | No existe almacenamiento | [ADR 0010](../adr/0010-editor-markdown.md) |
 | `/activity` con notificaciones reales | Pantalla vacía | [PRD-9](../prds/PRD-9-explore-activity.md) |
-| Opciones de `PostOptionsDrawer` (Guardar, Seguir, Ocultar, Silenciar, Bloquear, Reportar, "Analizar texto con IA", "Guardar como imagen") | Solo cierran el panel; no hay funcionalidad detrás | [PRD-9](../prds/PRD-9-explore-activity.md) |
+| Opciones de `PostOptionsDrawer` (Guardar, Seguir, Ocultar publicación, Bloquear, Reportar) | Solo cierran el panel; no hay funcionalidad detrás | [PRD-9](../prds/PRD-9-explore-activity.md) |
 | Ajustes de cuenta: email | Solo lectura | [PRD-1](../prds/PRD-1-auth.md) |
+| `AccountDrawer`: 8 de sus 13 enlaces no tienen página (`/subscriptions`, `/saved`, `/support`, `/about`, `/privacy`, `/terms`, `/data`, `/accessibility`) | 404 al hacer clic | [PRD-9](../prds/PRD-9-explore-activity.md) |
 | Pestaña "Subscriptions" del perfil | Siempre vacía; las pestañas tienen etiquetas en inglés | [PRD-3](../prds/PRD-3-feed-follows.md) |
 | Búsqueda por texto | No existe | [PRD-3](../prds/PRD-3-feed-follows.md) |
 | Avatares | `profiles.avatar_url` existe sin uso; se muestran iniciales | [PRD-1](../prds/PRD-1-auth.md) |

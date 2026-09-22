@@ -54,7 +54,6 @@ Lectura del archivo, de arriba hacia abajo:
 | Editar artículo | **Real** (si `canEdit` y es artículo) | Cierra el cajón y va a `/editor/<id>` |
 | Copiar enlace | **Real** | Ver arriba |
 | Guardar | Sin efecto | Solo cierra el cajón |
-| Guardar como imagen | Sin efecto | Solo cierra el cajón |
 | Eliminar nota | **Real** (si `canDelete`) | Doble toque, luego `deleteNote` |
 
 ### Opciones en un **post ajeno**
@@ -63,9 +62,9 @@ Lectura del archivo, de arriba hacia abajo:
 | :--- | :--- |
 | Copiar enlace | **Real** |
 | Seguir | Sin efecto en el cajón (el seguimiento real está en el botón de la cabecera de la tarjeta) |
-| Guardar, Guardar como imagen, Analizar texto con IA, Ocultar publicación, Silenciar, Bloquear, Reportar | Sin efecto: solo cierran el cajón |
+| Guardar, Ocultar publicación, Bloquear, Reportar | Sin efecto: solo cierran el cajón |
 
-Ninguna de las opciones sin efecto tiene modelo de datos que la respalde: en `supabase/migrations/` no hay tablas de guardados, silencios, bloqueos, reportes ni ocultos. "Analizar texto con IA" tampoco está conectada al chat, que solo funciona dentro del editor del autor ([PRD-8](PRD-8-ai-chat.md)).
+Ninguna de las opciones sin efecto tiene modelo de datos que la respalde: en `supabase/migrations/` no hay tablas de guardados, bloqueos, reportes ni ocultos.
 
 ### Eliminar: solo notas
 

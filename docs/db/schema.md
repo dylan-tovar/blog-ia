@@ -205,7 +205,7 @@ PK compuesta `(post_id, tag_id)`: impide asociar el mismo tag dos veces a un pos
 | :--- | :--- | :--- |
 | Users can view tags of their own posts or published posts | SELECT | Existe un `posts` con ese `post_id` que esté `published` o sea del usuario |
 | Users can tag their own posts | INSERT | Existe un `posts` con ese `post_id` cuyo `author_id = auth.uid()` **y `type = 'article'`** (`0005`): las notas no llevan tags |
-| Users can untag their own posts | DELETE | Igual que INSERT |
+| Users can untag their own posts | DELETE | Existe un `posts` con ese `post_id` cuyo `author_id = auth.uid()` (sin exigir `type = 'article'`: la policy es de `0002` y `0005` nunca la actualizó, así que en teoría también destaga notas, aunque hoy nunca llevan tags) |
 
 No hay política de UPDATE.
 

@@ -41,7 +41,7 @@ La parte del sistema donde una equivocación es un problema de seguridad: cómo 
 | Archivo | Para qué | Clave |
 | :--- | :--- | :--- |
 | `lib/supabase/server.ts` | Server Components y Server Actions. Lee y escribe cookies. `setAll` está en `try/catch` porque un Server Component no puede escribir cookies: ahí el refresco lo hace el proxy | publishable |
-| `lib/supabase/client.ts` | Navegador. Existe pero **hoy nada lo importa** (una búsqueda de `supabase/client` en `src/`, `e2e/` y `scripts/` no da resultados) | publishable |
+| `lib/supabase/client.ts` | Navegador. Lo usa `uploadPostImage` (`features/posts/images/upload-post-image.ts`) para subir imágenes de portada | publishable |
 | `lib/supabase/admin.ts` | Salta RLS. Marcado `server-only`: si se importa desde un Client Component, el build falla. `persistSession: false` | **secret key** |
 
 `lib/env.ts` valida las dos variables públicas al arrancar. `lib/env.server.ts` valida `SUPABASE_SECRET_KEY` **de forma perezosa** (`getServerEnv()` solo la exige cuando alguien la pide): así, si falta, solo falla el login por username y no todas las páginas que importan las acciones de auth.
@@ -179,7 +179,6 @@ grant execute on function ... to service_role;
 | Documentar que la app no implementa un límite propio de intentos de login (lo que aplique Supabase Auth no se verificó) y proponer qué haría falta | M |
 | Documentar qué pasaría si se migra la creación del perfil a un trigger de base (impacto en `signUp`, en `completeOnboarding` y en el ADR 0007) | A |
 | Verificar si el proyecto de Supabase exige confirmación de email (rompería el paso de `signUp` a `/onboarding`) y dejarlo escrito | M |
-| `lib/supabase/client.ts` no lo importa nadie (verificado con `rg "supabase/client"`): decidir si se elimina o se conserva para uso futuro y dejarlo escrito | B |
 
 ## Preguntas de autoevaluación
 
