@@ -199,7 +199,7 @@ Si apareciera abuso en notas, la vía que sugiere la interfaz es un botón de **
 
 | Tema | Detalle |
 | :--- | :--- |
-| **Menú "más opciones" con opciones sin efecto** | Reales: editar nota, editar artículo, copiar enlace, eliminar nota. **Sin efecto (solo cierran el menú):** Guardar, Guardar como imagen, Seguir, "Analizar texto con IA", Ocultar publicación, Silenciar, Bloquear y **Reportar**. No existen marcadores, silenciar, bloquear ni reportes. Ver [PRD-9](PRD-9-explore-activity.md) |
+| **Menú "más opciones" con opciones sin efecto** | Reales: editar nota, editar artículo, copiar enlace, eliminar nota. **Sin efecto (solo cierran el menú):** Guardar, Seguir, Ocultar publicación, Bloquear y **Reportar**. No existen marcadores, bloqueos ni reportes. Ver [PRD-9](PRD-9-explore-activity.md) |
 | Sin portada | No hay espacio reservado para una foto en la tarjeta del artículo |
 | No se puede borrar un artículo | `deleteNote` solo actúa sobre notas |
 | Sin historial de ediciones de notas | No hay versiones ni marca de "editado" |

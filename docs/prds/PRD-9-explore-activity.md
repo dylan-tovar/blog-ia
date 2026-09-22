@@ -100,7 +100,6 @@ Un cajón que se abre con el botón "···" de cada tarjeta del feed y de la p�
 | Copiar enlace | Real | Copia `<origen>/post/<id>` al portapapeles y cierra el cajón. No confirma y no maneja un fallo del portapapeles |
 | Eliminar nota | Real (solo notas) | Pide un segundo toque ("Tocá de nuevo para eliminar") y ejecuta `deleteNote` |
 | Guardar | **Sin efecto** | Solo cierra el cajón |
-| Guardar como imagen | **Sin efecto** | Solo cierra el cajón |
 
 **En un post ajeno**
 
@@ -108,9 +107,9 @@ Un cajón que se abre con el botón "···" de cada tarjeta del feed y de la p�
 | :--- | :--- |
 | Copiar enlace | Real |
 | Seguir | **Sin efecto** en el cajón (solo cierra). El seguimiento real está en el botón "Seguir" de la cabecera de la tarjeta |
-| Guardar, Guardar como imagen, Analizar texto con IA, Ocultar publicación, Silenciar, Bloquear, Reportar | **Sin efecto**: solo cierran el cajón |
+| Guardar, Ocultar publicación, Bloquear, Reportar | **Sin efecto**: solo cierran el cajón |
 
-No existe ningún modelo de datos que respalde los botones sin efecto: una búsqueda en `supabase/migrations/` no encuentra tablas de guardados, silencios, bloqueos, reportes ni ocultos. "Analizar texto con IA" tampoco está conectada al chat, que solo funciona dentro del editor del autor ([PRD-8](PRD-8-ai-chat.md)). Tampoco hay ninguna acción para eliminar un **artículo**: la única acción de borrado es `deleteNote`.
+No existe ningún modelo de datos que respalde los botones sin efecto: una búsqueda en `supabase/migrations/` no encuentra tablas de guardados, bloqueos, reportes ni ocultos. Tampoco hay ninguna acción para eliminar un **artículo**: la única acción de borrado es `deleteNote`.
 
 ## Decisiones y por qué
 
