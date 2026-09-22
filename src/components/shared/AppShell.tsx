@@ -4,6 +4,7 @@ import { Newspaper } from "lucide-react";
 import { BottomNav } from "@/components/shared/BottomNav";
 import { HeaderAccount } from "@/components/shared/HeaderAccount";
 import { HeaderTitle } from "@/components/shared/HeaderTitle";
+import { getUnreadNotificationCount } from "@/features/notifications/queries";
 import { getViewer } from "@/lib/viewer";
 
 type Viewer = NonNullable<Awaited<ReturnType<typeof getViewer>>>;
@@ -16,10 +17,12 @@ async function SignedInChrome({ fab }: { fab?: (viewer: Viewer) => ReactNode }) 
     return null;
   }
 
+  const unreadCount = await getUnreadNotificationCount(viewer.id);
+
   return (
     <>
       {fab?.(viewer)}
-      <BottomNav />
+      <BottomNav initialUnreadCount={unreadCount} />
     </>
   );
 }

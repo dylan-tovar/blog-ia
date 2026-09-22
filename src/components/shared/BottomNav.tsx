@@ -2,18 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, House, Search, User, type LucideIcon } from "lucide-react";
+import { House, Search, User, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isNavItemActive, NAV_ITEMS } from "@/components/shared/navigation";
+import { NotificationBell } from "@/components/shared/NotificationBell";
 
-const ICONS: Record<(typeof NAV_ITEMS)[number]["href"], LucideIcon> = {
+const ICONS: Partial<Record<(typeof NAV_ITEMS)[number]["href"], LucideIcon>> = {
   "/": House,
   "/explore": Search,
-  "/activity": Bell,
   "/profile": User,
 };
 
-export function BottomNav() {
+export function BottomNav({ initialUnreadCount = 0 }: { initialUnreadCount?: number }) {
   const pathname = usePathname();
 
   return (
@@ -36,7 +36,11 @@ export function BottomNav() {
                   active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon className="size-6" aria-hidden />
+                {item.href === "/activity" ? (
+                  <NotificationBell initialCount={initialUnreadCount} className="size-6" />
+                ) : (
+                  Icon && <Icon className="size-6" aria-hidden />
+                )}
               </Link>
             </li>
           );

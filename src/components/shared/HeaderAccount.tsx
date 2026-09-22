@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { MainNav } from "@/components/shared/MainNav";
 import { AccountDrawer } from "@/components/shared/AccountDrawer";
 import { LoginDrawer } from "@/features/auth/components/LoginDrawer";
+import { getUnreadNotificationCount } from "@/features/notifications/queries";
 import { getViewer } from "@/lib/viewer";
 
 export async function HeaderAccount() {
@@ -19,9 +20,11 @@ export async function HeaderAccount() {
     );
   }
 
+  const unreadCount = await getUnreadNotificationCount(viewer.id);
+
   return (
     <div className="flex items-center gap-1">
-      <MainNav className="hidden items-center md:flex" />
+      <MainNav className="hidden items-center md:flex" initialUnreadCount={unreadCount} />
       <AccountDrawer viewer={viewer} />
     </div>
   );
