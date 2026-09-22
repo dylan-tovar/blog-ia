@@ -58,6 +58,7 @@ jobs:
     env:
       NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: placeholder
+      NEXT_PUBLIC_SITE_URL: https://placeholder.example.com
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
