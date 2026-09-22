@@ -35,3 +35,7 @@ En la interfaz, `PostCard` (feed, perfil de autor y lista de notas de un post) a
 ## Actualización (2026-09-22)
 
 `/post/[id]` reconstruye el hilo completo en memoria, sin tocar el modelo: como todas las notas de un hilo ya vienen en una sola llamada a `getNotesForPost(raíz)`, la página arma la cadena de ancestros siguiendo `replyTo` nota por nota (`buildAncestorChain`) y la muestra arriba del post actual, más los hijos directos (`children`, notas cuyo `replyTo.id` es el post actual) abajo — igual que la vista de hilo de X. No hace falta una CTE recursiva porque el hilo entero ya está en memoria de una sola consulta.
+
+## Actualización (2026-09-22, más tarde)
+
+La primera versión de la reconstrucción del hilo solo mostraba las notas intermedias; el post raíz (artículo o nota original) quedaba invisible salvo un link de texto, que además desaparecía en cuanto había algún ancestro. Se agregó traer el post raíz con `getFeedPostsByIds` (ya existente, sin código de datos nuevo) y mostrarlo como la primera tarjeta del hilo, igual que las notas intermedias — así "hasta el post principal" queda literalmente visible, no solo referenciado.
