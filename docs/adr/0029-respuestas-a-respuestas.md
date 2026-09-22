@@ -29,5 +29,9 @@ En la interfaz, `PostCard` (feed, perfil de autor y lista de notas de un post) a
 ## Consecuencias
 
 - **A favor:** `getNotesCounts` y `getNotesForPost` (que ya filtran/cuentan por `parent_post_id` = raíz) siguen funcionando sin cambios — las respuestas de 2º nivel aparecen solas en la misma lista y en el mismo conteo. Sin CTE recursiva, sin cambios a `can_attach_note`.
-- **En contra:** no hay una vista de "hilo" propiamente dicha — todas las respuestas de un post, sin importar a quién le respondan, se listan juntas y ordenadas por fecha. Alguien que responde a una respuesta de una respuesta (3er nivel en la práctica) sigue viendo su nota junto a las demás, ordenada por fecha, no anidada bajo su padre inmediato.
+- **En contra:** no hay una vista de "hilo" propiamente dicha en la base — todas las respuestas de un post, sin importar a quién le respondan, se guardan juntas bajo la misma raíz.
 - **Cuándo revisar:** si se pide una vista de árbol real (indentación por nivel, colapsar hilos), habría que introducir `reply_to_post_id` como el verdadero padre y resolver la raíz de otra forma (o aceptar el costo de la CTE recursiva).
+
+## Actualización (2026-09-22)
+
+`/post/[id]` reconstruye el hilo completo en memoria, sin tocar el modelo: como todas las notas de un hilo ya vienen en una sola llamada a `getNotesForPost(raíz)`, la página arma la cadena de ancestros siguiendo `replyTo` nota por nota (`buildAncestorChain`) y la muestra arriba del post actual, más los hijos directos (`children`, notas cuyo `replyTo.id` es el post actual) abajo — igual que la vista de hilo de X. No hace falta una CTE recursiva porque el hilo entero ya está en memoria de una sola consulta.
