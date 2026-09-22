@@ -12,9 +12,8 @@ import { PostCard } from "@/features/posts/components/PostCard";
 import { PostOptionsDrawer } from "@/features/posts/components/PostOptionsDrawer";
 import { ReadTracker } from "@/features/posts/components/ReadTracker";
 import { LoginDrawer } from "@/features/auth/components/LoginDrawer";
-import { getNotesForPost, getPublishedPost } from "@/features/posts/queries";
+import { getFeedPostsByIds, getNotesForPost, getPublishedPost } from "@/features/posts/queries";
 import { isFollowing } from "@/features/subscriptions/queries";
-import { replyTarget } from "@/features/posts/utils";
 
 export const maxDuration = 30;
 
@@ -29,12 +28,16 @@ export default async function PublicPostPage(props: PageProps<"/post/[id]">) {
   // shares the same root `parent_post_id`, so fetching that root's notes once
   // already brings back the whole thread. From there the reply chain (who
   // replies to whom) is reconstructed in memory via `replyTo`.
-  const [notes, following] = await Promise.all([
+  const [notes, following, rootPosts] = await Promise.all([
     isReply ? getNotesForPost(post.parent_post_id!) : getNotesForPost(post.id),
     viewer && post.author && viewer.id !== post.author.id
       ? isFollowing(viewer.id, post.author.id)
       : Promise.resolve(false),
+    // The root itself (article or original note) so it can be shown as a
+    // full card at the top of the thread — not just a text link.
+    isReply ? getFeedPostsByIds([post.parent_post_id!]) : Promise.resolve([]),
   ]);
+  const rootPost = rootPosts[0] ?? null;
 
   const notesById = new Map(notes.map((note) => [note.id, note]));
 
@@ -58,26 +61,17 @@ export default async function PublicPostPage(props: PageProps<"/post/[id]">) {
   const children = isReply ? notes.filter((note) => note.replyTo?.id === post.id) : notes;
 
   const authorName = post.author?.display_name ?? "Autor desconocido";
-  const replyReference = post.replyTo ?? post.parent;
-  const target = replyTarget(replyReference);
   const isOwn = !!viewer && viewer.id === post.author?.id;
   const canDelete = isOwn && post.type === "note";
   const canEdit = isOwn;
 
   return (
     <>
-      {ancestors.length > 0 && (
+      {isReply && (rootPost || ancestors.length > 0) && (
         <div className="flex flex-col border-b">
-          {ancestors.map((note, index) => (
-            // Only the top-most ancestor shows "En respuesta a X" (the root):
-            // the rest are already stacked in reply order, so repeating it on
-            // every card would just be noise.
-            <PostCard
-              key={note.id}
-              post={note}
-              viewerId={viewer?.id ?? null}
-              showReplyTo={index === 0}
-            />
+          {rootPost && <PostCard post={rootPost} viewerId={viewer?.id ?? null} />}
+          {ancestors.map((note) => (
+            <PostCard key={note.id} post={note} viewerId={viewer?.id ?? null} showReplyTo={false} />
           ))}
         </div>
       )}
@@ -131,15 +125,6 @@ export default async function PublicPostPage(props: PageProps<"/post/[id]">) {
             />
           </div>
         </div>
-
-        {ancestors.length === 0 && replyReference && target && (
-          <Link
-            href={`/post/${replyReference.id}`}
-            className="mt-4 block truncate text-sm text-muted-foreground hover:underline"
-          >
-            En respuesta a <span className="font-medium">{target}</span>
-          </Link>
-        )}
 
         {!isNote && post.wordCount >= MIN_WORDS_SUMMARY && (
           <SummaryButton
