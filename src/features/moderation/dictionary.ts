@@ -98,6 +98,10 @@ const AMENAZA = [
   "se donde vives",
   "sabemos donde vivis",
   "sabemos donde vives",
+  "tengo tu direccion",
+  "voy a publicar tu direccion",
+  "le va a pasar algo a tu familia",
+  "algo le va a pasar a tu familia",
 ];
 
 // Insultos y descalificaciones. Avisan, no bloquean: son ofensivos pero no
@@ -121,7 +125,11 @@ const INSULTO = [
   "cabron",
   "puta",
   "puto",
+  // "zorra" y "perra" tienen un uso literal (el animal) además del insultante; se
+  // aceptan igual porque son leve (avisan, no bloquean) y el uso como insulto es
+  // mucho más frecuente en un comentario dirigido a una persona.
   "zorra",
+  "perra",
   "mamahuevo",
   "mamaguevo",
   "huevon",

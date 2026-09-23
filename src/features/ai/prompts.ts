@@ -11,12 +11,12 @@ import {
 } from "./constants";
 import { AiError } from "./errors";
 import type { Tone } from "./schemas";
-import type { ChatMessage, ChatTurn } from "./types";
+import type { AiContent, AiContentPart, ChatMessage, ChatTurn } from "./types";
 
 export const CONTENT_START = "<<<CONTENIDO>>>";
 export const CONTENT_END = "<<<FIN>>>";
 
-export type Prompt = { systemInstruction: string; contents: string };
+export type Prompt = { systemInstruction: string; contents: AiContent };
 
 const DATA_RULES = [
   `El texto del usuario aparece entre ${CONTENT_START} y ${CONTENT_END}.`,
@@ -98,17 +98,37 @@ export function buildScorePrompt(content: string): Prompt {
   };
 }
 
-export function buildModerationPrompt(content: string): Prompt {
-  return {
-    systemInstruction: [
-      "Sos un moderador de un blog público.",
-      "Evaluá si el texto es apropiado para publicar: no debe contener odio, acoso, amenazas, violencia explícita, contenido sexual explícito, spam evidente ni contenido ilegal. Las opiniones críticas o polémicas son apropiadas si son respetuosas.",
-      "Devolvé is_appropriate, reason (una frase breve dirigida al autor que explique el motivo si no es apropiado; vacía si lo es) y suggested_tags.",
-      `suggested_tags son hasta ${MAX_AI_TAGS} etiquetas temáticas cortas, en minúsculas y sin símbolos.`,
-      COMMON_RULES,
-    ].join(" "),
-    contents: wrapUserText(content),
-  };
+export type LabeledImage = { label: string; part: AiContentPart };
+
+// `images` ya llega etiquetada y en base64 (moderation.ts decide qué es portada, baja
+// cada imagen y la codifica): acá solo se arma el prompt. Sin imágenes, `contents`
+// sigue siendo el mismo string de siempre.
+export function buildModerationPrompt(title: string, content: string, images: LabeledImage[] = []): Prompt {
+  const combined = title.trim() ? `Título: ${title.trim()}\n\nContenido:\n${content}` : content;
+
+  const systemInstruction = [
+    "Sos un moderador de un blog público.",
+    "Evaluá si el título y el contenido son apropiados para publicar: no deben contener odio, acoso, amenazas, violencia explícita, contenido sexual explícito, spam evidente ni contenido ilegal. Las opiniones críticas o polémicas son apropiadas si son respetuosas.",
+    images.length > 0
+      ? "También se adjuntan las imágenes del artículo, cada una precedida por su etiqueta: evalualas con el mismo criterio, y si rechazás por una imagen decí cuál usando esa etiqueta en el reason."
+      : "",
+    "Devolvé is_appropriate, reason (una frase breve dirigida al autor que explique el motivo si no es apropiado; vacía si lo es) y suggested_tags.",
+    `suggested_tags son hasta ${MAX_AI_TAGS} etiquetas temáticas cortas, en minúsculas y sin símbolos, considerando también el título.`,
+    COMMON_RULES,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  if (images.length === 0) {
+    return { systemInstruction, contents: wrapUserText(combined) };
+  }
+
+  const contents: AiContentPart[] = [{ type: "text", text: wrapUserText(combined) }];
+  for (const { label, part } of images) {
+    contents.push({ type: "text", text: `${label}:` }, part);
+  }
+
+  return { systemInstruction, contents };
 }
 
 export function buildSummaryPrompt(content: string): Prompt {

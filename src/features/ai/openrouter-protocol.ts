@@ -1,6 +1,6 @@
 import { AiError } from "./errors";
 import { CHAT_TOOL_DECLARATIONS, type ModelPart } from "./function-calls";
-import type { ChatTurn } from "./types";
+import type { AiContentPart, ChatTurn } from "./types";
 
 // Traducción entre el protocolo de OpenRouter (compatible con OpenAI) y los tipos
 // internos. Vive aparte de `openrouter.ts` y sin `server-only` para poder probarla
@@ -46,15 +46,32 @@ export const CHAT_TOOLS = CHAT_TOOL_DECLARATIONS.map((tool) => ({
   },
 }));
 
+function isContentParts(contents: readonly unknown[]): contents is AiContentPart[] {
+  return contents.length === 0 || "type" in (contents[0] as object);
+}
+
 // La instrucción de sistema es un mensaje más, no un campo aparte como en Gemini.
-export function toMessages(system: string, contents: string | ChatTurn[]): OpenAiMessage[] {
-  const turns: OpenAiMessage[] =
-    typeof contents === "string"
-      ? [{ role: "user", content: contents }]
-      : contents.map(({ role, text }) => ({
-          role: role === "model" ? ("assistant" as const) : ("user" as const),
-          content: text,
-        }));
+//
+// AiContentPart[] (moderación con imágenes) todavía no tiene un adapter multipart acá:
+// se descartan las partes de imagen y se manda solo el texto. Quien llama es responsable
+// de loguear cuántas se descartaron, porque acá no se conoce la feature para la telemetría.
+export function toMessages(system: string, contents: string | ChatTurn[] | AiContentPart[]): OpenAiMessage[] {
+  let turns: OpenAiMessage[];
+
+  if (typeof contents === "string") {
+    turns = [{ role: "user", content: contents }];
+  } else if (isContentParts(contents)) {
+    const text = contents
+      .filter((part): part is Extract<AiContentPart, { type: "text" }> => part.type === "text")
+      .map((part) => part.text)
+      .join("\n\n");
+    turns = [{ role: "user", content: text }];
+  } else {
+    turns = contents.map(({ role, text }) => ({
+      role: role === "model" ? ("assistant" as const) : ("user" as const),
+      content: text,
+    }));
+  }
 
   return [{ role: "system", content: system }, ...turns];
 }

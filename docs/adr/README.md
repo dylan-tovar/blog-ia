@@ -49,6 +49,7 @@ Un ADR registra una decisión de arquitectura: qué se decidió, por qué y qué
 | [0031](0031-proveedor-de-ia-intercambiable-openrouter.md) | El proveedor de IA se elige por variable de entorno: Gemini u OpenRouter, detrás del mismo puerto | Aceptada |
 | [0032](0032-diccionario-de-moderacion-en-el-editor.md) | Diccionario determinista de odio, amenazas e insultos mientras se escribe un artículo; lo grave impide publicar | Aceptada |
 | [0033](0033-claude-como-proveedor-por-defecto.md) | Claude es el proveedor de IA por defecto, con el SDK oficial de Anthropic | Aceptada; cambia dos decisiones del 0031 |
+| [0034](0034-moderacion-de-imagenes.md) | La IA también revisa la portada y las imágenes del artículo al publicar, no solo el texto | Aceptada |
 
 > Faltan en esta tabla los ADR [0027](0027-notificaciones-por-triggers-sql.md), [0028](0028-emails-transaccionales-resend.md) y [0030](0030-descubrimiento-busqueda-sugeridos-temas.md), que existen como archivo pero no se agregaron al índice.
 

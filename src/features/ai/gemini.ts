@@ -10,6 +10,7 @@ import { logged, loggedStream } from "./provider-telemetry";
 import { toResponseJsonSchema } from "./schemas";
 import { thinkingConfigFor } from "./thinking";
 import type {
+  AiContentPart,
   ChatStreamPart,
   GenerateStructured,
   GenerateText,
@@ -78,12 +79,22 @@ function throwIfBlocked(response: GenerateContentResponse) {
   return finishReason;
 }
 
+// El SDK acepta un string o una lista de Part; la moderación de imágenes es la
+// única feature que manda lo segundo, con inlineData por cada imagen adjunta.
+function toGeminiContents(contents: GenerateTextInput["contents"]) {
+  if (typeof contents === "string") return contents;
+
+  return contents.map((part: AiContentPart) =>
+    part.type === "text" ? { text: part.text } : { inlineData: { mimeType: part.mimeType, data: part.data } },
+  );
+}
+
 async function callModel(input: GenerateTextInput, responseJsonSchema?: unknown): Promise<string> {
   const { client, model } = getClient();
 
   const response = await client.models.generateContent({
     model,
-    contents: input.contents,
+    contents: toGeminiContents(input.contents),
     config: {
       ...requestConfig(input, model),
       ...(responseJsonSchema ? { responseMimeType: "application/json", responseJsonSchema } : {}),

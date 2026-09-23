@@ -1,4 +1,5 @@
 import { ShieldAlert, TriangleAlert } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { CATEGORY_HINTS, CATEGORY_LABELS } from "@/features/moderation/dictionary";
 import type { ModerationSummary } from "@/features/moderation/scan";
 import { cn } from "@/lib/utils";
@@ -18,22 +19,20 @@ export function ModerationBadge({ summary }: { summary: ModerationSummary }) {
     : `${summary.leve} ${plural(summary.leve, "término para revisar", "términos para revisar")}`;
 
   return (
-    <span
+    <Badge
       role="status"
       aria-live="polite"
+      variant={summary.blocked ? "destructive" : "outline"}
       title={
         summary.blocked
           ? "No vas a poder publicar hasta resolverlos. Abrí Continuar para ver cuáles son."
           : "Conviene revisarlos, pero no impiden publicar."
       }
-      className={cn(
-        "flex items-center gap-1.5 text-sm",
-        summary.blocked ? "text-destructive" : "text-muted-foreground",
-      )}
+      className={cn("h-auto gap-1.5 py-1 text-sm", !summary.blocked && "text-muted-foreground")}
     >
       <Icon className="size-4 shrink-0" aria-hidden />
       {label}
-    </span>
+    </Badge>
   );
 }
 

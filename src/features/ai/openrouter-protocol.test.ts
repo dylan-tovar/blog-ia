@@ -30,6 +30,19 @@ describe("toMessages", () => {
     expect(messages.map((message) => message.role)).toEqual(["system", "user", "assistant", "user"]);
     expect(messages[2].content).toBe("qué tal");
   });
+
+  it("keeps only the text parts when given AiContentPart[], dropping images", () => {
+    const messages = toMessages("sistema", [
+      { type: "text", text: "primera parte" },
+      { type: "image", mimeType: "image/webp", data: "AAA" },
+      { type: "text", text: "segunda parte" },
+    ]);
+
+    expect(messages).toEqual([
+      { role: "system", content: "sistema" },
+      { role: "user", content: "primera parte\n\nsegunda parte" },
+    ]);
+  });
 });
 
 describe("CHAT_TOOLS", () => {
