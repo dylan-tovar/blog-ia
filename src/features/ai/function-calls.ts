@@ -1,4 +1,4 @@
-import { CHAT_MAX_STEPS, EDIT_LABEL_MAX_CHARS, SYSTEM_STEP_IDS } from "./constants";
+import { EDIT_LABEL_MAX_CHARS, SYSTEM_STEP_IDS } from "./constants";
 import { articleAnalysisSchema, chatPlanSchema, editActionSchema } from "./schemas";
 import type { ChatStreamPart } from "./types";
 

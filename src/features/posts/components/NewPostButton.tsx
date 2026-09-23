@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { CreatePostMenu } from "@/features/posts/components/CreatePostMenu";
 import { NoteDialog } from "@/features/posts/components/NoteDialog";
 
 const FAB_POSITION =

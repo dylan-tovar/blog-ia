@@ -1,7 +1,6 @@
 "use client";
 
 import { useOptimistic, useState, useTransition } from "react";
-import Link from "next/link";
 import { Heart } from "lucide-react";
 import { LoginDrawer } from "@/features/auth/components/LoginDrawer";
 import { cn } from "@/lib/utils";
