@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <title>PRD — Generador de Contenido Personalizado con IA</title>
+  <style>
+    body {
+      font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+      max-width: 860px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.65;
+      color: #1a1a1a;
+    }
+
+    h1 {
+      font-size: 1.7rem;
+      border-bottom: 2px solid #333;
+      padding-bottom: 8px;
+    }
+
+    h2 {
+      font-size: 1.3rem;
+      margin-top: 36px;
+      color: #1a1a1a;
+      border-left: 4px solid #444;
+      padding-left: 10px;
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      margin-top: 20px;
+      color: #333;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 9px 10px;
+      border: 1px solid #ccc;
+      font-size: 0.93rem;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f2f2f2;
+    }
+
+    code {
+      background: #f2f2f2;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    .why {
+      background: #f8f8f5;
+      border-left: 3px solid #999;
+      padding: 10px 14px;
+      margin: 10px 0;
+      font-size: 0.95rem;
+    }
+
+    .why b {
+      color: #444;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>PRD — Generador de Contenido Personalizado con Funcionalidades de IA</h1>
+
+  <h2>1. Resumen del producto</h2>
+  <p>Plataforma de publicación donde autores crean contenido (notas y articulos) y lectores se suscriben a los creadores
+    que les interesan. La IA se integra en dos frentes: como asistente del autor durante todo el ciclo de creación
+    (antes, durante y después de escribir) y como herramienta de consumo para el lector (resumen). Un motor de
+    recomendación determinista personaliza el feed sin depender de IA generativa para esa función.</p>
+
+  <h2>2. Objetivo</h2>
+  <p>Demostrar un flujo de trabajo real de integración de IA en un producto, con arquitectura backend limpia, sin caer
+    en "IA por moda": cada función de IA resuelve un problema concreto del autor o del lector, y donde una solución
+    determinista es suficiente, se usa esa en vez de gastar recursos de IA innecesariamente.</p>
+
+  <h2>3. Stack tecnológico</h2>
+  <table>
+    <tr>
+      <th>Capa</th>
+      <th>Tecnología</th>
+      <th>Por qué</th>
+    </tr>
+    <tr>
+      <td>Backend</td>
+      <td>NestJS (TypeScript)</td>
+      <td>Arquitectura modular por dominio, fácil de aislar la lógica de IA en su propio módulo</td>
+    </tr>
+    <tr>
+      <td>Frontend</td>
+      <td>Next.js (App Router) + Tailwind CSS</td>
+      <td>Renderizado híbrido, mobile-first, sin necesidad de infraestructura extra</td>
+    </tr>
+    <tr>
+      <td>Base de datos</td>
+      <td>PostgreSQL</td>
+      <td>Relaciones claras entre usuarios, posts, tags y suscripciones; soporta bien las consultas de scoring</td>
+    </tr>
+  </table>
+
+  <h2>4. Funcionalidades core (sin IA)</h2>
+
+  <h3>4.1 Plataforma UGC de suscripción</h3>
+  <ul>
+    <li>Cualquier usuario puede publicar contenido (User Generated Content)</li>
+    <li>Los lectores siguen autores y/o se suscriben a boletines específicos</li>
+    <li>Feed organizado cronológicamente o por categoría/tag</li>
+  </ul>
+
+  <h3>4.2 Motor de recomendaciones por scoring de tags (sin IA)</h3>
+  <p>Cuando un lector ve un artículo o entra al feed, el sistema calcula qué tan relevante es cada post disponible
+    comparando sus tags contra el historial de lectura del usuario (tabla <code>reading_history</code>). Cuantos más
+    tags en común tenga un artículo con lo que el usuario ya leyó, más arriba aparece en las sugerencias.</p>
+
+  <div class="why">
+    <b>Por qué NO usar IA generativa para esto:</b><br>
+    Una recomendación de contenido es fundamentalmente un problema de <b>similitud/ranking</b>, no de generación de
+    texto. Pedirle a un modelo de lenguaje "qué artículo le recomendarías a este usuario" es:
+    <ul>
+      <li><b>Más lento:</b> una llamada a la API por cada carga de feed, en vez de una consulta SQL de milisegundos</li>
+      <li><b>Más caro:</b> cada recomendación consumiría tokens, sin necesidad real</li>
+      <li><b>Menos confiable:</b> el modelo podría "inventar" relaciones entre artículos que no existen (alucinación),
+        mientras que un match de tags es 100% explicable y predecible</li>
+      <li><b>Innecesario:</b> el problema ya tiene una solución estándar y barata (recommender systems basados en
+        similitud de atributos), la IA generativa no aporta ventaja aquí</li>
+    </ul>
+    Se reserva la IA para tareas donde sí agrega valor real: generar texto, entender contenido no estructurado, o tomar
+    decisiones de juicio (como moderación). Esto también es un punto fuerte para la sustentación: muestra criterio
+    técnico, no solo "meterle IA a todo".
+  </div>
+
+  <h2>5. Funcionalidades de IA — Autor</h2>
+  <p>Se diseñaron para acompañar las tres etapas naturales del proceso de escritura, de modo que la IA no sea un botón
+    aislado sino parte del flujo.</p>
+
+  <h3>5.1 Antes de escribir — Outline Generator</h3>
+  <p><b>Qué hace:</b> el autor ingresa un tema o idea preliminar; la IA devuelve un esqueleto estructurado en JSON con
+    subtítulos lógicos (H2/H3).</p>
+  <div class="why"><b>Por qué:</b> resuelve el problema de la "hoja en blanco", que es la principal fricción para
+    publicar contenido nuevo. Al pedir salida en JSON estructurado (no texto libre), se puede renderizar directamente
+    como plantilla editable en el editor.</div>
+
+  <h3>5.2 Durante la escritura — Títulos + Tono</h3>
+  <p><b>Qué hace:</b> analiza el borrador y sugiere títulos más atractivos; un control adicional permite regenerar el
+    texto con distinto tono (informal / formal / estilo investigación).</p>
+  <div class="why"><b>Por qué:</b> el título es el mayor factor de alcance en plataformas de contenido, y el tono
+    permite que el mismo autor sirva a audiencias distintas sin reescribir manualmente. Ambas funciones comparten el
+    mismo endpoint con un parámetro <code>tone</code>, evitando duplicar lógica.</div>
+
+  <h3>5.3 Después de escribir — Content Score</h3>
+  <p><b>Qué hace:</b> analiza el borrador terminado y devuelve un puntaje de calidad más sugerencias accionables
+    (claridad, SEO, engagement) y palabras clave sugeridas.</p>
+  <div class="why"><b>Por qué:</b> a diferencia del outline (estructura) y el tono (estilo), esta función evalúa el
+    resultado final antes de publicar — cierra el ciclo de asistencia. Las <code>keywords_suggested</code> se reutilizan
+    como candidatos de tags, conectando esta feature con la moderación/auto-tagging sin duplicar trabajo.</div>
+
+  <h3>5.4 Al publicar — Moderación + Auto-tagging</h3>
+  <p><b>Qué hace:</b> una sola llamada a la IA al momento de publicar devuelve
+    <code>{ is_appropriate, reason, suggested_tags }</code>. Si el contenido es apropiado, se publica con los tags
+    sugeridos (editables por el autor); si no, se rechaza mostrando el motivo o se envía a revisión manual.</p>
+  <div class="why"><b>Por qué combinarlo en una sola función:</b> moderar y etiquetar requieren el mismo insumo (leer y
+    entender el contenido completo), así que se resuelven con una sola llamada en vez de dos, reduciendo costo y
+    latencia. Además, el etiquetado automático alimenta directamente el motor de recomendaciones determinista (sección
+    4.2): la IA aporta el dato (los tags), pero la lógica de recomendación en sí sigue siendo barata y explicable.</div>
+
+  <h2>6. Funcionalidad de IA — Lector</h2>
+  <h3>6.1 Resumen automático</h3>
+  <p><b>Qué hace:</b> un botón en artículos largos genera un resumen breve para que el lector capte la esencia sin leer
+    todo el texto.</p>
+  <div class="why"><b>Por qué:</b> mejora la experiencia de consumo sin requerir que el autor haga trabajo extra; el
+    resumen se genera una sola vez y se cachea (ver sección 8).</div>
+
+  <h2>7. Modelo de datos (entidades clave)</h2>
+  <table>
+    <tr>
+      <th>Entidad</th>
+      <th>Campos relevantes</th>
+      <th>Propósito</th>
+    </tr>
+    <tr>
+      <td><code>users</code></td>
+      <td>id, nombre, email, rol</td>
+      <td>Autores y lectores (mismo modelo, distinto rol)</td>
+    </tr>
+    <tr>
+      <td><code>posts</code></td>
+      <td>id, contenido, status, ai_generated_summary, ai_generated_titles, updated_at</td>
+      <td>Contenido publicado, con resultados de IA cacheados</td>
+    </tr>
+    <tr>
+      <td><code>tags</code></td>
+      <td>id, nombre</td>
+      <td>Catálogo de temas; relación many-to-many con posts</td>
+    </tr>
+    <tr>
+      <td><code>subscriptions</code></td>
+      <td>id, follower_id, author_id</td>
+      <td>Relación de seguimiento entre lectores y autores</td>
+    </tr>
+    <tr>
+      <td><code>reading_history</code></td>
+      <td>user_id, post_id, read_at</td>
+      <td>Base del motor de recomendaciones por tags</td>
+    </tr>
+  </table>
+  <div class="why"><b>Por qué <code>tags</code> como tabla propia y no un array de strings en <code>posts</code>:</b>
+    permite hacer JOINs eficientes para el scoring de recomendaciones y evita duplicar/normalizar strings sueltos.</div>
+
+  <h2>8. Arquitectura de IA</h2>
+  <p>Toda la lógica de IA vive en un <code>AiModule</code> con un <code>AiService</code> que expone:
+    <code>generateOutline</code>, <code>suggestTitles</code>, <code>adjustTone</code>, <code>analyzeContent</code>,
+    <code>moderateAndTag</code>, <code>summarize</code>. Los módulos de dominio (posts, etc.) inyectan este servicio en
+    vez de llamar directamente a la API externa.</p>
+
+  <h3>Decisiones de diseño clave</h3>
+  <table>
+    <tr>
+      <th>Decisión</th>
+      <th>Por qué</th>
+    </tr>
+    <tr>
+      <td>Llamadas siempre desde el backend</td>
+      <td>Nunca exponer la API key en el cliente; también permite aplicar rate limiting y cache de forma centralizada
+      </td>
+    </tr>
+    <tr>
+      <td>Rate limiting en endpoints de IA</td>
+      <td>Evita abuso y controla costos de la API externa</td>
+    </tr>
+    <tr>
+      <td>Cache de resultados en la fila del post</td>
+      <td>Un resumen o título generado no cambia si el post no se editó; evita llamadas repetidas innecesarias. Se
+        invalida comparando contra <code>updated_at</code></td>
+    </tr>
+    <tr>
+      <td>Fallback si la IA falla</td>
+      <td>El post debe poder publicarse igual (sin tags automáticos, marcado para revisión manual); la disponibilidad
+        del producto no puede depender de un proveedor externo</td>
+    </tr>
+    <tr>
+      <td>Moderación asíncrona</td>
+      <td>Evita que el autor espere varios segundos al publicar; el post se guarda como pendiente y se notifica cuando
+        la revisión termina</td>
+    </tr>
+  </table>
+
+</body>
+
+</html>

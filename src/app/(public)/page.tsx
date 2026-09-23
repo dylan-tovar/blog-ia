@@ -1,11 +1,9 @@
 import { Suspense } from "react";
-import { SquarePen } from "lucide-react";
 import { getViewer } from "@/lib/viewer";
 import { getRecommendedPostIds, getRecommendedPosts } from "@/features/recommendations/queries";
 import { RecommendedSection } from "@/features/recommendations/components/RecommendedSection";
 import { RecommendedSkeleton } from "@/features/recommendations/components/RecommendedSkeleton";
 import { FeedList } from "@/features/posts/components/FeedList";
-import { CreatePostMenu } from "@/features/posts/components/CreatePostMenu";
 import { NoteTriggerBar } from "@/features/posts/components/NoteTriggerBar";
 import { getFeedPage, getFeedPostsByIds } from "@/features/posts/queries";
 import { tagNameSchema } from "@/features/posts/schemas";
@@ -59,16 +57,8 @@ export default async function HomePage(props: PageProps<"/">) {
       <h1 className="sr-only">Inicio</h1>
 
       {viewer && (
-        <section aria-label="Crear" className="flex items-center gap-3 border-b px-4 py-2">
-          <NoteTriggerBar viewerName={viewer.displayName} className="flex-1" />
-          <CreatePostMenu
-            viewerName={viewer.displayName}
-            align="end"
-            className="hidden min-h-9 cursor-pointer items-center justify-center gap-2 rounded-md bg-secondary px-3 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80 md:inline-flex"
-          >
-            <SquarePen className="size-4" aria-hidden />
-            Crear
-          </CreatePostMenu>
+        <section aria-label="Crear nota" className="hidden px-4 md:px-0 pt-4 pb-2 md:block">
+          <NoteTriggerBar viewerName={viewer.displayName} />
         </section>
       )}
 

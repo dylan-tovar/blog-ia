@@ -55,9 +55,9 @@
 
 :root {
   color-scheme: dark;
-  --background: oklch(0.175 0 0);
+  --background: oklch(0.2039 0 0);
   --foreground: oklch(0.97 0 0);
-  --card: oklch(0.21 0 0);
+  --card: oklch(0.2258 0 0);
   --card-foreground: oklch(0.97 0 0);
   --popover: oklch(0.21 0 0);
   --popover-foreground: oklch(0.97 0 0);
@@ -74,7 +74,7 @@
   /* Green-400 / amber-400 range: readable as text on --card (AA, > 7:1). */
   --success: oklch(0.792 0.209 151.711);
   --warning: oklch(0.828 0.189 84.429);
-  --border: oklch(1 0 0 / 10%);
+  --border: oklch(0.3205 0 0);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.623 0.214 259.815);
   --chart-1: oklch(0.87 0 0);
@@ -97,9 +97,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }
@@ -130,8 +132,8 @@
   vertical-align: top;
 }
 
-.tiptap th > p,
-.tiptap td > p {
+.tiptap th>p,
+.tiptap td>p {
   margin: 0;
 }
 
@@ -156,11 +158,11 @@
   gap: 0.5rem;
 }
 
-.tiptap ul[data-type="taskList"] li > label {
+.tiptap ul[data-type="taskList"] li>label {
   margin-top: 0.3rem;
 }
 
-.tiptap ul[data-type="taskList"] li > div {
+.tiptap ul[data-type="taskList"] li>div {
   flex: 1;
 }
 

@@ -52,40 +52,29 @@ export function CreatePostMenu({
           {children}
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent side={side} align={align} className={cn("w-64", contentClassName)}>
+        <DropdownMenuContent side={side} align={align} className={cn("w-(--anchor-width)", contentClassName)}>
           <DropdownMenuItem
-            className="min-h-11 gap-3 px-3 md:min-h-9"
+            className="min-h-9 cursor-pointer gap-2.5 px-3 font-medium"
             onClick={() => {
               openNoteAfterClose.current = true;
             }}
           >
             <StickyNote aria-hidden />
-            <span className="flex flex-col">
-              <span className="font-medium">Nota</span>
-              <span className="text-xs text-muted-foreground">Texto corto, hasta 500 caracteres</span>
-            </span>
+            <span>Nota</span>
           </DropdownMenuItem>
 
           {isDesktop ? (
             <DropdownMenuItem
-              className="min-h-11 gap-3 px-3 md:min-h-9"
+              className="min-h-9 cursor-pointer gap-2.5 px-3 font-medium"
               render={<Link href="/editor/new" />}
             >
               <FileText aria-hidden />
-              <span className="flex flex-col">
-                <span className="font-medium">Artículo</span>
-                <span className="text-xs text-muted-foreground">Editor completo con markdown</span>
-              </span>
+              <span>Artículo</span>
             </DropdownMenuItem>
           ) : (
-            <DropdownMenuItem disabled className="min-h-11 gap-3 px-3">
+            <DropdownMenuItem disabled className="min-h-9 gap-2.5 px-3 font-medium">
               <FileText aria-hidden />
-              <span className="flex flex-col">
-                <span className="font-medium">Artículo</span>
-                <span className="text-xs text-muted-foreground">
-                  Disponible solo desde computadora
-                </span>
-              </span>
+              <span>Artículo</span>
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

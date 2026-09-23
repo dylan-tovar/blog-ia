@@ -4,10 +4,33 @@ import { Newspaper } from "lucide-react";
 import { BottomNav } from "@/components/shared/BottomNav";
 import { HeaderAccount } from "@/components/shared/HeaderAccount";
 import { HeaderTitle } from "@/components/shared/HeaderTitle";
+import { DesktopSidebar } from "@/components/shared/DesktopSidebar";
 import { getUnreadNotificationCount } from "@/features/notifications/queries";
 import { getViewer } from "@/lib/viewer";
 
 type Viewer = NonNullable<Awaited<ReturnType<typeof getViewer>>>;
+
+async function DesktopSidebarLoader() {
+  const viewer = await getViewer();
+  const unreadCount = viewer ? await getUnreadNotificationCount(viewer.id) : 0;
+  return <DesktopSidebar viewer={viewer} initialUnreadCount={unreadCount} />;
+}
+
+function DesktopSidebarSkeleton() {
+  return (
+    <div className="flex h-full flex-col justify-between py-4 animate-pulse">
+      <div className="flex flex-col items-center xl:items-start gap-4">
+        <div className="size-10 rounded-xl bg-muted" />
+        <div className="flex flex-col gap-2 w-full mt-2">
+          <div className="h-10 rounded-full bg-muted w-10 xl:w-48" />
+          <div className="h-10 rounded-full bg-muted w-10 xl:w-48" />
+          <div className="h-10 rounded-full bg-muted w-10 xl:w-48" />
+        </div>
+      </div>
+      <div className="h-12 rounded-full bg-muted w-10 xl:w-full" />
+    </div>
+  );
+}
 
 // The session-dependent parts sit behind <Suspense> so the shell streams
 // immediately instead of waiting on the auth lookup.
@@ -35,9 +58,10 @@ export function AppShell({
   fab?: (viewer: Viewer) => ReactNode;
 }) {
   return (
-    <>
-      <header className="sticky top-0 z-40 border-b bg-background/90 pt-[env(safe-area-inset-top)] backdrop-blur">
-        <div className="mx-auto flex min-h-14 w-full max-w-2xl items-center gap-3 px-4">
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Mobile Top Header */}
+      <header className="sticky top-0 z-40 bg-background/90 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden">
+        <div className="mx-auto flex min-h-16 w-full max-w-2xl items-center gap-3 px-4">
           <Link
             href="/"
             aria-label="Ir al inicio"
@@ -53,12 +77,32 @@ export function AppShell({
           </div>
         </div>
       </header>
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col pb-28 md:pb-12">
-        {children}
-      </main>
+
+      {/* Main desktop layout: sidebar docked to the left edge */}
+      <div className="flex min-h-screen w-full">
+        {/* Left Column: Desktop Navigation Sidebar pinned to the left */}
+        <aside className="sticky top-0 hidden h-screen w-16 shrink-0 flex-col ml-2 px-3 md:flex lg:w-60 xl:w-64 lg:px-4">
+          <Suspense fallback={<DesktopSidebarSkeleton />}>
+            <DesktopSidebarLoader />
+          </Suspense>
+        </aside>
+
+        {/* Center Feed & Right Discovery Container */}
+        <div className="flex flex-1 justify-center px-0 md:px-4">
+          {/* Center Column: Feed / Main Content */}
+          <main className="flex w-full max-w-2xl flex-col pb-28 md:pb-12 min-h-screen">
+            {children}
+          </main>
+
+          {/* Right Column: Reserved for desktop discovery widgets */}
+          <aside className="sticky top-0 hidden h-screen w-80 shrink-0 flex-col p-6 xl:block" />
+        </div>
+      </div>
+
+      {/* Mobile Bottom Navigation & Mobile FAB */}
       <Suspense fallback={null}>
         <SignedInChrome fab={fab} />
       </Suspense>
-    </>
+    </div>
   );
 }

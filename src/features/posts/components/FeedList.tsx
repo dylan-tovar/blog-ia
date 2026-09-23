@@ -71,7 +71,7 @@ export function FeedList({
         />
       ))}
       {hasMore && (
-        <div className="p-4">
+        <div className="p-4 md:px-0">
           <Button
             type="button"
             variant="secondary"

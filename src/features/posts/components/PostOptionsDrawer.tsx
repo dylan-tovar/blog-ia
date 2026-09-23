@@ -24,6 +24,13 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { EditNoteDialog } from "@/features/posts/components/EditNoteDialog";
 import { LoginDrawer } from "@/features/auth/components/LoginDrawer";
 import { deleteNote } from "@/features/posts/actions";
@@ -117,7 +124,8 @@ export function PostOptionsDrawer({
   onFollowChange,
 }: PostOptionsDrawerProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -144,18 +152,26 @@ export function PostOptionsDrawer({
   }, []);
 
   function close() {
-    setOpen(false);
+    setDrawerOpen(false);
+    setDropdownOpen(false);
   }
 
-  function handleOpenChange(next: boolean) {
-    setOpen(next);
-    if (!next) {
-      setConfirmingDelete(false);
-      setCopied(false);
-      if (copyTimerRef.current) {
-        clearTimeout(copyTimerRef.current);
-      }
+  function resetTransientState() {
+    setConfirmingDelete(false);
+    setCopied(false);
+    if (copyTimerRef.current) {
+      clearTimeout(copyTimerRef.current);
     }
+  }
+
+  function handleDrawerOpenChange(next: boolean) {
+    setDrawerOpen(next);
+    if (!next) resetTransientState();
+  }
+
+  function handleDropdownOpenChange(next: boolean) {
+    setDropdownOpen(next);
+    if (!next) resetTransientState();
   }
 
   async function handleCopyLink() {
@@ -209,7 +225,7 @@ export function PostOptionsDrawer({
     startDeleting(async () => {
       const result = await deleteNote(post.id);
       if (result.ok) {
-        handleOpenChange(false);
+        close();
         if (redirectOnDelete) {
           router.push(redirectOnDelete);
         } else {
@@ -224,11 +240,12 @@ export function PostOptionsDrawer({
 
   return (
     <>
-      <Drawer open={open} onOpenChange={handleOpenChange} showSwipeHandle>
+      {/* Mobile Drawer */}
+      <Drawer open={drawerOpen} onOpenChange={handleDrawerOpenChange} showSwipeHandle>
         <DrawerTrigger
           type="button"
           aria-label="Más opciones"
-          className="grid size-5 place-items-center text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+          className="grid size-5 place-items-center text-muted-foreground transition-colors hover:text-foreground cursor-pointer md:hidden"
         >
           <Ellipsis className="size-4" aria-hidden />
         </DrawerTrigger>
@@ -327,6 +344,154 @@ export function PostOptionsDrawer({
           </div>
         </DrawerContent>
       </Drawer>
+
+      {/* Desktop Dropdown */}
+      <DropdownMenu open={dropdownOpen} onOpenChange={handleDropdownOpenChange}>
+        <DropdownMenuTrigger
+          type="button"
+          aria-label="Más opciones"
+          className="hidden size-5 place-items-center text-muted-foreground transition-colors hover:text-foreground cursor-pointer md:grid"
+        >
+          <Ellipsis className="size-4" aria-hidden />
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent align="end" side="bottom" sideOffset={6} className="w-52 p-1.5 shadow-xl">
+          {isOwn ? (
+            <>
+              {canEdit && post.type === "note" && (
+                <DropdownMenuItem
+                  className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal"
+                  onClick={() => {
+                    close();
+                    setEditOpen(true);
+                  }}
+                >
+                  <Pencil className="size-4 text-muted-foreground" />
+                  <span>Editar nota</span>
+                </DropdownMenuItem>
+              )}
+              {canEdit && post.type === "article" && (
+                <DropdownMenuItem
+                  className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal"
+                  onClick={() => {
+                    close();
+                    router.push(`/editor/${post.id}`);
+                  }}
+                >
+                  <Pencil className="size-4 text-muted-foreground" />
+                  <span>Editar artículo</span>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                closeOnClick={false}
+                className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal"
+                onClick={handleCopyLink}
+              >
+                {copied ? (
+                  <Check className="size-4 text-emerald-500" />
+                ) : (
+                  <Link2 className="size-4 text-muted-foreground" />
+                )}
+                <span>{copied ? "¡Enlace copiado!" : "Copiar enlace"}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal"
+                onClick={close}
+              >
+                <Bookmark className="size-4 text-muted-foreground" />
+                <span>Guardar</span>
+              </DropdownMenuItem>
+
+              {canDelete && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    closeOnClick={confirmingDelete}
+                    className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal text-destructive focus:text-destructive"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="size-4 animate-spin text-destructive" />
+                    ) : (
+                      <Trash2 className="size-4 text-destructive" />
+                    )}
+                    <span>{confirmingDelete ? "Clic de nuevo para eliminar" : "Eliminar nota"}</span>
+                  </DropdownMenuItem>
+                </>
+              )}
+            </>
+          ) : (
+            <>
+              <DropdownMenuItem
+                closeOnClick={false}
+                className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal"
+                onClick={handleCopyLink}
+              >
+                {copied ? (
+                  <Check className="size-4 text-emerald-500" />
+                ) : (
+                  <Link2 className="size-4 text-muted-foreground" />
+                )}
+                <span>{copied ? "¡Enlace copiado!" : "Copiar enlace"}</span>
+              </DropdownMenuItem>
+              {post.author && viewerId !== post.author.id && (
+                <DropdownMenuItem
+                  className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal"
+                  onClick={handleToggleFollow}
+                  disabled={isFollowingPending}
+                >
+                  {isFollowingPending ? (
+                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                  ) : following ? (
+                    <UserMinus className="size-4 text-muted-foreground" />
+                  ) : (
+                    <UserPlus className="size-4 text-muted-foreground" />
+                  )}
+                  <span>{following ? "Dejar de seguir" : "Seguir"}</span>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal"
+                onClick={close}
+              >
+                <Bookmark className="size-4 text-muted-foreground" />
+                <span>Guardar</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem
+                className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal"
+                onClick={close}
+              >
+                <EyeOff className="size-4 text-muted-foreground" />
+                <span>Ocultar publicación</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem
+                variant="destructive"
+                className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal text-destructive focus:text-destructive"
+                onClick={close}
+              >
+                <Ban className="size-4 text-destructive" />
+                <span>Bloquear</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal text-destructive focus:text-destructive"
+                onClick={close}
+              >
+                <AlertCircle className="size-4 text-destructive" />
+                <span>Reportar</span>
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {canEdit && post.type === "note" && (
         <EditNoteDialog

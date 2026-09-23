@@ -14,6 +14,7 @@ import { PostOptionsDrawer } from "@/features/posts/components/PostOptionsDrawer
 import { LoginDrawer } from "@/features/auth/components/LoginDrawer";
 import type { FeedPost } from "@/features/posts/queries";
 import { formatRelativeDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 interface PostCardProps {
   post: FeedPost;
@@ -95,7 +96,7 @@ export function PostCard({
   const replyToPostId = post.type === "note" ? post.id : undefined;
 
   return (
-    <article className="grid grid-cols-[auto_1fr] gap-3 border-b px-4 py-4">
+    <article className="grid grid-cols-[auto_1fr] gap-3 border-b px-4 md:px-0 pt-4 pb-2">
       {post.author ? (
         <Link href={`/author/${post.author.id}`} aria-label={authorName} className="h-fit">
           <UserAvatar name={authorName} size="default" />
@@ -163,25 +164,18 @@ export function PostCard({
             initialCount={post.likeCount}
             viewerId={viewerId}
           />
-          {!isReply && (
-            <Link
-              href={`/post/${post.id}#notes`}
-              aria-label={post.notesCount === 1 ? "1 nota" : `${post.notesCount} notas`}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <MessageSquare className="size-[18px]" aria-hidden />
-              <span className="tabular-nums">{post.notesCount}</span>
-            </Link>
-          )}
-          {canReply &&
-            (viewerId === null ? (
+
+          {canReply ? (
+            viewerId === null ? (
               <LoginDrawer
                 trigger={
                   <button
                     type="button"
-                    className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+                    aria-label="Responder"
+                    className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
                   >
-                    Responder
+                    <MessageSquare className="size-[18px]" aria-hidden />
+                    {!isReply && <span className="tabular-nums">{post.notesCount}</span>}
                   </button>
                 }
               />
@@ -190,11 +184,28 @@ export function PostCard({
                 type="button"
                 onClick={() => setReplying((current) => !current)}
                 aria-expanded={replying}
-                className="inline-flex min-h-11 items-center rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+                aria-label="Responder"
+                className={cn(
+                  "inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm transition-colors cursor-pointer",
+                  replying ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                )}
               >
-                Responder
+                <MessageSquare className="size-[18px]" aria-hidden />
+                {!isReply && <span className="tabular-nums">{post.notesCount}</span>}
               </button>
-            ) : null)}
+            ) : null
+          ) : (
+            !isReply && (
+              <Link
+                href={`/post/${post.id}#notes`}
+                aria-label={post.notesCount === 1 ? "1 nota" : `${post.notesCount} notas`}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <MessageSquare className="size-[18px]" aria-hidden />
+                <span className="tabular-nums">{post.notesCount}</span>
+              </Link>
+            )
+          )}
         </div>
 
         {replying && viewerId && (

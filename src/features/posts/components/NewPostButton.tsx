@@ -15,31 +15,17 @@ export function NewPostButton({ viewerName }: { viewerName: string | null }) {
   const [noteOpen, setNoteOpen] = useState(false);
 
   return (
-    <>
-      <div className={`${FAB_POSITION} md:hidden`}>
-        <button
-          type="button"
-          aria-label="Nueva nota"
-          aria-haspopup="dialog"
-          onClick={() => setNoteOpen(true)}
-          className={FAB_CLASS}
-        >
-          <Plus className="size-7" aria-hidden />
-        </button>
-        <NoteDialog open={noteOpen} onOpenChange={setNoteOpen} viewerName={viewerName} />
-      </div>
-
-      <div className={`${FAB_POSITION} hidden md:block`}>
-        <CreatePostMenu
-          viewerName={viewerName}
-          label="Crear"
-          className={FAB_CLASS}
-          side="top"
-          align="end"
-        >
-          <Plus className="size-7" aria-hidden />
-        </CreatePostMenu>
-      </div>
-    </>
+    <div className={`${FAB_POSITION} md:hidden`}>
+      <button
+        type="button"
+        aria-label="Nueva nota"
+        aria-haspopup="dialog"
+        onClick={() => setNoteOpen(true)}
+        className={FAB_CLASS}
+      >
+        <Plus className="size-7" aria-hidden />
+      </button>
+      <NoteDialog open={noteOpen} onOpenChange={setNoteOpen} viewerName={viewerName} />
+    </div>
   );
 }
