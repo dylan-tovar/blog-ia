@@ -17,7 +17,7 @@ import { isFollowing } from "@/features/subscriptions/queries";
 
 export const maxDuration = 30;
 
-export default async function PublicPostPage(props: PageProps<"/post/[id]">) {
+export default async function PublicPostPage(props: PageProps<"/p/[id]">) {
   const { id } = await props.params;
   const post = await getPublishedPost(id);
   const isNote = post.type === "note";
@@ -89,9 +89,9 @@ export default async function PublicPostPage(props: PageProps<"/post/[id]">) {
         <div className="mt-4 flex items-center gap-3">
           <UserAvatar name={authorName} size="lg" />
           <p className="min-w-0 text-sm text-muted-foreground">
-            {post.author ? (
+            {post.author?.username ? (
               <Link
-                href={`/author/${post.author.id}`}
+                href={`/${post.author.username}`}
                 className="font-semibold text-foreground hover:underline"
               >
                 {authorName}

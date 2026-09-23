@@ -1,12 +1,12 @@
 import { getViewer } from "@/lib/viewer";
 import { getLikedPostsByUser, getPublishedPostsByAuthor } from "@/features/posts/queries";
-import { getPublicProfile } from "@/features/profile/queries";
+import { getPublicProfileByUsername } from "@/features/profile/queries";
 import { getFollowerCount, getSubscribers, getSubscriptions, isFollowing } from "@/features/subscriptions/queries";
 import { AuthorProfileView } from "@/features/profile/components/AuthorProfileView";
 
-export default async function AuthorPage(props: PageProps<"/author/[id]">) {
-  const { id } = await props.params;
-  const profile = await getPublicProfile(id);
+export default async function AuthorPage(props: PageProps<"/[username]">) {
+  const { username } = await props.params;
+  const profile = await getPublicProfileByUsername(username);
   const viewer = await getViewer();
 
   const [posts, likedPosts, followerCount, following, subscribers, subscriptions] = await Promise.all([
