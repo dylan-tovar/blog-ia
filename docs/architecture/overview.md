@@ -20,6 +20,7 @@
 | ¿Por qué se configura así Gemini? | Thinking mínimo, sin reintentos, timeouts por función | [0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) |
 | ¿Cómo se cambia de proveedor de IA? | Una variable de entorno: el resto de la capa depende de un puerto, no del SDK | [0031](../adr/0031-proveedor-de-ia-intercambiable-openrouter.md) |
 | ¿Por qué hay un filtro de palabras además de la IA? | Es inmediato, gratis y explicable; la IA sigue decidiendo la publicación | [0032](../adr/0032-diccionario-de-moderacion-en-el-editor.md) |
+| ¿La IA también revisa las imágenes del artículo? | Sí, portada y cuerpo, en la misma llamada que el texto; solo con Gemini por ahora | [0033](../adr/0033-moderacion-de-imagenes.md) |
 | ¿Por qué las migraciones son manuales y no hay CI? | Cero herramientas nuevas para un equipo pequeño; el costo está documentado | [0016](../adr/0016-migraciones-sql-manuales.md), [0018](../adr/0018-sin-ci-gates-manuales.md) |
 | ¿Por qué el feed está en `/` y los tags no se ven? | Decisiones de producto documentadas | [0021](../adr/0021-feed-en-raiz-y-global.md), [0020](../adr/0020-tags-como-metadato-interno.md) |
 | ¿Por qué `/` muestra solo a quienes sigo, con recomendados intercalados? | Seguir tiene efecto visible y el descubrimiento sigue dentro del flujo; el feed global queda para visitantes, sin seguidos y `?tag=` | [0026](../adr/0026-feed-de-seguidos-con-recomendados.md) |

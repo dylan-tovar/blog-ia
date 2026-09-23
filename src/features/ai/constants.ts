@@ -2,6 +2,11 @@ export const MODERATION_TIMEOUT_MS = 8_000;
 export const DEFAULT_TIMEOUT_MS = 15_000;
 export const TONE_TIMEOUT_MS = 25_000;
 
+// Tope de imágenes que se revisan por intento de publicación (portada + cuerpo): un
+// artículo con más no manda un request desmedido, se revisan solo las primeras.
+export const MAX_MODERATION_IMAGES = 6;
+export const MODERATION_IMAGE_FETCH_TIMEOUT_MS = 5_000;
+
 export const AI_MAX_INPUT_CHARS = 30_000;
 export const TONE_MAX_INPUT_CHARS = 15_000;
 

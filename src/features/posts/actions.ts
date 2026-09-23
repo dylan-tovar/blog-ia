@@ -22,7 +22,7 @@ import {
 } from "@/features/posts/schemas";
 import { scanArticle } from "@/features/moderation/scan";
 import { getFeedPage, type FeedScope } from "@/features/posts/queries";
-import { buildFinalUpdate, classifyPublishClaim } from "@/features/posts/publish";
+import { buildFinalUpdate, buildModerationImages, classifyPublishClaim } from "@/features/posts/publish";
 
 export type CreateNoteState = { ok?: boolean; error?: string } | undefined;
 
@@ -324,7 +324,7 @@ export async function publishPost(postId: string): Promise<PublishPostResult> {
   try {
     const { data: post } = await supabase
       .from("posts")
-      .select("id, title, content, status, updated_at, post_tags(tags(name))")
+      .select("id, title, content, status, updated_at, cover_image_url, post_tags(tags(name))")
       .eq("id", postId)
       .eq("author_id", user.id)
       .eq("type", "article")
@@ -388,6 +388,7 @@ export async function publishPost(postId: string): Promise<PublishPostResult> {
     const outcome = await moderateArticle({
       title: post.title ?? "",
       content: post.content,
+      images: buildModerationImages(post.cover_image_url, post.content, env.NEXT_PUBLIC_SUPABASE_URL),
       generate: generateStructured,
       rateLimit: () => checkAiRateLimit(user.id, "moderation"),
     });

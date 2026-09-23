@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { MODERATION_TIMEOUT_MS } from "./constants";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { MAX_MODERATION_IMAGES, MODERATION_TIMEOUT_MS } from "./constants";
 import { AiError } from "./errors";
 import {
   GENERIC_BLOCKED_REASON,
@@ -7,10 +7,20 @@ import {
   decideModeration,
   mergeTags,
   moderateArticle,
+  type ModerationImage,
   type ModerationOutcome,
 } from "./moderation";
 import type { RateLimitResult } from "./rate-limit";
-import type { GenerateInput, GenerateStructured } from "./types";
+import type { AiContentPart, GenerateInput, GenerateStructured } from "./types";
+
+function fakeResponse(overrides: Partial<{ ok: boolean; contentType: string; bytes: Uint8Array }> = {}) {
+  const { ok = true, contentType = "image/webp", bytes = new Uint8Array([1, 2, 3]) } = overrides;
+  return {
+    ok,
+    headers: { get: (name: string) => (name === "content-type" ? contentType : null) },
+    arrayBuffer: async () => bytes.buffer,
+  } as unknown as Response;
+}
 
 const okResult = (overrides: Partial<{ is_appropriate: boolean; reason: string; suggested_tags: string[] }> = {}) => ({
   is_appropriate: true,
@@ -230,5 +240,86 @@ describe("moderateArticle", () => {
     });
 
     expect(received).toBe(controller.signal);
+  });
+});
+
+describe("moderateArticle with images", () => {
+  const allowed: RateLimitResult = { ok: true };
+  const images: ModerationImage[] = [
+    { url: "https://x.supabase.co/storage/v1/object/public/post-images/u1/cover.webp", label: "la portada" },
+    { url: "https://x.supabase.co/storage/v1/object/public/post-images/u1/body.webp", label: "la imagen 1 del cuerpo" },
+  ];
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("fetches, encodes and labels each image before calling the model", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => fakeResponse()));
+
+    let received: GenerateInput<unknown> | undefined;
+    const generate: GenerateStructured = async (input) => {
+      received = input as GenerateInput<unknown>;
+      return okResult() as never;
+    };
+
+    await moderateArticle({ title: "t", content: "c", images, generate, rateLimit: async () => allowed });
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const contents = received?.contents;
+    if (!contents || typeof contents === "string") throw new Error("se esperaba contents como partes");
+
+    const imageParts = contents.filter((part): part is Extract<AiContentPart, { type: "image" }> => part.type === "image");
+    expect(imageParts).toHaveLength(2);
+    expect(imageParts[0].mimeType).toBe("image/webp");
+    expect(contents.some((part) => part.type === "text" && part.text === "la portada:")).toBe(true);
+  });
+
+  it("publishes without AI tags (unavailable) when an image fails to fetch", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("network down"); }));
+
+    let calls = 0;
+    const generate: GenerateStructured = async () => {
+      calls += 1;
+      return okResult() as never;
+    };
+
+    const outcome = await moderateArticle({ title: "t", content: "c", images, generate, rateLimit: async () => allowed });
+
+    expect(calls).toBe(0);
+    expect(outcome.kind === "error" && outcome.error.kind).toBe("unavailable");
+  });
+
+  it("drops an image with a disallowed content-type without failing the others", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(fakeResponse({ contentType: "text/html" }))
+      .mockResolvedValueOnce(fakeResponse());
+    vi.stubGlobal("fetch", fetchMock);
+
+    let received: GenerateInput<unknown> | undefined;
+    const generate: GenerateStructured = async (input) => {
+      received = input as GenerateInput<unknown>;
+      return okResult() as never;
+    };
+
+    await moderateArticle({ title: "t", content: "c", images, generate, rateLimit: async () => allowed });
+
+    const contents = received?.contents;
+    if (!contents || typeof contents === "string") throw new Error("se esperaba contents como partes");
+    expect(contents.filter((part) => part.type === "image")).toHaveLength(1);
+  });
+
+  it("only fetches up to MAX_MODERATION_IMAGES images", async () => {
+    const many: ModerationImage[] = Array.from({ length: MAX_MODERATION_IMAGES + 3 }, (_, i) => ({
+      url: `https://x.supabase.co/storage/v1/object/public/post-images/u1/${i}.webp`,
+      label: `la imagen ${i}`,
+    }));
+    vi.stubGlobal("fetch", vi.fn(async () => fakeResponse()));
+
+    const generate: GenerateStructured = async () => okResult() as never;
+    await moderateArticle({ title: "t", content: "c", images: many, generate, rateLimit: async () => allowed });
+
+    expect(fetch).toHaveBeenCalledTimes(MAX_MODERATION_IMAGES);
   });
 });
