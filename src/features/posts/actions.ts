@@ -569,7 +569,7 @@ export async function deletePost(postId: string): Promise<{ ok: boolean; error?:
 
   revalidatePath("/posts");
   revalidatePath("/");
-  revalidatePath(`/author/${user.id}`);
-  revalidatePath(`/post/${postId}`);
+  await revalidateAuthorProfile(user.id);
+  revalidatePath(`/p/${postId}`);
   return { ok: true };
 }
