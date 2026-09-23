@@ -31,6 +31,18 @@ interface LoginDrawerProps {
   onOpenChange?: (open: boolean) => void;
 }
 
+// In React 19 / Next.js 15, JSX elements passed across the RSC boundary from Server Components
+// have transitional element symbols that fail `isValidElement` during SSR on the server.
+// Checking `$$typeof` ensures both server and client detect the element consistently.
+function isReactElement(value: unknown): value is React.ReactElement {
+  return (
+    isValidElement(value) ||
+    (typeof value === "object" &&
+      value !== null &&
+      ("$$typeof" in value || "type" in value))
+  );
+}
+
 function LoginBenefits() {
   return (
     <>
@@ -114,7 +126,7 @@ export function LoginDrawer({
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         {trigger === null ? null : trigger ? (
-          isValidElement(trigger) ? (
+          isReactElement(trigger) ? (
             <DialogTrigger render={trigger} className={className} />
           ) : (
             <DialogTrigger
@@ -163,7 +175,7 @@ export function LoginDrawer({
   return (
     <Drawer open={open} onOpenChange={setOpen} showSwipeHandle>
       {trigger === null ? null : trigger ? (
-        isValidElement(trigger) ? (
+        isReactElement(trigger) ? (
           <DrawerTrigger render={trigger} className={className} />
         ) : (
           <DrawerTrigger

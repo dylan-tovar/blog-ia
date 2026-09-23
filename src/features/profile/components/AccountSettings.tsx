@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/drawer";
 import { SettingsForm } from "@/features/profile/components/SettingsForm";
 import { signOut } from "@/features/auth/actions";
+import { InterestsSettingsSection } from "@/features/interests/components/InterestsSettingsSection";
+import type { InterestOption } from "@/features/interests/queries";
 
 interface AccountSettingsProps {
   user: {
@@ -26,9 +28,17 @@ interface AccountSettingsProps {
     avatar_url?: string | null;
   } | null;
   postCount?: number;
+  initialInterests?: InterestOption[];
+  availableOptions?: InterestOption[];
 }
 
-export function AccountSettings({ user, profile, postCount = 0 }: AccountSettingsProps) {
+export function AccountSettings({
+  user,
+  profile,
+  postCount = 0,
+  initialInterests = [],
+  availableOptions = [],
+}: AccountSettingsProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerSection, setDrawerSection] = useState<"profile" | "email" | "handle">("profile");
 
@@ -102,6 +112,12 @@ export function AccountSettings({ user, profile, postCount = 0 }: AccountSetting
           </div>
         </div>
       </section>
+
+      {/* INTERESTS SECTION */}
+      <InterestsSettingsSection
+        initialInterests={initialInterests}
+        availableOptions={availableOptions}
+      />
 
       {/* PUBLICATIONS SECTION */}
       <section className="mt-8">

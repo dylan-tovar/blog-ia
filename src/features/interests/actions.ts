@@ -127,7 +127,7 @@ export async function saveInterests(
 }
 
 // Same diff/upsert/delete as `saveInterests`, for editing interests from the sidebar
-// after onboarding: no `onboarded_at` gate and no redirect, just the result.
+// after onboarding: no `onboarded_at` gate, no redirect, and no minimum interest count.
 export async function updateInterests(tagIds: string[]): Promise<InterestsActionState> {
   const parsed = interestsSchema.safeParse({ tagIds });
 
@@ -137,21 +137,15 @@ export async function updateInterests(tagIds: string[]): Promise<InterestsAction
 
   const { supabase, user } = await requireUser();
 
-  // The eligible set is recomputed here too: the client's list is never trusted.
-  const eligible = await getInterestOptions();
-  if (!eligible.ok) {
-    return { error: "No pudimos cargar los temas. Intentá de nuevo." };
-  }
+  if (parsed.data.tagIds.length > 0) {
+    const { data: validTags, error: tagError } = await supabase
+      .from("tags")
+      .select("id")
+      .in("id", parsed.data.tagIds);
 
-  // Same rule as onboarding, including the minimum-interest-count invariant: editing
-  // from the sidebar must not be a way to end up with fewer interests than onboarding
-  // would have allowed.
-  const invalid = validateSelection(
-    parsed.data.tagIds,
-    eligible.options.map(({ id }) => id),
-  );
-  if (invalid) {
-    return { error: invalid };
+    if (tagError || !validTags || validTags.length !== parsed.data.tagIds.length) {
+      return { error: "Alguno de los temas ya no está disponible. Recargá la página y elegí de nuevo." };
+    }
   }
 
   const applyError = await applyInterestChanges(supabase, user.id, parsed.data.tagIds);

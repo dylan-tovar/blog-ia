@@ -2,9 +2,11 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Ellipsis, Link2, Share2, SquarePen } from "lucide-react";
+import { Ellipsis, Link2, Share2, SquarePen, Users } from "lucide-react";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { FollowButton } from "@/features/subscriptions/components/FollowButton";
+import { SubscribersModal } from "@/features/subscriptions/components/SubscribersModal";
+import type { Subscriber } from "@/features/subscriptions/queries";
 import { PostCard } from "@/features/posts/components/PostCard";
 import {
   Drawer,
@@ -34,14 +36,16 @@ interface AuthorProfileViewProps {
   likedPosts?: FeedPost[];
   followerCount: number;
   following: boolean;
+  subscribers?: Subscriber[];
+  subscriptions?: Subscriber[];
 }
 
 const TABS = [
-  { id: "activity", label: "Activity" },
+  { id: "activity", label: "Actividad" },
   { id: "posts", label: "Posts" },
-  { id: "replies", label: "Replies" },
+  { id: "replies", label: "Respuestas" },
   { id: "likes", label: "Likes" },
-  { id: "subscriptions", label: "Subscriptions" },
+  { id: "subscriptions", label: "Suscripciones" },
 ] as const;
 
 export function AuthorProfileView({
@@ -51,12 +55,19 @@ export function AuthorProfileView({
   likedPosts = [],
   followerCount,
   following,
+  subscribers = [],
+  subscriptions = [],
 }: AuthorProfileViewProps) {
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]["id"]>("activity");
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const isOwnProfile = viewer?.id === profile.id;
+
+  const activeIndex = useMemo(
+    () => Math.max(0, TABS.findIndex((tab) => tab.id === activeTab)),
+    [activeTab],
+  );
 
   const displayedPosts = useMemo(() => {
     if (activeTab === "posts") {
@@ -106,48 +117,52 @@ export function AuthorProfileView({
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
+    <div className="mx-auto w-full max-w-xl">
       {/* PROFILE HEADER */}
       <section className="px-4 pt-6 pb-2">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-6">
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-2xl font-bold tracking-tight text-foreground">
+            <h1 className="truncate text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
               {profile.display_name}
             </h1>
-            <p className="mt-0.5 truncate text-sm text-muted-foreground">
+            <p className="mt-0.5 truncate text-sm text-muted-foreground sm:text-base">
               @{profile.username}
             </p>
 
-            {/* Pill badge */}
-            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-neutral-800/80 px-2.5 py-1 text-xs font-medium text-foreground">
-              <UserAvatar name={profile.display_name} className="size-4 text-[9px]" />
-              <span className="max-w-[160px] truncate">{profile.display_name}</span>
-            </div>
-
             {/* Subscribers */}
             <div className="mt-3">
-              <span className="text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer">
-                {followerCount === 0
-                  ? "See subscribers"
-                  : `${followerCount} ${followerCount === 1 ? "subscriber" : "subscribers"}`}
-              </span>
+              <SubscribersModal
+                authorName={profile.display_name}
+                subscribers={subscribers}
+                viewerId={viewer?.id ?? null}
+                trigger={
+                  <button
+                    type="button"
+                    className="text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+                  >
+                    {followerCount === 0
+                      ? "Ver suscriptores"
+                      : `${followerCount} ${followerCount === 1 ? "suscriptor" : "suscriptores"}`}
+                  </button>
+                }
+              />
             </div>
           </div>
 
           {/* Large Avatar */}
           <UserAvatar
             name={profile.display_name}
-            className="size-18 text-2xl font-bold ring-1 ring-border/50 shrink-0"
+            className="size-20 shrink-0 text-2xl font-bold ring-1 ring-border/50 sm:size-24 sm:text-3xl"
           />
         </div>
 
         {/* ACTION BUTTONS */}
-        <div className="mt-5 flex items-center gap-2">
+        <div className="mt-6 flex items-center gap-2.5">
           {isOwnProfile ? (
             <>
               <CreatePostMenu
                 viewerName={viewer?.displayName ?? null}
-                className="flex min-h-9 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md bg-neutral-800 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-700"
+                className="flex min-h-9 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-blue-500"
               >
                 <SquarePen className="size-4" aria-hidden />
                 Crear
@@ -157,7 +172,7 @@ export function AuthorProfileView({
                 href="/settings"
                 className="flex flex-1 items-center justify-center rounded-md bg-neutral-800 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-neutral-700"
               >
-                Edit profile
+                Editar perfil
               </Link>
 
               <Drawer open={optionsOpen} onOpenChange={setOptionsOpen} showSwipeHandle>
@@ -206,71 +221,139 @@ export function AuthorProfileView({
       </section>
 
       {/* TABS */}
-      <div className="mt-3 border-b border-border/60">
-        <div className="flex gap-6 overflow-x-auto px-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "relative cursor-pointer py-3 text-sm whitespace-nowrap transition-colors",
-                activeTab === tab.id
-                  ? "font-semibold text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-foreground"
-                  : "font-medium text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
+      <div className="relative mt-2 border-b border-border/60">
+        <div role="tablist" aria-label="Secciones del perfil" className="flex w-full">
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "relative flex-1 cursor-pointer py-3.5 px-1 text-center text-xs sm:text-sm whitespace-nowrap transition-colors",
+                  isActive
+                    ? "font-semibold text-foreground"
+                    : "font-medium text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
+
+        {/* Sliding active indicator */}
+        <div
+          aria-hidden="true"
+          className="absolute bottom-0 left-0 h-[2px] w-1/5 bg-foreground transition-transform duration-300 ease-out"
+          style={{ transform: `translateX(${activeIndex * 100}%)` }}
+        />
       </div>
 
-      {/* COMPOSER BAR (Own profile on Activity/Posts tabs) */}
-      {isOwnProfile && (activeTab === "activity" || activeTab === "posts") && (
-        <section aria-label="Nueva nota" className="border-b border-border/40 px-4 py-2">
-          <NoteTriggerBar viewerName={viewer?.displayName ?? null} />
-        </section>
-      )}
+      {/* TAB CONTENT WITH SMOOTH TRANSITION */}
+      <div key={activeTab} className="flex flex-col animate-in fade-in-50 duration-200">
+        {/* COMPOSER BAR (Own profile on Activity/Posts tabs) */}
+        {isOwnProfile && (activeTab === "activity" || activeTab === "posts") && (
+          <section aria-label="Nueva nota" className="px-4 md:px-0 pt-4 pb-3">
+            <NoteTriggerBar viewerName={viewer?.displayName ?? null} />
+          </section>
+        )}
 
-      {/* TAB CONTENT */}
-      {activeTab === "activity" || activeTab === "posts" || activeTab === "replies" || activeTab === "likes" ? (
-        displayedPosts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
-            <div className="mb-3 grid size-12 place-items-center rounded-2xl bg-neutral-800/60 text-muted-foreground">
-              <SquarePen className="size-6" />
-            </div>
-            <h3 className="text-base font-semibold text-foreground">
-              {activeTab === "replies"
-                ? isOwnProfile
-                  ? "Todavía no respondiste a ninguna publicación."
-                  : "Todavía no hay respuestas."
-                : activeTab === "likes"
+        {/* TAB CONTENT */}
+        {activeTab === "activity" || activeTab === "posts" || activeTab === "replies" || activeTab === "likes" ? (
+          displayedPosts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
+              <div className="mb-3 grid size-12 place-items-center rounded-2xl bg-neutral-800/60 text-muted-foreground">
+                <SquarePen className="size-6" />
+              </div>
+              <h3 className="text-base font-semibold text-foreground">
+                {activeTab === "replies"
                   ? isOwnProfile
-                    ? "Todavía no le diste me gusta a ninguna publicación."
-                    : "Todavía no hay me gusta."
-                  : isOwnProfile
-                    ? "Todavía no publicaste nada."
-                    : "Todavía no hay publicaciones."}
-            </h3>
-            {isOwnProfile && activeTab !== "replies" && activeTab !== "likes" && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                Empezá escribiendo una nota.
-              </p>
-            )}
-          </div>
+                    ? "Todavía no respondiste a ninguna publicación."
+                    : "Todavía no hay respuestas."
+                  : activeTab === "likes"
+                    ? isOwnProfile
+                      ? "Todavía no le diste me gusta a ninguna publicación."
+                      : "Todavía no hay me gusta."
+                    : isOwnProfile
+                      ? "Todavía no publicaste nada."
+                      : "Todavía no hay publicaciones."}
+              </h3>
+              {isOwnProfile && activeTab !== "replies" && activeTab !== "likes" && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Empezá escribiendo una nota.
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col">
+              {displayedPosts.map((post) => (
+                <PostCard key={post.id} post={post} viewerId={viewer?.id ?? null} />
+              ))}
+            </div>
+          )
+        ) : activeTab === "subscriptions" ? (
+          subscriptions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
+              <div className="mb-3 grid size-12 place-items-center rounded-2xl bg-neutral-800/60 text-muted-foreground">
+                <Users className="size-6" />
+              </div>
+              <h3 className="text-base font-semibold text-foreground">
+                {isOwnProfile
+                  ? "Todavía no te suscribiste a ningún autor."
+                  : "Todavía no sigue a ningún autor."}
+              </h3>
+              {isOwnProfile && (
+                <Link
+                  href="/explore"
+                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                >
+                  Explorar autores para seguir
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col divide-y divide-border/40 px-4">
+              {subscriptions.map((sub) => (
+                <div
+                  key={sub.id}
+                  className="flex items-center justify-between gap-3 py-3.5"
+                >
+                  <Link
+                    href={`/author/${sub.id}`}
+                    className="flex min-w-0 flex-1 items-center gap-3 transition-opacity hover:opacity-85"
+                  >
+                    <UserAvatar name={sub.displayName} className="size-11 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold text-foreground hover:underline">
+                        {sub.displayName}
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        @{sub.username}
+                      </span>
+                    </div>
+                  </Link>
+
+                  {viewer?.id !== sub.id && (
+                    <FollowButton
+                      authorId={sub.id}
+                      initialFollowing={sub.isFollowing}
+                      variant="compact"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )
         ) : (
-          <div className="flex flex-col">
-            {displayedPosts.map((post) => (
-              <PostCard key={post.id} post={post} viewerId={viewer?.id ?? null} />
-            ))}
+          <div className="px-4 py-16 text-center text-sm text-muted-foreground">
+            No {activeTab} yet.
           </div>
-        )
-      ) : (
-        <div className="px-4 py-16 text-center text-sm text-muted-foreground">
-          No {activeTab} yet.
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -6,7 +6,6 @@ import { Bell, House, Search, User, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isNavItemActive, NAV_ITEMS } from "@/components/shared/navigation";
 import { NotificationBell } from "@/components/shared/NotificationBell";
-import { SearchModal } from "@/features/discovery/components/SearchModal";
 
 // Unused for "/activity" (NotificationBell renders instead), but kept exhaustive
 // so a future NAV_ITEMS entry without an icon fails the build, not silently.
@@ -53,9 +52,6 @@ export function BottomNav({ initialUnreadCount = 0 }: { initialUnreadCount?: num
             </li>
           );
         })}
-        <li className="flex-1">
-          <SearchModal variant="icon" className="mx-auto min-h-14" />
-        </li>
       </ul>
     </nav>
   );

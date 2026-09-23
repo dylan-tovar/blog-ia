@@ -20,7 +20,7 @@ export function NoteTriggerBar({ viewerName, className }: NoteTriggerBarProps) {
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         className={cn(
-          "group flex min-h-16 w-full cursor-pointer items-center gap-3.5 rounded-xl border border-border bg-card px-4 py-3 text-left text-[15px] text-muted-foreground shadow-xs transition-all hover:border-border hover:bg-muted hover:scale-[0.99] hover:text-foreground active:scale-[0.99]",
+          "group flex min-h-18 w-full cursor-pointer items-center gap-3.5 rounded-xl border border-border bg-card px-4 py-3 text-left text-[15px] text-muted-foreground shadow-xs transition-all hover:border-border hover:bg-muted hover:scale-[0.99] hover:text-foreground active:scale-[0.99]",
           className,
         )}
       >

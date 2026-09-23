@@ -19,7 +19,6 @@ import { cn } from "@/lib/utils";
 import { isNavItemActive } from "@/components/shared/navigation";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { UserAvatar } from "@/components/shared/UserAvatar";
-import { SearchModal } from "@/features/discovery/components/SearchModal";
 import { CreatePostMenu } from "@/features/posts/components/CreatePostMenu";
 import { LoginDrawer } from "@/features/auth/components/LoginDrawer";
 import { signOut } from "@/features/auth/actions";
@@ -117,8 +116,6 @@ export function DesktopSidebar({ viewer, initialUnreadCount = 0 }: DesktopSideba
             );
           })}
 
-          <SearchModal variant="nav" />
-
           {!viewer && (
             <LoginDrawer
               trigger={
@@ -178,7 +175,7 @@ export function DesktopSidebar({ viewer, initialUnreadCount = 0 }: DesktopSideba
 
       {/* Bottom section: User Account Profile */}
       {viewer && (
-        <div className="w-full pt-4 border-t border-border/40">
+        <div className="w-full pt-4">
           <DropdownMenu>
             <DropdownMenuTrigger
               aria-label="Opciones de cuenta"

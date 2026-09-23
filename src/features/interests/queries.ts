@@ -23,7 +23,6 @@ export async function getInterestOptions(): Promise<InterestOptionsResult> {
   return { ok: true, options: (data ?? []).map(({ id, name }) => ({ id, name })) };
 }
 
-// Only used to preselect chips when resuming: a failure just means no preselection.
 export async function getUserInterestIds(userId: string): Promise<string[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -38,3 +37,36 @@ export async function getUserInterestIds(userId: string): Promise<string[]> {
 
   return (data ?? []).map(({ tag_id }) => tag_id);
 }
+
+export async function getUserInterests(userId: string): Promise<InterestOption[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("user_interests")
+    .select("tags(id, name)")
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("Interests: could not load user interests", error.message);
+    return [];
+  }
+
+  return (data ?? [])
+    .map((row: any) => (Array.isArray(row.tags) ? row.tags[0] : row.tags))
+    .filter((tag: any): tag is InterestOption => Boolean(tag && tag.id && tag.name));
+}
+
+export async function getAllInterestOptions(): Promise<InterestOption[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("tags")
+    .select("id, name")
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("Interests: could not load all interest options", error.message);
+    return [];
+  }
+
+  return data ?? [];
+}
+

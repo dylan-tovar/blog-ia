@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { updateInterests } from "@/features/interests/actions";
 import type { InterestOption } from "@/features/interests/queries";
 import { cn } from "@/lib/utils";
@@ -44,11 +44,11 @@ export function InterestChipsSidebar({ options, initialSelectedIds }: InterestCh
   }
 
   return (
-    <section aria-labelledby="interest-chips-heading" className="flex flex-col gap-2">
+    <section aria-labelledby="interest-chips-heading" className="flex flex-col gap-3">
       <h2 id="interest-chips-heading" className="text-sm font-semibold text-foreground">
-        Tus temas
+        Tópicos recomendados
       </h2>
-      <div role="group" aria-label="Temas de interés" className="flex flex-wrap gap-2">
+      <div role="group" aria-label="Tópicos recomendados" className="flex flex-wrap gap-2.5">
         {options.map(({ id, name }) => {
           const selected = selectedIds.includes(id);
           return (
@@ -56,17 +56,35 @@ export function InterestChipsSidebar({ options, initialSelectedIds }: InterestCh
               key={id}
               type="button"
               aria-pressed={selected}
+              aria-label={
+                selected
+                  ? `Quitar ${name} de tus tópicos de interés`
+                  : `Agregar ${name} a tus tópicos de interés`
+              }
               disabled={isPending}
               onClick={() => toggle(id)}
               className={cn(
-                "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors disabled:pointer-events-none disabled:opacity-50",
+                "group inline-flex items-center rounded-full border text-sm transition-all disabled:pointer-events-none disabled:opacity-50",
                 selected
-                  ? "bg-foreground text-background"
-                  : "bg-muted text-muted-foreground hover:text-foreground",
+                  ? "border-primary/50 bg-primary/10 font-medium text-primary hover:bg-primary/15"
+                  : "border-border/80 bg-card/70 text-foreground/90 hover:border-border hover:bg-muted/60",
               )}
             >
-              {selected && <Check aria-hidden="true" className="size-3" />}
-              {name}
+              <span className="py-1.5 pl-3.5 pr-2.5">{name}</span>
+              <span
+                className={cn(
+                  "flex items-center justify-center border-l py-1.5 pl-2 pr-3 transition-colors",
+                  selected
+                    ? "border-primary/30 text-primary"
+                    : "border-border/70 text-muted-foreground group-hover:text-foreground",
+                )}
+              >
+                {selected ? (
+                  <Check aria-hidden="true" className="size-4 stroke-[2.5]" />
+                ) : (
+                  <Plus aria-hidden="true" className="size-4 stroke-[2]" />
+                )}
+              </span>
             </button>
           );
         })}

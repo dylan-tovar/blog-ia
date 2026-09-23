@@ -77,3 +77,124 @@ export async function getFollowerCount(authorId: string) {
 
   return count ?? 0;
 }
+
+export interface Subscriber {
+  id: string;
+  displayName: string;
+  username: string;
+  avatarUrl: string | null;
+  isFollowing: boolean;
+}
+
+export async function getSubscribers(
+  authorId: string,
+  viewerId?: string | null,
+): Promise<Subscriber[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select(`
+      created_at,
+      follower:profiles!subscriptions_follower_id_fkey (
+        id,
+        display_name,
+        username,
+        avatar_url
+      )
+    `)
+    .eq("author_id", authorId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`No pudimos leer los seguidores: ${error.message}`);
+  }
+
+  type SubscriberRow = {
+    created_at: string;
+    follower: {
+      id: string;
+      display_name: string;
+      username: string;
+      avatar_url: string | null;
+    } | null;
+  };
+
+  const rows = (data as unknown as SubscriberRow[]) ?? [];
+  const followers = rows
+    .map((r) => r.follower)
+    .filter((f): f is NonNullable<typeof f> => Boolean(f));
+
+  let followedIds = new Set<string>();
+  if (viewerId && followers.length > 0) {
+    const followedList = await getFollowedAuthorIds(
+      viewerId,
+      followers.map((f) => f.id),
+    );
+    followedIds = new Set(followedList);
+  }
+
+  return followers.map((f) => ({
+    id: f.id,
+    displayName: f.display_name,
+    username: f.username,
+    avatarUrl: f.avatar_url,
+    isFollowing: viewerId ? followedIds.has(f.id) : false,
+  }));
+}
+
+export async function getSubscriptions(
+  userId: string,
+  viewerId?: string | null,
+): Promise<Subscriber[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select(`
+      created_at,
+      author:profiles!subscriptions_author_id_fkey (
+        id,
+        display_name,
+        username,
+        avatar_url
+      )
+    `)
+    .eq("follower_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(`No pudimos leer las suscripciones: ${error.message}`);
+  }
+
+  type SubscriptionRow = {
+    created_at: string;
+    author: {
+      id: string;
+      display_name: string;
+      username: string;
+      avatar_url: string | null;
+    } | null;
+  };
+
+  const rows = (data as unknown as SubscriptionRow[]) ?? [];
+  const authors = rows
+    .map((r) => r.author)
+    .filter((a): a is NonNullable<typeof a> => Boolean(a));
+
+  let followedIds = new Set<string>();
+  if (viewerId && authors.length > 0) {
+    const followedList = await getFollowedAuthorIds(
+      viewerId,
+      authors.map((a) => a.id),
+    );
+    followedIds = new Set(followedList);
+  }
+
+  return authors.map((a) => ({
+    id: a.id,
+    displayName: a.display_name,
+    username: a.username,
+    avatarUrl: a.avatar_url,
+    isFollowing: viewerId ? followedIds.has(a.id) : false,
+  }));
+}
+

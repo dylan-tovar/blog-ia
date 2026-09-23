@@ -6,6 +6,7 @@ import { HeaderAccount } from "@/components/shared/HeaderAccount";
 import { HeaderTitle } from "@/components/shared/HeaderTitle";
 import { DesktopSidebar } from "@/components/shared/DesktopSidebar";
 import { RightRail } from "@/components/shared/RightRail";
+import { RightRailContainer } from "@/components/shared/RightRailContainer";
 import { getUnreadNotificationCount } from "@/features/notifications/queries";
 import { getViewer } from "@/lib/viewer";
 
@@ -93,22 +94,21 @@ export function AppShell({
           </Suspense>
         </aside>
 
-        {/* Center Feed & Right Discovery Container */}
-        <div className="flex flex-1 justify-center px-0 md:px-4">
-          {/* Center Column: Feed / Main Content */}
-          <main className="flex w-full max-w-2xl flex-col pb-28 md:pb-12 min-h-screen">
+        {/* Center Column: Feed / Main Content */}
+        <div className="flex flex-1 min-w-0 justify-center px-0 md:px-4">
+          <main className="flex w-full min-w-0 max-w-3xl xl:max-w-4xl flex-col pb-28 md:pb-12 min-h-screen">
             {children}
           </main>
-
-          {/* Right Column: desktop discovery widgets (search/suggested people/topics) */}
-          <aside className="sticky top-0 hidden h-screen w-80 shrink-0 flex-col overflow-y-auto p-6 xl:flex">
-            {rightRail && (
-              <Suspense fallback={null}>
-                <RightRail />
-              </Suspense>
-            )}
-          </aside>
         </div>
+
+        {/* Right Column: desktop discovery widgets (search/suggested people/topics) */}
+        {rightRail && (
+          <RightRailContainer>
+            <Suspense fallback={null}>
+              <RightRail />
+            </Suspense>
+          </RightRailContainer>
+        )}
       </div>
 
       {/* Mobile Bottom Navigation & Mobile FAB */}

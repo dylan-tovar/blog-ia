@@ -53,11 +53,11 @@ export default async function HomePage(props: PageProps<"/">) {
   ]);
 
   return (
-    <>
+    <div className="mx-auto w-full max-w-xl">
       <h1 className="sr-only">Inicio</h1>
 
       {viewer && (
-        <section aria-label="Crear nota" className="hidden px-4 md:px-0 pt-4 pb-2 md:block">
+        <section aria-label="Crear nota" className="hidden px-4 md:px-0 pt-6 pb-2 md:block">
           <NoteTriggerBar viewerName={viewer.displayName} />
         </section>
       )}
@@ -89,6 +89,6 @@ export default async function HomePage(props: PageProps<"/">) {
           recommendedPosts={recommendedPosts}
         />
       )}
-    </>
+    </div>
   );
 }

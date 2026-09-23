@@ -15,7 +15,14 @@ async function InterestChipsSection({ viewerId }: { viewerId: string }) {
     return null;
   }
 
-  return <InterestChipsSidebar options={eligible.options} initialSelectedIds={selectedIds} />;
+  const selectedSet = new Set(selectedIds);
+  const unselectedOptions = eligible.options.filter((opt) => !selectedSet.has(opt.id));
+
+  if (unselectedOptions.length === 0) {
+    return null;
+  }
+
+  return <InterestChipsSidebar options={unselectedOptions} initialSelectedIds={selectedIds} />;
 }
 
 // Server component; `getViewer` is memoized with `React.cache`, so this is a free
