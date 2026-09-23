@@ -89,6 +89,19 @@ describe("scanText", () => {
     expect(terms("eres un sudaca de mierda")).toEqual(["sudaca de mierda"]);
   });
 
+  it("detecta el insulto misógino 'perra'", () => {
+    const [match] = scanText("qué perra que sos");
+
+    expect(match.term).toBe("perra");
+    expect(match.category).toBe("insulto");
+    expect(match.severity).toBe("leve");
+  });
+
+  it("detecta amenazas de doxxing y contra la familia", () => {
+    expect(scanText("tengo tu direccion")[0].severity).toBe("grave");
+    expect(scanText("le va a pasar algo a tu familia")[0].severity).toBe("grave");
+  });
+
   it("detecta frases de varias palabras y tolera el espaciado", () => {
     expect(terms("te voy a matar")).toEqual(["te voy a matar"]);
     expect(terms("te  voy  a  matar")).toEqual(["te voy a matar"]);
