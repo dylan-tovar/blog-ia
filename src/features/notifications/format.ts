@@ -10,17 +10,17 @@ export function describeNotification(notification: Notification): {
     case "follow":
       return {
         actionText: "empezó a seguirte",
-        href: notification.actor ? `/author/${notification.actor.id}` : "/activity",
+        href: notification.actor?.username ? `/${notification.actor.username}` : "/activity",
       };
     case "like":
       return {
         actionText: "le dio me gusta a tu post",
-        href: notification.postId ? `/post/${notification.postId}` : "/activity",
+        href: notification.postId ? `/p/${notification.postId}` : "/activity",
       };
     case "note":
       return {
         actionText: "dejó una nota en tu post",
-        href: notification.postId ? `/post/${notification.postId}` : "/activity",
+        href: notification.postId ? `/p/${notification.postId}` : "/activity",
       };
   }
 }

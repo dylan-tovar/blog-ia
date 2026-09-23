@@ -6,5 +6,10 @@ export default async function ProfileRedirectPage() {
   if (!viewer) {
     redirect("/login");
   }
-  redirect(`/author/${viewer.id}`);
+  // No username yet (profile row missing it) shouldn't happen once past the
+  // onboarding gate, but redirect there instead of producing a broken /null link.
+  if (!viewer.username) {
+    redirect("/onboarding");
+  }
+  redirect(`/${viewer.username}`);
 }

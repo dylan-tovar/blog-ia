@@ -287,7 +287,7 @@ export function PostEditor({
         allTagNames={allTagNames}
         ensurePostId={persist}
         getContent={getContent}
-        onPublished={(publishedId) => router.push(`/post/${publishedId}`)}
+        onPublished={(publishedId) => router.push(`/p/${publishedId}`)}
         onPublishedStatus={() => {
           setStatus("published");
           setRejectionReason(null);

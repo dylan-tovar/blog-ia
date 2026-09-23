@@ -97,8 +97,8 @@ export function PostCard({
 
   return (
     <article className="grid grid-cols-[auto_1fr] gap-3 border-b px-4 md:px-0 pt-4 pb-2">
-      {post.author ? (
-        <Link href={`/author/${post.author.id}`} aria-label={authorName} className="h-fit">
+      {post.author?.username ? (
+        <Link href={`/${post.author.username}`} aria-label={authorName} className="h-fit">
           <UserAvatar name={authorName} size="default" />
         </Link>
       ) : (
@@ -107,9 +107,9 @@ export function PostCard({
 
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          {post.author ? (
+          {post.author?.username ? (
             <Link
-              href={`/author/${post.author.id}`}
+              href={`/${post.author.username}`}
               className="min-w-0 truncate text-[15px] font-medium text-foreground hover:underline"
             >
               {authorName}
@@ -197,7 +197,7 @@ export function PostCard({
           ) : (
             !isReply && (
               <Link
-                href={`/post/${post.id}#notes`}
+                href={`/p/${post.id}#notes`}
                 aria-label={post.notesCount === 1 ? "1 nota" : `${post.notesCount} notas`}
                 className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
               >

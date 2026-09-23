@@ -39,7 +39,7 @@ export async function notifyFollowersOfNewArticle({
           authorName: author.display_name,
           title: post.title ?? "Nuevo artículo",
           bodyHtml,
-          postUrl: `${env.NEXT_PUBLIC_SITE_URL}/post/${postId}`,
+          postUrl: `${env.NEXT_PUBLIC_SITE_URL}/p/${postId}`,
           unsubscribeUrl,
         }),
         // RFC 8058 one-click unsubscribe: without these headers Gmail/Yahoo

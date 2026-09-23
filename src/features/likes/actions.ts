@@ -28,6 +28,6 @@ export async function setLike(postId: string, liked: boolean): Promise<SetLikeRe
         .eq("post_id", parsed.data.postId);
 
   revalidatePath("/");
-  revalidatePath(`/post/${parsed.data.postId}`);
+  revalidatePath(`/p/${parsed.data.postId}`);
   return { ok: !error };
 }

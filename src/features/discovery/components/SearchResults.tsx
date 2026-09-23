@@ -49,10 +49,15 @@ export function SearchResults({ query, results, isPending, onNavigate }: SearchR
             Personas
           </h3>
           <ul className="mt-1 flex flex-col gap-1">
-            {people.map((person) => (
+            {/* username is nullable in the type but NOT NULL in the DB once
+                onboarded — filtering is just a defensive guard against a
+                broken /null link, not an expected real-world case. */}
+            {people
+              .filter((person) => person.username)
+              .map((person) => (
               <li key={person.id}>
                 <Link
-                  href={`/author/${person.id}`}
+                  href={`/${person.username}`}
                   onClick={onNavigate}
                   className="flex items-center gap-3 rounded-xl px-2.5 py-2 transition-colors hover:bg-muted/70"
                 >
@@ -81,7 +86,7 @@ export function SearchResults({ query, results, isPending, onNavigate }: SearchR
             {posts.map((post) => (
               <li key={post.id}>
                 <Link
-                  href={`/post/${post.id}`}
+                  href={`/p/${post.id}`}
                   onClick={onNavigate}
                   className="flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm text-foreground transition-colors hover:bg-muted/70"
                 >

@@ -19,13 +19,13 @@ export function NoteItem({ post, showReplyTo = true }: NoteItemProps) {
     <div className="mt-1">
       {replyReference && target && (
         <Link
-          href={`/post/${replyReference.id}`}
+          href={`/p/${replyReference.id}`}
           className="mb-1 block truncate text-[13px] text-muted-foreground hover:underline"
         >
           En respuesta a <span className="font-medium">{target}</span>
         </Link>
       )}
-      <Link href={`/post/${post.id}`} className="block">
+      <Link href={`/p/${post.id}`} className="block">
         <p className="text-[15px] whitespace-pre-wrap text-foreground/90 [overflow-wrap:anywhere]">
           {post.content}
         </p>
