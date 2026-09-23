@@ -8,7 +8,7 @@ function makeNotification(overrides: Partial<Notification>): Notification {
     type: "follow",
     createdAt: "2026-09-21T00:00:00.000Z",
     readAt: null,
-    actor: { id: "22222222-2222-2222-2222-222222222222", displayName: "Ana" },
+    actor: { id: "22222222-2222-2222-2222-222222222222", displayName: "Ana", username: "ana" },
     postId: null,
     noteExcerpt: null,
     ...overrides,
@@ -20,7 +20,7 @@ describe("describeNotification", () => {
     const result = describeNotification(makeNotification({ type: "follow" }));
     expect(result).toEqual({
       actionText: "empezó a seguirte",
-      href: "/author/22222222-2222-2222-2222-222222222222",
+      href: "/ana",
     });
   });
 
@@ -30,7 +30,7 @@ describe("describeNotification", () => {
     );
     expect(result).toEqual({
       actionText: "le dio me gusta a tu post",
-      href: "/post/33333333-3333-3333-3333-333333333333",
+      href: "/p/33333333-3333-3333-3333-333333333333",
     });
   });
 
@@ -40,12 +40,22 @@ describe("describeNotification", () => {
     );
     expect(result).toEqual({
       actionText: "dejó una nota en tu post",
-      href: "/post/44444444-4444-4444-4444-444444444444",
+      href: "/p/44444444-4444-4444-4444-444444444444",
     });
   });
 
   it("falls back to /activity when the target id is missing", () => {
     const result = describeNotification(makeNotification({ type: "follow", actor: null }));
+    expect(result.href).toBe("/activity");
+  });
+
+  it("falls back to /activity when the actor has no username", () => {
+    const result = describeNotification(
+      makeNotification({
+        type: "follow",
+        actor: { id: "22222222-2222-2222-2222-222222222222", displayName: "Ana", username: null },
+      }),
+    );
     expect(result.href).toBe("/activity");
   });
 });

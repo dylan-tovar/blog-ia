@@ -226,7 +226,7 @@ describe("isEmailIdentifier", () => {
 describe("resolveAuthRedirect", () => {
   it("allows safe internal paths", () => {
     expect(resolveAuthRedirect("/explore")).toBe("/explore");
-    expect(resolveAuthRedirect("/post/123")).toBe("/post/123");
+    expect(resolveAuthRedirect("/p/123")).toBe("/p/123");
     expect(resolveAuthRedirect("/")).toBe("/");
   });
 
