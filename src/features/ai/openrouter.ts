@@ -93,6 +93,13 @@ async function post(body: Record<string, unknown>, signal: AbortSignal): Promise
 async function callModel(input: GenerateTextInput, responseJsonSchema?: unknown): Promise<string> {
   const { temperature, maxOutputTokens } = FEATURE_CONFIG[input.feature];
 
+  // OpenRouter todavía no tiene armado el formato multipart para imágenes (solo Gemini,
+  // por ahora): toMessages ya las descarta, acá solo se deja constancia de cuántas.
+  if (Array.isArray(input.contents)) {
+    const dropped = input.contents.filter((part) => part.type === "image").length;
+    if (dropped > 0) console.info("[ai]", { feature: input.feature, droppedImages: dropped });
+  }
+
   const response = await post(
     {
       messages: toMessages(input.system, input.contents),

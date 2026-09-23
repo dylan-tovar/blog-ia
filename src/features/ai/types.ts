@@ -3,10 +3,19 @@ import type { ArticleAnalysis, ChatStep, EditAction } from "./schemas";
 
 export type AiFeature = "outline" | "titles" | "tone" | "score" | "moderation" | "summary" | "chat";
 
+// Casi todas las features mandan texto plano. La moderación es la excepción: además
+// del texto puede llevar imágenes adjuntas (portada y las del cuerpo), en base64 listas
+// para el proveedor — quien las baja y codifica es la capa de features, no el adapter.
+export type AiContentPart =
+  | { type: "text"; text: string }
+  | { type: "image"; mimeType: string; data: string };
+
+export type AiContent = string | AiContentPart[];
+
 export type GenerateInput<T> = {
   feature: AiFeature;
   system: string;
-  contents: string;
+  contents: AiContent;
   schema: z.ZodType<T>;
   timeoutMs: number;
   signal?: AbortSignal;

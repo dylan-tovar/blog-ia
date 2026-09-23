@@ -1,4 +1,5 @@
-import type { ModerationDecision } from "@/features/ai/moderation";
+import type { ModerationDecision, ModerationImage } from "@/features/ai/moderation";
+import { extractImageUrls } from "@/features/posts/cover/cover";
 import type { PostStatus } from "@/lib/supabase/database.types";
 
 // A publish attempt claims the post by moving it to `pending_review`. Only draft/rejected
@@ -23,6 +24,22 @@ export function classifyPublishClaim(status: string, updatedAtIso: string, nowMs
 
 export function staleReviewCutoffIso(nowMs: number) {
   return new Date(nowMs - PENDING_REVIEW_STALE_MS).toISOString();
+}
+
+// La portada va primero (si existe), después las del cuerpo en el orden en que
+// aparecen; si la portada también está insertada en el cuerpo no se manda dos veces.
+export function buildModerationImages(
+  coverImageUrl: string | null,
+  content: string,
+  supabaseUrl: string,
+): ModerationImage[] {
+  const bodyUrls = extractImageUrls(content, supabaseUrl).filter((url) => url !== coverImageUrl);
+
+  const images: ModerationImage[] = [];
+  if (coverImageUrl) images.push({ url: coverImageUrl, label: "la portada" });
+  bodyUrls.forEach((url, index) => images.push({ url, label: `la imagen ${index + 1} del cuerpo` }));
+
+  return images;
 }
 
 export function buildFinalUpdate(decision: ModerationDecision, nowIso: string) {

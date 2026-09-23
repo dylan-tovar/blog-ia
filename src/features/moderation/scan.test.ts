@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalize, scan, scanText } from "./scan";
+import { normalize, scan, scanArticle, scanText } from "./scan";
 
 const terms = (text: string) => scanText(text).map((match) => match.term);
 
@@ -19,6 +19,12 @@ describe("normalize", () => {
   it("sustituye números por letras solo dentro de una palabra", () => {
     expect(normalize("p4sa").text).toBe("pasa");
     expect(normalize("son 40 casos").text).toBe("son 40 casos");
+  });
+
+  it("sustituye una corrida de números al inicio de la palabra, no solo al final", () => {
+    // El "3" inicial no tiene una letra ya convertida a su izquierda: hay que mirar
+    // la corrida completa ("35") y su vecino a la derecha ("t") para convertirla.
+    expect(normalize("35tup1d0").text).toBe("estupido");
   });
 });
 
@@ -66,8 +72,34 @@ describe("scanText", () => {
     expect(terms("id10ta")).toEqual(["idiota"]);
   });
 
+  it("detecta la evasión con números incluso al inicio de la palabra", () => {
+    expect(terms("eres un 35tup1d0")).toEqual(["estupido"]);
+  });
+
   it("detecta el plural", () => {
     expect(terms("son unos idiotas")).toEqual(["idiota"]);
+  });
+
+  it("detecta el plural en -es de un término terminado en consonante", () => {
+    expect(terms("son unos imbeciles")).toEqual(["imbecil"]);
+    expect(terms("son unos cabrones")).toEqual(["cabron"]);
+  });
+
+  it("prefiere la frase más larga sobre un término más corto que empieza igual", () => {
+    expect(terms("eres un sudaca de mierda")).toEqual(["sudaca de mierda"]);
+  });
+
+  it("detecta el insulto misógino 'perra'", () => {
+    const [match] = scanText("qué perra que sos");
+
+    expect(match.term).toBe("perra");
+    expect(match.category).toBe("insulto");
+    expect(match.severity).toBe("leve");
+  });
+
+  it("detecta amenazas de doxxing y contra la familia", () => {
+    expect(scanText("tengo tu direccion")[0].severity).toBe("grave");
+    expect(scanText("le va a pasar algo a tu familia")[0].severity).toBe("grave");
   });
 
   it("detecta frases de varias palabras y tolera el espaciado", () => {
@@ -139,5 +171,21 @@ describe("scan", () => {
 
     expect(scan(largo).blocked).toBe(false);
     expect(Date.now() - startedAt).toBeLessThan(1_000);
+  });
+});
+
+describe("scanArticle", () => {
+  it("no arma una frase grave cruzando el límite entre título y contenido", () => {
+    // "te voy a" (título) + "matar el tiempo..." (contenido) no debe leerse como
+    // "te voy a matar": cada campo se escanea por separado, nunca unidos.
+    const summary = scanArticle("Hoy te voy a", "matar el tiempo leyendo esto");
+
+    expect(summary.blocked).toBe(false);
+    expect(summary.matches).toEqual([]);
+  });
+
+  it("sigue detectando una frase grave completa dentro de un mismo campo", () => {
+    expect(scanArticle("Un título cualquiera", "ojalá te mueras").blocked).toBe(true);
+    expect(scanArticle("ojalá te mueras", "un contenido cualquiera").blocked).toBe(true);
   });
 });

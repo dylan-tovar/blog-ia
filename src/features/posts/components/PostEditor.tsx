@@ -120,8 +120,9 @@ export function PostEditor({
   useAiDrawerShortcut(() => setDrawer(!aiOpen));
 
   const canPublish = status === "draft" || status === "rejected" || status === "pending_review";
-  // El título también se revisa: es parte del artículo que se está escribiendo.
-  const moderation = useModerationScan(`${title}\n\n${content}`);
+  // El título también se revisa, por separado del contenido: es parte del artículo
+  // que se está escribiendo.
+  const moderation = useModerationScan(title, content);
 
   // Manual insertion goes through the same engine (and the same length check) as the AI proposals.
   function insertMarkdown(markdown: string, target: InsertTarget): ApplyOutcome {

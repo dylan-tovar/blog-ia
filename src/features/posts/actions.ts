@@ -20,9 +20,9 @@ import {
   savePostSchema,
   tagNameSchema,
 } from "@/features/posts/schemas";
-import { scan } from "@/features/moderation/scan";
+import { scanArticle } from "@/features/moderation/scan";
 import { getFeedPage, type FeedScope } from "@/features/posts/queries";
-import { buildFinalUpdate, classifyPublishClaim } from "@/features/posts/publish";
+import { buildFinalUpdate, buildModerationImages, classifyPublishClaim } from "@/features/posts/publish";
 
 export type CreateNoteState = { ok?: boolean; error?: string } | undefined;
 
@@ -324,7 +324,7 @@ export async function publishPost(postId: string): Promise<PublishPostResult> {
   try {
     const { data: post } = await supabase
       .from("posts")
-      .select("id, title, content, status, updated_at, post_tags(tags(name))")
+      .select("id, title, content, status, updated_at, cover_image_url, post_tags(tags(name))")
       .eq("id", postId)
       .eq("author_id", user.id)
       .eq("type", "article")
@@ -352,7 +352,7 @@ export async function publishPost(postId: string): Promise<PublishPostResult> {
     // llamada a la IA: es determinista, no cuesta cuota y evita dejar un reclamo
     // colgado. El editor ya deshabilita el botón, pero eso es interfaz: la regla
     // vale acá, como el resto de las que protegen la publicación (ADR 0012).
-    if (scan(`${post.title ?? ""}\n\n${post.content}`).blocked) {
+    if (scanArticle(post.title ?? "", post.content).blocked) {
       return { ok: false, error: PUBLISH_BLOCKED_BY_DICTIONARY };
     }
 
@@ -386,7 +386,9 @@ export async function publishPost(postId: string): Promise<PublishPostResult> {
         .eq("status", "pending_review");
 
     const outcome = await moderateArticle({
+      title: post.title ?? "",
       content: post.content,
+      images: buildModerationImages(post.cover_image_url, post.content, env.NEXT_PUBLIC_SUPABASE_URL),
       generate: generateStructured,
       rateLimit: () => checkAiRateLimit(user.id, "moderation"),
     });

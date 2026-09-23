@@ -1,6 +1,12 @@
-import { MAX_TAGS_PER_POST, MODERATION_TIMEOUT_MS } from "./constants";
-import { mapGeminiError, type AiError, type AiErrorKind } from "./errors";
-import { buildModerationPrompt } from "./prompts";
+import { IMAGE_ACCEPTED_TYPES } from "@/features/posts/images/image-limits";
+import {
+  MAX_MODERATION_IMAGES,
+  MAX_TAGS_PER_POST,
+  MODERATION_IMAGE_FETCH_TIMEOUT_MS,
+  MODERATION_TIMEOUT_MS,
+} from "./constants";
+import { AiError, mapGeminiError, type AiErrorKind } from "./errors";
+import { buildModerationPrompt, type LabeledImage } from "./prompts";
 import { rateLimitToAiError, type RateLimitResult } from "./rate-limit";
 import { moderationSchema, normalizeAiTags, truncateReason, type Moderation } from "./schemas";
 import type { GenerateStructured } from "./types";
@@ -58,13 +64,57 @@ export function decideModeration(outcome: ModerationOutcome, existingTags: strin
   return { status: "published", tags: merged.filter((tag) => !existing.has(tag)) };
 }
 
+// Una URL de imagen para moderar, ya etiquetada por quien arma la lista (publishPost
+// sabe cuál es la portada y cuáles son del cuerpo; acá no hace falta adivinarlo).
+export type ModerationImage = { url: string; label: string };
+
+const ACCEPTED_MIME_TYPES: readonly string[] = IMAGE_ACCEPTED_TYPES;
+
+// Baja y codifica una imagen para mandarla al modelo. Un tipo de contenido no permitido
+// se descarta sin abortar las demás (no es un error, es una imagen que no corresponde
+// revisar); cualquier otra falla (red, timeout, status no ok) se propaga como AiError
+// "unavailable", el mismo camino que ya existe para una caída del proveedor.
+async function fetchModerationImage(image: ModerationImage, signal?: AbortSignal): Promise<LabeledImage | null> {
+  const timeout = AbortSignal.timeout(MODERATION_IMAGE_FETCH_TIMEOUT_MS);
+  const fetchSignal = signal ? AbortSignal.any([signal, timeout]) : timeout;
+
+  let response: Response;
+  try {
+    response = await fetch(image.url, { signal: fetchSignal });
+  } catch {
+    throw new AiError("unavailable");
+  }
+  if (!response.ok) {
+    throw new AiError("unavailable");
+  }
+
+  const mimeType = response.headers.get("content-type")?.split(";")[0]?.trim() ?? "";
+  if (!ACCEPTED_MIME_TYPES.includes(mimeType)) {
+    console.info("[ai]", { feature: "moderation", skippedImage: image.label, reason: "unsupported_mime" });
+    return null;
+  }
+
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  return { label: image.label, part: { type: "image", mimeType, data: Buffer.from(bytes).toString("base64") } };
+}
+
+async function fetchModerationImages(images: ModerationImage[], signal?: AbortSignal): Promise<LabeledImage[]> {
+  const bounded = images.slice(0, MAX_MODERATION_IMAGES);
+  const fetched = await Promise.all(bounded.map((image) => fetchModerationImage(image, signal)));
+  return fetched.filter((image): image is LabeledImage => image !== null);
+}
+
 export async function moderateArticle({
+  title,
   content,
+  images = [],
   generate,
   rateLimit,
   signal,
 }: {
+  title: string;
   content: string;
+  images?: ModerationImage[];
   generate: GenerateStructured;
   rateLimit: () => Promise<RateLimitResult>;
   signal?: AbortSignal;
@@ -75,7 +125,8 @@ export async function moderateArticle({
   }
 
   try {
-    const { systemInstruction, contents } = buildModerationPrompt(content);
+    const labeledImages = await fetchModerationImages(images, signal);
+    const { systemInstruction, contents } = buildModerationPrompt(title, content, labeledImages);
     const result = await generate({
       feature: "moderation",
       system: systemInstruction,
