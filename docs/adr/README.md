@@ -45,13 +45,15 @@ Un ADR registra una decisión de arquitectura: qué se decidió, por qué y qué
 | [0024](0024-perfil-en-onboarding.md) | El perfil se crea en `/onboarding`, no al registrarse | Aceptada; reemplazada parcialmente por 0025 |
 | [0025](0025-intereses-en-onboarding.md) | El onboarding tiene un segundo paso obligatorio para elegir intereses | Aceptada |
 | [0026](0026-feed-de-seguidos-con-recomendados.md) | El inicio muestra a quienes seguís, con recomendados intercalados | Aceptada |
+| [0027](0027-notificaciones-por-triggers-sql.md) | La tabla `notifications` se alimenta con triggers SQL (follow, like, nota), no desde la app | Aceptada |
+| [0028](0028-emails-transaccionales-resend.md) | Emails transaccionales con Resend: confirmación, recuperación, bienvenida y nuevo artículo de seguidos | Aceptada |
 | [0029](0029-respuestas-a-respuestas.md) | Se puede responder a una respuesta, con hilo plano y no árbol real | Aceptada |
+| [0030](0030-descubrimiento-busqueda-sugeridos-temas.md) | 3ra columna de descubrimiento: búsqueda ILIKE, gente sugerida y barra de temas editable | Aceptada; actualiza parcialmente 0020 |
 | [0031](0031-proveedor-de-ia-intercambiable-openrouter.md) | El proveedor de IA se elige por variable de entorno: Gemini u OpenRouter, detrás del mismo puerto | Aceptada |
 | [0032](0032-diccionario-de-moderacion-en-el-editor.md) | Diccionario determinista de odio, amenazas e insultos mientras se escribe un artículo; lo grave impide publicar | Aceptada |
 | [0033](0033-claude-como-proveedor-por-defecto.md) | Claude es el proveedor de IA por defecto, con el SDK oficial de Anthropic | Aceptada; cambia dos decisiones del 0031 |
 | [0034](0034-moderacion-de-imagenes.md) | La IA también revisa la portada y las imágenes del artículo al publicar, no solo el texto | Aceptada |
-
-> Faltan en esta tabla los ADR [0027](0027-notificaciones-por-triggers-sql.md), [0028](0028-emails-transaccionales-resend.md) y [0030](0030-descubrimiento-busqueda-sugeridos-temas.md), que existen como archivo pero no se agregaron al índice.
+| [0035](0035-renombrado-de-rutas-post-y-author.md) | `/post/[id]` pasa a `/p/[id]` y `/author/[id]` pasa a `/[username]`, con redirects permanentes | Aceptada |
 
 ## Cómo leerlos
 
@@ -65,3 +67,6 @@ Un ADR registra una decisión de arquitectura: qué se decidió, por qué y qué
 | Cómo se trabaja con la base y las pruebas | 0016, 0018 |
 | Por qué la interfaz es así | 0005, 0008, 0020, 0021, 0026 |
 | Qué muestra el inicio y cómo se mezclan seguidos y recomendados | 0004, 0021, 0026 |
+| Cómo llegan las notificaciones y los emails | 0027, 0028 |
+| Cómo funciona descubrir gente, buscar y responder hilos | 0029, 0030 |
+| Por qué cambiaron las URLs de perfil y de post | 0035 |

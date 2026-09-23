@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | :--- | :--- |
-| Estado | **Por implementar.** Documento de planificación; nada de lo descrito acá existe todavía en el código |
+| Estado | **Implementado.** Auditoría 2026-09-23: `src/lib/email/` (cliente, envío, markdown-a-HTML, plantillas de bienvenida y nuevo artículo), `0012_email_preferences.sql` y las tres rutas de correo (confirmación/recuperación, bienvenida, nuevo artículo) están en el código; ver el estado de cada paquete |
 | Depende de | [PRD-1](PRD-1-auth.md) (auth y signup), [PRD-2.4](PRD-2.4-publish-dialog-tags.md) / [PRD-5.3](PRD-5.3-publish-moderation.md) (publicar y moderación), [PRD-3.1](PRD-3.1-follow-system.md) (seguir) |
 | Migraciones | `0012_email_preferences.sql` (nueva: columnas de `profiles` y función `follower_emails_for_author`) |
 | ADRs relacionados | [0028](../adr/0028-emails-transaccionales-resend.md), [0027](../adr/0027-notificaciones-por-triggers-sql.md) (precedente de "sin infra nueva"), [0007](../adr/0007-login-por-username-con-secret-key.md) (precedente de leer `auth.users` con `SECURITY DEFINER`) |

@@ -1,12 +1,12 @@
 # Puesta en marcha
 
-Para levantar el proyecto hace falta un proyecto de Supabase con las diez migraciones aplicadas y tres variables de entorno. Las funciones de IA piden además una clave de Gemini; sin ella la app funciona y solo la IA responde "no configurada".
+Para levantar el proyecto hace falta un proyecto de Supabase con las catorce migraciones aplicadas y tres variables de entorno. Las funciones de IA piden además la clave del proveedor activo (Claude por defecto); sin ella la app funciona y solo la IA responde "no configurada".
 
 ## Camino rápido
 
 1. Instalar dependencias: `pnpm install`
 2. Crear `.env.local` en la raíz con las variables de [la tabla](#variables-de-entorno).
-3. Aplicar las migraciones de `supabase/migrations/` en orden (`0001` a `0010`) en el SQL Editor de Supabase ([procedimiento](#migraciones)). (ESTO SOLO ES LA PRIMERA VEZ, YA ESTAN APLICADAS EN EL PROYECTO DE SUPABASE)
+3. Aplicar las migraciones de `supabase/migrations/` en orden (`0001` a `0014`) en el SQL Editor de Supabase ([procedimiento](#migraciones)). (ESTO SOLO ES LA PRIMERA VEZ, YA ESTAN APLICADAS EN EL PROYECTO DE SUPABASE)
 4. Opcional, para ver el feed con contenido: `pnpm seed:dev`. (YA TIENE CONTENIDO, NO ES NECESARIO EN NUESTRO CASO)
 5. Levantar el servidor: `pnpm dev` y abrir <http://localhost:3000/register>. El registro pide email y una contraseña fuerte (8+ caracteres con minúscula, mayúscula, número y símbolo); después `/onboarding` pide en el paso 1 nombre y username (crea el perfil, [ADR 0024](../adr/0024-perfil-en-onboarding.md)) y en el paso 2 elegir al menos 3 temas de interés, tomados de los tags de artículos publicados ([ADR 0025](../adr/0025-intereses-en-onboarding.md)). Con una base sin artículos publicados el mínimo se relaja y el paso 2 se puede completar sin elegir.
 
@@ -71,12 +71,16 @@ Los archivos de `supabase/migrations/` se aplican a mano, en orden, en el SQL Ed
 | 8 | `0008_post_images.sql` | Bucket público `post-images` de Storage y sus políticas (INSERT, SELECT y DELETE) por carpeta de usuario ([ADR 0022](../adr/0022-imagenes-en-supabase-storage.md)) | Sí |
 | 9 | `0009_post_cover.sql` | Portada de artículos: columnas `cover_*` de `posts`, restricciones y privilegio de UPDATE ([ADR 0023](../adr/0023-portada-de-articulos.md)) | Sí |
 | 10 | `0010_onboarding_interests.sql` | `profiles.onboarded_at` (los perfiles existentes se marcan como terminados), `user_interests` con RLS de fila propia y `popular_tags` ([ADR 0025](../adr/0025-intereses-en-onboarding.md)) | Sí: el backfill corre solo la primera vez, así que repetirla no marca como terminado a quien esté a mitad del onboarding |
+| 11 | `0011_notifications.sql` | Tabla `notifications` y los cinco triggers que la alimentan (follow, unfollow, like, unlike, nota) ([ADR 0027](../adr/0027-notificaciones-por-triggers-sql.md)) | Sí |
+| 12 | `0012_email_preferences.sql` | `profiles.notify_new_article_email`, `profiles.unsubscribe_token` y `follower_emails_for_author` ([ADR 0028](../adr/0028-emails-transaccionales-resend.md)) | Sí |
+| 13 | `0013_note_reply_to.sql` | `posts.reply_to_post_id` y `can_reply_to_note`, para responder a una respuesta ([ADR 0029](../adr/0029-respuestas-a-respuestas.md)) | Sí |
+| 14 | `0014_discovery_search.sql` | Índices `lower(...)` para la búsqueda y `popular_authors`, el pool de sugeridos para seguir ([ADR 0030](../adr/0030-descubrimiento-busqueda-sugeridos-temas.md)) | Sí |
 
 > **`0005` no se repite sola.** Vuelve a crear la política de INSERT de `posts` sin la condición `type = 'note' or status = 'draft'` y deja el UPDATE limitado a `type = 'article'`. Esas dos políticas las redefinen después `0007` y `0006`. Si se corre `0005` sola sobre un proyecto ya migrado, con los privilegios por columna de `0007` todavía vigentes (`status` y `published_at` insertables), un autor podría insertar un artículo ya publicado sin moderación y `updateNote` dejaría de funcionar. Si hay que repetir `0005`, se repite la cadena completa en orden: `0005`, `0006`, `0007`.
 
 Reglas prácticas:
 
-- **Proyecto nuevo:** correr las diez en orden.
+- **Proyecto nuevo:** correr las catorce en orden.
 - **Aplicar `0010` ANTES de desplegar el código del paso de intereses** ([ADR 0016](../adr/0016-migraciones-sql-manuales.md), [ADR 0025](../adr/0025-intereses-en-onboarding.md)). Sin ella, el proxy falla abierto pero `/onboarding` queda mostrando el paso 1 y el paso 2 no se puede completar.
 - **Proyecto existente:** correr solo las que falten, en orden. Las de la fila "No" fallan si se repiten (por ejemplo, una política o una restricción que ya existe).
 - **Si `0007` cambió** desde la última vez que se aplicó (el archivo se edita en su lugar), volver a correrla es seguro siempre que `0005` y `0006` ya estén aplicadas: usa `drop ... if exists` y `create or replace`. Nunca repetir `0005` o `0006` por separado (ver el aviso de arriba).
@@ -102,7 +106,15 @@ select
             and column_name = 'cover_image_url')                                     as m0009,
   exists (select 1 from information_schema.columns
           where table_schema = 'public' and table_name = 'profiles'
-            and column_name = 'onboarded_at')                                        as m0010;
+            and column_name = 'onboarded_at')                                        as m0010,
+  to_regclass('public.notifications') is not null                                    as m0011,
+  exists (select 1 from information_schema.columns
+          where table_schema = 'public' and table_name = 'profiles'
+            and column_name = 'notify_new_article_email')                            as m0012,
+  exists (select 1 from information_schema.columns
+          where table_schema = 'public' and table_name = 'posts'
+            and column_name = 'reply_to_post_id')                                    as m0013,
+  exists (select 1 from pg_proc where proname = 'popular_authors')                    as m0014;
 ```
 
 - **Verificar después de `0007`:** con el seed cargado, `pnpm verify:writes` confirma que el navegador ya no puede escribir `status` ni las columnas de IA (ver el [desfase de email conocido](testing.md#problemas-conocidos) entre este script y el seed).

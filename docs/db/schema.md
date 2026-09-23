@@ -14,9 +14,12 @@ Derivado de `supabase/migrations/0001_profiles.sql` a `0010_onboarding_interests
 | Bucket `post-images` de Storage y sus políticas | `0008_post_images.sql` | [ADR 0022](../adr/0022-imagenes-en-supabase-storage.md) |
 | Portada de artículos (`posts.cover_image_url`, `cover_text`, `cover_color`) | `0009_post_cover.sql` | [ADR 0023](../adr/0023-portada-de-articulos.md) |
 | `profiles.onboarded_at` (con backfill), tabla `user_interests` y función `popular_tags` | `0010_onboarding_interests.sql` | [ADR 0025](../adr/0025-intereses-en-onboarding.md) |
+| `notifications` (follow, like, nota) y sus triggers | `0011_notifications.sql` | [ADR 0027](../adr/0027-notificaciones-por-triggers-sql.md) |
 | `profiles.notify_new_article_email`, `profiles.unsubscribe_token` y función `follower_emails_for_author` | `0012_email_preferences.sql` | [PRD-11.3](../prds/PRD-11.3-nuevo-articulo-seguidos.md), [ADR 0028](../adr/0028-emails-transaccionales-resend.md) |
+| `posts.reply_to_post_id` y función `can_reply_to_note` | `0013_note_reply_to.sql` | [ADR 0029](../adr/0029-respuestas-a-respuestas.md) |
+| Índices `lower(...)` para búsqueda y función `popular_authors` | `0014_discovery_search.sql` | [ADR 0030](../adr/0030-descubrimiento-busqueda-sugeridos-temas.md) |
 
-`0001` a `0004` no se pueden repetir. `0005`, `0006` y `0007` solo se repiten como cadena completa y en orden, nunca `0005` sola: recrea las políticas de INSERT y UPDATE de `posts` en su versión original ([db/README](README.md)). `0008`, `0009` y `0010` se pueden repetir; el backfill de `onboarded_at` de `0010` corre solo la primera vez.
+`0001` a `0004` no se pueden repetir. `0005`, `0006` y `0007` solo se repiten como cadena completa y en orden, nunca `0005` sola: recrea las políticas de INSERT y UPDATE de `posts` en su versión original ([db/README](README.md)). `0008` a `0014` se pueden repetir; el backfill de `onboarded_at` de `0010` corre solo la primera vez.
 
 ## Relaciones
 
@@ -34,6 +37,9 @@ erDiagram
   POSTS ||--o{ LIKES : "post_id (cascade)"
   PROFILES ||--o{ USER_INTERESTS : "user_id (cascade)"
   TAGS ||--o{ USER_INTERESTS : "tag_id (cascade)"
+  PROFILES ||--o{ NOTIFICATIONS : "recipient_id / actor_id (cascade)"
+  POSTS ||--o{ NOTIFICATIONS : "post_id / note_id (cascade)"
+  POSTS ||--o{ POSTS : "reply_to_post_id (set null)"
 
   PROFILES {
     uuid id PK
@@ -41,6 +47,8 @@ erDiagram
     text username UK
     text avatar_url
     timestamptz onboarded_at "null: falta elegir intereses"
+    boolean notify_new_article_email
+    uuid unsubscribe_token UK
   }
   USER_INTERESTS {
     uuid user_id PK
@@ -52,6 +60,7 @@ erDiagram
     uuid author_id FK
     text type "note o article"
     uuid parent_post_id FK
+    uuid reply_to_post_id FK "solo notas: a que nota responde"
     text title
     text content
     text status "draft, pending_review, published, rejected"
@@ -65,6 +74,16 @@ erDiagram
     timestamptz updated_at "ultimo cambio de contenido"
     timestamptz published_at
   }
+  NOTIFICATIONS {
+    uuid id PK
+    uuid recipient_id FK
+    uuid actor_id FK
+    text type "follow, like o note"
+    uuid post_id FK "null en follow"
+    uuid note_id FK "solo en note"
+    timestamptz read_at
+    timestamptz created_at
+  }
   AI_RATE_LIMITS {
     text key PK
     timestamptz window_start PK
@@ -73,9 +92,10 @@ erDiagram
 ```
 
 - `post_tags` resuelve la relación muchos a muchos entre `posts` y `tags`.
-- Borrar un usuario de `auth.users` borra su perfil, sus posts y las filas de `post_tags`, `likes`, `subscriptions`, `reading_history` y `user_interests` en cascada.
+- Borrar un usuario de `auth.users` borra su perfil, sus posts y las filas de `post_tags`, `likes`, `subscriptions`, `reading_history`, `user_interests` y `notifications` (como `recipient_id` o `actor_id`) en cascada.
 - Borrar un tag borra sus filas de `post_tags` y de `user_interests`, no los posts.
-- Borrar un post borra sus `likes` y su `reading_history` y deja las notas que colgaban de él sin padre (`set null`).
+- Borrar un post borra sus `likes`, su `reading_history` y sus `notifications` (`post_id`/`note_id`), y deja las notas que colgaban de él sin padre (`set null` en `parent_post_id`) o sin la nota a la que respondían (`set null` en `reply_to_post_id`).
+- `notifications` no la escribe la app: solo los triggers `security definer` de `0011_notifications.sql`, disparados por `insert`/`delete` en `subscriptions` y `likes` e `insert` en `posts` ([ADR 0027](../adr/0027-notificaciones-por-triggers-sql.md)).
 - `ai_rate_limits` no tiene relaciones: es un contador por clave y minuto que solo toca el servidor.
 
 ## Matriz de políticas RLS
@@ -92,6 +112,7 @@ erDiagram
 | `reading_history` | Solo el propio usuario | Propio, sobre posts publicados | Propio, sobre posts publicados | — |
 | `likes` | Todos | Propio, sobre posts publicados | — | Los propios |
 | `user_interests` | Solo el propio usuario | Como uno mismo | — | Las propias |
+| `notifications` | Solo el propio destinatario | — (solo triggers `security definer`) | Solo el propio destinatario (`read_at`) | — |
 | `ai_rate_limits` | — (RLS sin políticas) | — | — | — |
 
 Los privilegios de columna sobre `posts` (`0007`) se suman a estas políticas; ver la sección de `posts` y [ADR 0012](../adr/0012-integridad-de-escritura-de-posts.md). El servidor (`service_role`, la secret key) salta RLS: escribe `status`, `published_at`, `rejection_reason`, las columnas `ai_*`, `updated_at` al reclamar un post, y llama a las funciones reservadas.
@@ -105,11 +126,16 @@ Los privilegios de columna sobre `posts` (`0007`) se suman a estas políticas; v
 | `posts_invalidate_ai_cache()` | `0007` | trigger `before update`, `security invoker` | — | Invalidar la caché de IA al cambiar `content` |
 | `ai_rate_limit_hit(p_user_key, p_user_limit, p_global_limit, p_global_key default 'global')` | `0007` | `security definer`, `search_path` vacío | Solo `service_role` | Límite de peticiones a la IA por minuto |
 | `popular_tags(p_limit int default 30)` | `0010` | `security invoker`, `stable`, `search_path` vacío | `authenticated` (revocada a `public` y `anon`) | Tags de artículos `published`, con su cantidad de usos, ordenados por usos y luego por nombre; `p_limit` negativo se trata como 0. Es la oferta del paso 2 del onboarding ([ADR 0025](../adr/0025-intereses-en-onboarding.md)). Al ser `invoker`, las políticas de `posts` y `post_tags` siguen aplicando |
+| `notify_on_follow()`, `notify_on_unfollow()` | `0011` | trigger `after insert`/`after delete` sobre `subscriptions`, `security definer`, `search_path` vacío | — | Crea o borra la notificación `follow` (mismo patrón que `posts_invalidate_ai_cache` de `0007`: `notifications` no tiene política de insert, solo estas funciones pueden escribirla) ([ADR 0027](../adr/0027-notificaciones-por-triggers-sql.md)) |
+| `notify_on_like()`, `notify_on_unlike()` | `0011` | trigger `after insert`/`after delete` sobre `likes`, `security definer`, `search_path` vacío | — | Crea o borra la notificación `like` al autor del post ([ADR 0027](../adr/0027-notificaciones-por-triggers-sql.md)) |
+| `notify_on_note()` | `0011` | trigger `after insert` sobre `posts` (`when (type = 'note' and parent_post_id is not null)`), `security definer`, `search_path` vacío | — | Crea la notificación `note` al autor del post padre; no hace falta un trigger de `delete` porque borrar la nota borra la notificación por cascade ([ADR 0027](../adr/0027-notificaciones-por-triggers-sql.md)) |
 | `follower_emails_for_author(p_author_id uuid)` | `0012` | `security definer`, `stable`, `search_path` vacío | Solo `service_role` | Email y token de baja de cada seguidor de un autor con `notify_new_article_email = true`, para el correo de nuevo artículo ([PRD-11.3](../prds/PRD-11.3-nuevo-articulo-seguidos.md), [ADR 0028](../adr/0028-emails-transaccionales-resend.md)) |
+| `can_reply_to_note(p_reply_to_id uuid, p_parent_id uuid)` | `0013` | `security definer`, `stable`, `search_path` vacío | `authenticated` (revocada a `public` y `anon`) | Comprueba que una respuesta apunta a otra nota `published` del mismo hilo (mismo `parent_post_id`), nunca de otra raíz; mismo motivo que `can_attach_note` (una política de `posts` que consulta `posts` falla con `42P17`) ([ADR 0029](../adr/0029-respuestas-a-respuestas.md)) |
+| `popular_authors(p_exclude uuid[] default '{}', p_limit int default 50)` | `0014` | `security invoker`, `stable`, `search_path` vacío | `authenticated` (revocada a `public` y `anon`) | Autores más seguidos, excluyendo al viewer y a quien ya sigue; pool de "sugeridos para seguir" ([ADR 0030](../adr/0030-descubrimiento-busqueda-sugeridos-temas.md)) |
 
 ## Tipos de TypeScript
 
-`src/lib/supabase/database.types.ts` **se mantiene a mano** ([ADR 0016](../adr/0016-migraciones-sql-manuales.md)): declara `profiles`, `posts`, `tags`, `post_tags`, `subscriptions`, `reading_history`, `likes` y `user_interests`, y las funciones `ai_rate_limit_hit`, `login_email_for_username`, `popular_tags` y `follower_emails_for_author`. **No** incluye la tabla `ai_rate_limits` ni la función `can_attach_note` (ninguna se usa desde un cliente con tipos). Al cambiar una columna en SQL hay que actualizar este archivo a mano.
+`src/lib/supabase/database.types.ts` **se mantiene a mano** ([ADR 0016](../adr/0016-migraciones-sql-manuales.md)): declara `profiles`, `posts` (incluida `reply_to_post_id`), `tags`, `post_tags`, `subscriptions`, `reading_history`, `likes`, `user_interests` y `notifications`, y las funciones `ai_rate_limit_hit`, `login_email_for_username`, `popular_tags`, `follower_emails_for_author` y `popular_authors`. **No** incluye la tabla `ai_rate_limits` ni las funciones `can_attach_note` y `can_reply_to_note` (ninguna se usa desde un cliente con tipos). Al cambiar una columna en SQL hay que actualizar este archivo a mano.
 
 ## `profiles`
 
@@ -144,6 +170,7 @@ La fila la inserta la Server Action `completeOnboarding` cuando la persona compl
 | `author_id` | `uuid` | No | | FK a `profiles(id)` con `on delete cascade` |
 | `type` | `text` | No | `'article'` | `check` en `note`, `article` (`0005`). Se fija al insertar y no cambia: el cliente no tiene privilegio de UPDATE sobre esta columna (`0007`) |
 | `parent_post_id` | `uuid` | Sí | | FK a `posts(id)` con `on delete set null` (`0005`). Solo una nota puede tenerlo: es la nota dejada sobre otro post. Si el padre se borra, la nota sobrevive sin referencia |
+| `reply_to_post_id` | `uuid` | Sí | | FK a `posts(id)` con `on delete set null` (`0013`). Solo una nota puede tenerlo: a qué nota concreta responde (visualización de "En respuesta a X"), distinto de `parent_post_id` que siempre apunta a la raíz del hilo ([ADR 0029](../adr/0029-respuestas-a-respuestas.md)) |
 | `title` | `text` | Sí | | Solo aplica a artículos; una nota siempre lo tiene en `null` |
 | `content` | `text` | No | `''` | |
 | `status` | `text` | No | `'draft'` | `check` en `draft`, `pending_review`, `published`, `rejected` |
@@ -161,13 +188,13 @@ La fila la inserta la Server Action `completeOnboarding` cuando la persona compl
 | Política | Operación | Regla |
 | :--- | :--- | :--- |
 | Published posts are public, drafts only for the owner | SELECT | `status = 'published' or author_id = auth.uid()` |
-| Users can create their own posts | INSERT | `author_id = auth.uid()`; un artículo solo nace `draft` (`0007`); y, si tiene `parent_post_id`, la función `can_attach_note` confirma que el padre está `published` y no es a su vez una respuesta (sin hilos anidados) |
+| Users can create their own posts | INSERT | `author_id = auth.uid()`; un artículo solo nace `draft` (`0007`); si tiene `parent_post_id`, la función `can_attach_note` confirma que el padre está `published` y no es a su vez una respuesta (sin hilos anidados); si además tiene `reply_to_post_id`, `can_reply_to_note` confirma que apunta a otra nota `published` del mismo hilo (`0013`, [ADR 0029](../adr/0029-respuestas-a-respuestas.md)) |
 | Users can update their own posts | UPDATE | `author_id = auth.uid()` (using y with check). `0006` quitó la restricción a artículos para poder editar notas; lo que el cliente puede tocar lo limitan los privilegios por columna de abajo |
 | Users can delete their own posts | DELETE | `author_id = auth.uid()` |
 
 Ciclo de estados de un artículo (PRD-5): `draft` a `pending_review` (mientras se modera; el reclamo es un compare-and-set sobre `status` y `updated_at`) y de ahí a `published` o `rejected`; un `rejected` se puede volver a publicar, y un `pending_review` que quedó colgado también una vez pasados 2 minutos. Si el proveedor de IA falla, se publica igual sin tags automáticos; si se alcanza el límite de peticiones, **no** se publica: se libera el reclamo y el autor reintenta. Una nota nace `published`. Las transiciones las hace solo el servidor (`publishPost`, con `service_role`).
 
-Privilegios por columna (`0007`, [ADR 0012](../adr/0012-integridad-de-escritura-de-posts.md)): `anon` y `authenticated` no tienen `insert` ni `update` a nivel de tabla. El cliente solo puede insertar `author_id, type, title, content, status, published_at, parent_post_id` y actualizar `title, content`. Desde `0009` también puede actualizar `cover_image_url, cover_text, cover_color` (la portada se elige al publicar, nunca al crear el borrador). `status`, `published_at` (al publicar), `rejection_reason` y las columnas de IA solo las escribe el servidor. `0006` había dejado que cualquier autor pudiera escribir `status` desde el navegador.
+Privilegios por columna (`0007`, [ADR 0012](../adr/0012-integridad-de-escritura-de-posts.md)): `anon` y `authenticated` no tienen `insert` ni `update` a nivel de tabla. El cliente solo puede insertar `author_id, type, title, content, status, published_at, parent_post_id` y actualizar `title, content`. Desde `0009` también puede actualizar `cover_image_url, cover_text, cover_color` (la portada se elige al publicar, nunca al crear el borrador). Desde `0013` también puede insertar `reply_to_post_id`: sin ese grant, `createNote` fallaría al escribir esa columna aunque la política de insert ya lo permitiera. `status`, `published_at` (al publicar), `rejection_reason` y las columnas de IA solo las escribe el servidor. `0006` había dejado que cualquier autor pudiera escribir `status` desde el navegador.
 
 Trigger `posts_invalidate_ai_cache` (`before update`, `security invoker`): si cambia `content`, pone en `NULL` `ai_generated_summary`, `ai_generated_titles` y `content_score` y sube `updated_at`. El servidor guarda cada resultado de IA con compare-and-set sobre el `updated_at` que leyó.
 
@@ -179,6 +206,8 @@ Restricciones del modelo de tipos (`0005`), validadas en la base y no solo en la
 | `posts_note_shape_check` | Una nota está siempre `published`, con `published_at` y sin `title` |
 | `posts_note_length_check` | Una nota tiene entre 1 y 500 caracteres. Está `NOT VALID`: no revisa las filas previas a la migración (las notas convertidas pueden ser más largas) pero sí toda fila nueva o modificada |
 | `posts_article_no_parent_check` | Un artículo no tiene `parent_post_id` |
+| `posts_article_no_reply_to_check` (`0013`) | Un artículo no tiene `reply_to_post_id` |
+| `posts_reply_to_not_self_check` (`0013`) | `reply_to_post_id` no puede ser el propio `id` |
 
 La migración `0005` convierte los posts existentes (datos de prueba) en notas sin título y `published`, y borra los borradores fantasma vacíos. Solo corre esa conversión la primera vez, cuando la columna `type` todavía no existe. Los tags y el ciclo `draft`/`pending_review` aplican solo a artículos.
 
@@ -290,6 +319,38 @@ PK compuesta `(user_id, tag_id)`: no se repite un interés. El máximo (20) y el
 
 No hay política de UPDATE: la fila es solo (usuario, tag); cambiar una elección es borrar e insertar. La FK a `tags` se valida sin RLS, así que un `tag_id` cualquiera es válido para la base; la app comprueba que sea uno de los ofrecidos por `popular_tags` antes de guardar.
 
+## `notifications`
+
+Feed de actividad de `/activity` (follow, like, nota sobre un post propio), alimentado únicamente por triggers `security definer`, nunca por la app directamente (`0011`, [ADR 0027](../adr/0027-notificaciones-por-triggers-sql.md)).
+
+| Columna | Tipo | Nulo | Default | Notas |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | `uuid` | No | `gen_random_uuid()` | PK |
+| `recipient_id` | `uuid` | No | | FK a `profiles(id)` con `on delete cascade`. Quien recibe la notificación |
+| `actor_id` | `uuid` | No | | FK a `profiles(id)` con `on delete cascade`. Quien siguió, dio like o dejó la nota |
+| `type` | `text` | No | | `check` en `follow`, `like`, `note` |
+| `post_id` | `uuid` | Sí | | FK a `posts(id)` con `on delete cascade`. En `like`: el post likeado. En `note`: el post padre (para navegar al hilo). En `follow`: `null` |
+| `note_id` | `uuid` | Sí | | FK a `posts(id)` con `on delete cascade`. Solo en `note`: la nota en sí; borrarla borra esta fila por el cascade |
+| `read_at` | `timestamptz` | Sí | | `null` = no leída. La marca `markAllNotificationsRead` al visitar `/activity` |
+| `created_at` | `timestamptz` | No | `now()` | |
+
+Índices: `(recipient_id, created_at desc)` para el listado paginado, y `(recipient_id) where read_at is null` para el conteo de no leídas (badge).
+
+| Política | Operación | Regla |
+| :--- | :--- | :--- |
+| notifications_select_own | SELECT | `auth.uid() = recipient_id` |
+| notifications_update_own | UPDATE | `auth.uid() = recipient_id` (using y with check) |
+
+No hay política de INSERT ni de DELETE: RLS es la única autorización sobre la tabla, y las únicas escrituras posibles son las de los triggers `security definer` de abajo (mismo patrón que `posts_invalidate_ai_cache` en `0007_ai_features.sql`).
+
+| Trigger | Sobre | Cuándo | Función |
+| :--- | :--- | :--- | :--- |
+| `subscriptions_notify_follow` | `subscriptions` | `after insert` | `notify_on_follow()`: inserta `follow` si `follower_id <> author_id` |
+| `subscriptions_notify_unfollow` | `subscriptions` | `after delete` | `notify_on_unfollow()`: borra la notificación `follow` correspondiente, para que no quede stale un "te sigue" después de dejar de seguir |
+| `likes_notify_like` | `likes` | `after insert` | `notify_on_like()`: inserta `like` al autor del post, si no es el propio |
+| `likes_notify_unlike` | `likes` | `after delete` | `notify_on_unlike()`: borra la notificación `like` correspondiente |
+| `posts_notify_note` | `posts` | `after insert`, `when (type = 'note' and parent_post_id is not null)` | `notify_on_note()`: inserta `note` al autor del post padre, si no es el propio |
+
 ## `ai_rate_limits`
 
 Contadores del límite de peticiones a la IA (`0007`). Ventana fija de un minuto. Las claves son `user:<id>` y `global` para las funciones de asistencia, y `moderation:user:<id>` y `moderation:global` para la moderación al publicar (carril separado). `ai_rate_limit_hit(p_user_key, p_user_limit, p_global_limit, p_global_key)` solo la ejecuta `service_role`.
@@ -317,5 +378,8 @@ Bucket público (`0008`) para las imágenes de los artículos, con límite de 2 
 - Índices de `0003_feed.sql`: `posts (published_at desc) where status = 'published'` (orden del feed), `post_tags (tag_id)` (filtro por tag; la PK de `post_tags` empieza por `post_id`), `subscriptions (author_id)` y `reading_history (user_id)`.
 - Índices de `0005_post_types_and_likes.sql`: `posts (parent_post_id) where parent_post_id is not null` (notas de un post) y `likes (post_id)` (conteo de likes).
 - Índice de `0010_onboarding_interests.sql`: `user_interests (tag_id)` (la PK empieza por `user_id`; este cubre las búsquedas por tag).
+- Índices de `0011_notifications.sql`: `notifications (recipient_id, created_at desc)` (listado paginado) y `notifications (recipient_id) where read_at is null` (badge de no leídas).
+- Índice de `0013_note_reply_to.sql`: `posts (reply_to_post_id) where reply_to_post_id is not null`.
+- Índices de `0014_discovery_search.sql` (todos `btree` sobre `lower(...)`, para que la búsqueda ILIKE use índice en vez de un scan completo): `profiles (lower(username))`, `profiles (lower(display_name))`, `posts (lower(title)) where status = 'published' and type = 'article'` y `tags (lower(name))`.
 - Además, los índices implícitos de las claves primarias y de los `unique`.
-- Un solo trigger: `posts_invalidate_ai_cache` (`0007`, ver `posts`). La fila de `profiles` no se crea por trigger: la inserta la action `completeOnboarding` ([ADR 0024](../adr/0024-perfil-en-onboarding.md)).
+- Triggers: `posts_invalidate_ai_cache` (`0007`, ver `posts`) y los cinco de `notifications` (`0011`, ver esa sección). La fila de `profiles` no se crea por trigger: la inserta la action `completeOnboarding` ([ADR 0024](../adr/0024-perfil-en-onboarding.md)).

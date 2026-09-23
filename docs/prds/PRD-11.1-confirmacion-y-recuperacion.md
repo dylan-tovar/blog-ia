@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | :--- | :--- |
-| Estado | **Por implementar** |
+| Estado | **Implementado.** Auditoría 2026-09-23: `forgotPassword`/`resetPassword` en `src/features/auth/actions.ts`, ruta `/auth/confirm`, `/forgot-password` y `/reset-password` en el código. El SMTP custom apuntando a Resend es configuración del dashboard de Supabase, no verificable desde el repo |
 | Depende de | [PRD-11](PRD-11-emails-transaccionales.md) (setup compartido de `src/lib/email/` y env), [PRD-1](PRD-1-auth.md) (`signUp`/`signIn`) |
 | Migraciones | Ninguna propia (usa los flujos nativos de Supabase Auth) |
 | ADRs relacionados | [0028](../adr/0028-emails-transaccionales-resend.md) |

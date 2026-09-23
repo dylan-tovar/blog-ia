@@ -26,8 +26,8 @@ Diferencia de comportamiento a tener presente: en Gemini cada fragmento del stre
 | :--- | :--- | :--- | :--- | :--- |
 | **Chat del editor**: responde, propone ediciones y presenta análisis | Autor, en `/editor/[id]` (cajón `Cmd/Ctrl+I`) | `POST /api/ai/chat` (stream NDJSON) | Texto, propuestas (`propose_edit`), análisis (`present_analysis`), pasos | [PRD-8](../prds/PRD-8-ai-chat.md) |
 | **Acciones rápidas** (Estructura, Títulos, Tono, Analizar) | Autor, en el cajón | Envían un prompt ya escrito al chat | Lo mismo que el chat | [PRD-8](../prds/PRD-8-ai-chat.md), [PRD-5](../prds/PRD-5-ai-author.md) |
-| **Moderación y auto-tagging al publicar** | Servidor, dentro de `publishPost` | Server Action | `{ is_appropriate, reason, suggested_tags }` | [PRD-5](../prds/PRD-5-ai-author.md) |
-| **Resumen para lectores** | Lector, en `/post/[id]` (`SummaryButton`) | Server Action `getPostSummary` | Texto plano de 2 a 3 oraciones, guardado en el post | [PRD-6](../prds/PRD-6-ai-reader.md) |
+| **Moderación y auto-tagging al publicar** | Servidor, dentro de `publishPost` | Server Action | `{ is_appropriate, reason, suggested_tags }`. Revisa título y contenido, y también la portada y las imágenes del cuerpo (Gemini y Claude; se degrada con gracia en OpenRouter) | [PRD-5](../prds/PRD-5-ai-author.md), [ADR 0034](../adr/0034-moderacion-de-imagenes.md) |
+| **Resumen para lectores** | Lector, en `/p/[id]` (`SummaryButton`) | Server Action `getPostSummary` | Texto plano de 2 a 3 oraciones, guardado en el post | [PRD-6](../prds/PRD-6-ai-reader.md) |
 | Outline, títulos, tono y score como herramientas independientes | **Nadie** (ninguna pantalla las llama) | `POST /api/ai/outline`, `/titles`, `/tone`, `/score` | JSON | Deprecadas: [ADR 0019](../adr/0019-rutas-legacy-de-ia-deprecadas.md) |
 
 Reglas de alcance: las funciones del autor operan **solo sobre artículos** (nunca notas) y, salvo el chat, solo sobre los del propio autor. El chat no consulta la base: recibe el estado vivo del editor, así que cualquier usuario autenticado puede usarlo ([ADR 0013](../adr/0013-chat-ia-protocolo-ndjson-y-function-calling.md)).

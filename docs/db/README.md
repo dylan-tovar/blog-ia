@@ -20,10 +20,14 @@ PostgreSQL gestionado por Supabase (Auth, RLS y PostgREST). El esquema vive en a
 | 8 | `0008_post_images.sql` | Bucket público `post-images` de Storage y sus políticas de INSERT, SELECT y DELETE sobre `storage.objects` ([ADR 0022](../adr/0022-imagenes-en-supabase-storage.md)) | Sí |
 | 9 | `0009_post_cover.sql` | Columnas `cover_image_url`, `cover_text` y `cover_color` de `posts`, sus restricciones y el privilegio de UPDATE por columna ([ADR 0023](../adr/0023-portada-de-articulos.md)) | Sí |
 | 10 | `0010_onboarding_interests.sql` | `profiles.onboarded_at` (con backfill de los perfiles existentes), tabla `user_interests` con RLS de fila propia y función `popular_tags` ([ADR 0025](../adr/0025-intereses-en-onboarding.md)) | Sí: el backfill corre solo la primera vez |
+| 11 | `0011_notifications.sql` | Tabla `notifications` (follow, like, nota) sin políticas de insert/delete: solo la escriben triggers `security definer` sobre `subscriptions`, `likes` y `posts` ([ADR 0027](../adr/0027-notificaciones-por-triggers-sql.md)) | Sí |
+| 12 | `0012_email_preferences.sql` | `profiles.notify_new_article_email`, `profiles.unsubscribe_token` y función `follower_emails_for_author` ([ADR 0028](../adr/0028-emails-transaccionales-resend.md)) | Sí |
+| 13 | `0013_note_reply_to.sql` | `posts.reply_to_post_id` (a qué nota concreta responde una nota) y función `can_reply_to_note` ([ADR 0029](../adr/0029-respuestas-a-respuestas.md)) | Sí |
+| 14 | `0014_discovery_search.sql` | Índices `lower(...)` para la búsqueda ILIKE y función `popular_authors` (pool de sugeridos para seguir) ([ADR 0030](../adr/0030-descubrimiento-busqueda-sugeridos-temas.md)) | Sí |
 
 **`0005` nunca se repite sola.** Recrea la política de INSERT de `posts` sin la condición `type = 'note' or status = 'draft'` (que añade `0007`) y deja el UPDATE limitado a artículos (que abre `0006`). Corrida sola sobre un proyecto ya migrado, reabriría la inserción de artículos ya publicados sin moderación y rompería la edición de notas. Si hay que repetirla, se repite la cadena `0005` → `0006` → `0007`.
 
-No hay tabla de control de migraciones: quien las aplica debe saber cuáles corrió. Para un proyecto nuevo, correr las diez en orden. Para uno existente, correr solo las que falten, en orden; si `0007` cambió desde la última vez, se puede volver a correr sola (con `0005` y `0006` ya aplicadas). El procedimiento completo, con la verificación posterior, está en [getting-started](../guides/getting-started.md#migraciones).
+No hay tabla de control de migraciones: quien las aplica debe saber cuáles corrió. Para un proyecto nuevo, correr las catorce en orden. Para uno existente, correr solo las que falten, en orden; si `0007` cambió desde la última vez, se puede volver a correr sola (con `0005` y `0006` ya aplicadas). El procedimiento completo, con la verificación posterior, está en [getting-started](../guides/getting-started.md#migraciones).
 
 ## Comprobaciones
 
@@ -34,4 +38,4 @@ No hay tabla de control de migraciones: quien las aplica debe saber cuáles corr
 
 ## Tipos de TypeScript
 
-`src/lib/supabase/database.types.ts` se escribe **a mano**. Incluye `user_interests` y `popular_tags`. Le faltan la tabla `ai_rate_limits` y la función `can_attach_note`. Si se cambia una columna en SQL, hay que reflejarla ahí (ver la sección al final de [schema.md](schema.md)).
+`src/lib/supabase/database.types.ts` se escribe **a mano**. Incluye `user_interests`, `notifications`, `posts.reply_to_post_id` y las funciones `popular_tags`, `popular_authors` y `follower_emails_for_author`. Le faltan la tabla `ai_rate_limits` y las funciones `can_attach_note` y `can_reply_to_note`. Si se cambia una columna en SQL, hay que reflejarla ahí (ver la sección al final de [schema.md](schema.md)).

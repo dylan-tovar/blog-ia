@@ -1,6 +1,6 @@
 # Documentación de blog-ia
 
-`blog-ia` es una plataforma de publicación asistida por IA, construida como monolito Next.js 16 (App Router) con Supabase (PostgreSQL, Auth, RLS), shadcn/ui y Gemini. Cualquier usuario autenticado puede leer, seguir y publicar (artículos y notas). La IA asiste al autor con un chat dentro del editor, modera al publicar y resume artículos para los lectores; las recomendaciones, en cambio, son un ranking determinista de tags, sin IA.
+`blog-ia` es una plataforma de publicación asistida por IA, construida como monolito Next.js 16 (App Router) con Supabase (PostgreSQL, Auth, RLS) y shadcn/ui. La IA (Claude por defecto, o Gemini u OpenRouter según `AI_PROVIDER`, [ADR 0033](adr/0033-claude-como-proveedor-por-defecto.md)) asiste al autor con un chat dentro del editor, modera texto e imágenes al publicar y resume artículos para los lectores; las recomendaciones, en cambio, son un ranking determinista de tags, sin IA. Cualquier usuario autenticado puede leer, seguir, publicar (artículos y notas), responder en hilo, recibir notificaciones de actividad y correos transaccionales, y buscar gente, publicaciones y temas.
 
 Esta documentación está escrita para que alguien que recibe el proyecto entienda **qué se construyó, cómo funciona y por qué se decidió así**.
 
@@ -21,9 +21,9 @@ Esta documentación está escrita para que alguien que recibe el proyecto entien
 | Carpeta | Qué contiene | Cuándo leerla |
 | :--- | :--- | :--- |
 | [`PRD-global-vision.md`](PRD-global-vision.md) | Visión, alcance y decisiones KISS del producto | Antes de proponer cambios de alcance |
-| [`prds/`](prds/README.md) | PRDs por feature (0 a 9) y sus paquetes de trabajo (`PRD-N.M`): objetivos, comportamiento, datos y criterios de aceptación | Al implementar o revisar una feature, o al asumir un paquete |
+| [`prds/`](prds/README.md) | PRDs por feature (0 a 11) y sus paquetes de trabajo (`PRD-N.M`): objetivos, comportamiento, datos y criterios de aceptación | Al implementar o revisar una feature, o al asumir un paquete |
 | [`team/`](team/reparto-de-tareas.md) | Reparto de los 35 paquetes entre las 12 personas del equipo: cargas, mentorías, olas, acuerdos y guía de presentación | Al incorporarte al equipo o al planificar quién hace qué |
-| [`adr/`](adr/README.md) | Decisiones de arquitectura con alternativas y consecuencias (0001 a 0021) | Al cuestionar o cambiar una decisión |
+| [`adr/`](adr/README.md) | Decisiones de arquitectura con alternativas y consecuencias (0001 a 0035) | Al cuestionar o cambiar una decisión |
 | [`architecture/`](architecture/README.md) | Cómo funciona la app hoy: carpetas, rutas, flujos, auth, errores | Al incorporarse al código o agregar un módulo |
 | [`ai/`](ai/overview.md) | La capa de IA: funciones, límites, protecciones y cómo agregar una | Al tocar cualquier cosa de IA |
 | [`db/`](db/README.md) | Esquema, RLS, funciones y migraciones | Al tocar tablas, políticas o queries |
@@ -45,6 +45,7 @@ Esta documentación está escrita para que alguien que recibe el proyecto entien
 | [PRD-8](prds/PRD-8-ai-chat.md) | Chat de IA del editor |
 | [PRD-9](prds/PRD-9-explore-activity.md) | Explorar, Actividad y opciones de post |
 | [PRD-10](prds/PRD-10-post-images-cover.md) | Imágenes de artículos y portada en el feed |
+| [PRD-11](prds/PRD-11-emails-transaccionales.md) | Emails transaccionales con Resend |
 
 Cada PRD se parte en paquetes de trabajo (`PRD-1.1`, `PRD-1.2`…) con quien lo implementará; el listado y las convenciones de nombre están en [`prds/README.md`](prds/README.md#nombres-de-archivo-y-paquetes-de-trabajo) y el reparto del equipo en [`team/reparto-de-tareas.md`](team/reparto-de-tareas.md).
 
@@ -60,7 +61,7 @@ Lo que existe en el código hoy. Las limitaciones y pendientes están en la [tab
 | Perfil (nombre y username editables) y perfil público de autor | Implementado; el email de `/settings` es solo lectura; sin avatar | `src/features/profile/` |
 | Interfaz: tema oscuro, barra superior e inferior, botón "+" | Implementado ([ADR 0008](adr/0008-tema-oscuro-y-shell-de-aplicacion.md)) | `src/components/shared/` |
 | Artículos: editor Tiptap con markdown, autoguardado, tags, publicar con moderación de IA | Implementado ([ADR 0010](adr/0010-editor-markdown.md), [ADR 0011](adr/0011-ia-con-gemini.md)) | `src/features/posts/`, `src/app/(editor)/` |
-| Notas (crear, editar, borrar, responder) y me gusta | Implementado ([ADR 0009](adr/0009-tipos-de-post-y-likes.md), [ADR 0015](adr/0015-notas-editables.md)) | `src/features/posts/`, `src/features/likes/` |
+| Notas (crear, editar, borrar, responder, y responder a una respuesta en hilo plano) y me gusta | Implementado ([ADR 0009](adr/0009-tipos-de-post-y-likes.md), [ADR 0015](adr/0015-notas-editables.md), [ADR 0029](adr/0029-respuestas-a-respuestas.md)) | `src/features/posts/`, `src/features/likes/` |
 | Feed en `/` (global; para quien sigue a alguien, solo seguidos y propios con recomendados intercalados; cronológico, "Cargar más") y `/explore` con filtro por tag | Implementado ([ADR 0021](adr/0021-feed-en-raiz-y-global.md), [ADR 0026](adr/0026-feed-de-seguidos-con-recomendados.md), [ADR 0020](adr/0020-tags-como-metadato-interno.md)) | `src/app/(public)/` |
 | Seguir y dejar de seguir; lecturas (`reading_history`) | Implementado; seguir alimenta el feed de seguidos de `/` ([ADR 0026](adr/0026-feed-de-seguidos-con-recomendados.md)) | `src/features/subscriptions/` |
 | Recomendaciones por tags (historial de lectura e intereses elegidos) | Implementado ([ADR 0004](adr/0004-recomendaciones-scoring-determinista.md), [ADR 0025](adr/0025-intereses-en-onboarding.md)) | `src/features/recommendations/` |
@@ -71,8 +72,10 @@ Lo que existe en el código hoy. Las limitaciones y pendientes están en la [tab
 | Diccionario de odio, amenazas e insultos mientras se escribe un artículo | Implementado ([ADR 0032](adr/0032-diccionario-de-moderacion-en-el-editor.md)); no cubre notas ni portadas | `src/features/moderation/` |
 | Resumen de IA para lectores | Implementado | `src/features/ai/summary-actions.ts` |
 | Herramientas de IA "legacy" (outline, títulos, tono, score) | Código sin llamador; deprecadas ([ADR 0019](adr/0019-rutas-legacy-de-ia-deprecadas.md)) | `src/app/api/ai/{outline,titles,tone,score}` |
-| Actividad (`/activity`) | Pantalla vacía; no hay notificaciones | `src/app/(dashboard)/activity/` |
-| Búsqueda por texto | No existe | — |
+| Actividad (`/activity`): notificaciones de follow, like y nota, alimentadas por triggers SQL | Implementado ([ADR 0027](adr/0027-notificaciones-por-triggers-sql.md)) | `src/features/notifications/`, `src/app/(dashboard)/activity/` |
+| Emails transaccionales (confirmación, recuperación, bienvenida, nuevo artículo de seguidos) con Resend | Implementado ([ADR 0028](adr/0028-emails-transaccionales-resend.md), [PRD-11](prds/PRD-11-emails-transaccionales.md)) | `src/lib/email/` |
+| Descubrimiento: búsqueda (ILIKE) de gente/publicaciones/temas, gente sugerida por afinidad de tags | Implementado ([ADR 0030](adr/0030-descubrimiento-busqueda-sugeridos-temas.md)) | `src/features/discovery/` |
+| URLs de perfil y de post por `/[username]` y `/p/[id]`; `/author/[id]` y `/post/[id]` quedan como redirect permanente | Implementado ([ADR 0035](adr/0035-renombrado-de-rutas-post-y-author.md)) | `src/app/(public)/` |
 | CI y e2e vigentes | Sin CI; los e2e tienen desfases ([ADR 0018](adr/0018-sin-ci-gates-manuales.md)) | `e2e/` |
 
 ## Glosario
@@ -89,7 +92,7 @@ Lo que existe en el código hoy. Las limitaciones y pendientes están en la [tab
 | **Reclamo (claim)** | Al publicar, el artículo se marca `pending_review` con un compare-and-set para que dos peticiones no lo moderen a la vez |
 | **Compare-and-set** | Actualizar solo si la fila sigue en el estado leído (`status` y `updated_at`); si no, otro escritor ganó |
 | **Carril (lane)** | Un contador del límite de IA: `assist` para el chat y el resumen, `moderation` para publicar |
-| **Moderación** | Revisión con Gemini al publicar: `{ is_appropriate, reason, suggested_tags }` |
+| **Moderación** | Revisión con el proveedor de IA activo al publicar: `{ is_appropriate, reason, suggested_tags }`, incluidas la portada y las imágenes del cuerpo |
 | **Cajón (drawer)** | El panel lateral del chat de IA en el editor (`Cmd/Ctrl+I`) |
 | **NDJSON** | Un objeto JSON por línea; el formato del stream del chat |
 | **Bloque (`bN`)** | Nodo de primer nivel del documento del editor con id `b0`, `b1`…; lo que el modelo ve y señala |
