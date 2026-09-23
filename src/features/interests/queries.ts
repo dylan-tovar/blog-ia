@@ -50,9 +50,11 @@ export async function getUserInterests(userId: string): Promise<InterestOption[]
     return [];
   }
 
-  return (data ?? [])
-    .map((row: any) => (Array.isArray(row.tags) ? row.tags[0] : row.tags))
-    .filter((tag: any): tag is InterestOption => Boolean(tag && tag.id && tag.name));
+  type RawInterestRow = { tags: InterestOption | InterestOption[] | null };
+
+  return ((data ?? []) as RawInterestRow[])
+    .map((row) => (Array.isArray(row.tags) ? row.tags[0] : row.tags))
+    .filter((tag): tag is InterestOption => Boolean(tag && tag.id && tag.name));
 }
 
 export async function getAllInterestOptions(): Promise<InterestOption[]> {

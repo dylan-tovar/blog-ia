@@ -2,8 +2,6 @@
 
 import type { ReactNode } from "react";
 import { ArrowUpRight, MessageSquareQuote, Sparkles } from "lucide-react";
-import { Marker, MarkerContent } from "@/components/ui/marker";
-import { MessageGroup } from "@/components/ui/message";
 import type { ApplyOutcome } from "@/features/posts/components/editor/apply-action";
 import { ChatMessage } from "./ChatMessage";
 import type { ChatEntry, InsertTarget } from "./chat-state";

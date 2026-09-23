@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, CheckCircle2, Flame, Gauge, Lightbulb, Sparkles, TrendingUp } from "lucide-react";
+import { AlertCircle, CheckCircle2, Gauge, Sparkles } from "lucide-react";
 import type { ArticleAnalysis } from "@/features/ai/schemas";
 import { cn } from "@/lib/utils";
 
