@@ -549,3 +549,27 @@ export async function recordRead(postId: string): Promise<{ ok: boolean }> {
     return { ok: false };
   }
 }
+
+export async function deletePost(postId: string): Promise<{ ok: boolean; error?: string }> {
+  if (!idSchema.safeParse(postId).success) {
+    return { ok: false, error: "ID de publicación inválido." };
+  }
+
+  const { supabase, user } = await requireUser();
+
+  const { error } = await supabase
+    .from("posts")
+    .delete()
+    .eq("id", postId)
+    .eq("author_id", user.id);
+
+  if (error) {
+    return { ok: false, error: error.message };
+  }
+
+  revalidatePath("/posts");
+  revalidatePath("/");
+  revalidatePath(`/author/${user.id}`);
+  revalidatePath(`/post/${postId}`);
+  return { ok: true };
+}
