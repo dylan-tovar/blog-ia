@@ -18,6 +18,7 @@ import type { ApplyOutcome } from "@/features/posts/components/editor/apply-acti
 import { createEditorBridge } from "@/features/posts/components/editor/editor-bridge";
 import { EditorToolbar } from "@/features/posts/components/editor/EditorToolbar";
 import { EditorTopBar } from "@/features/posts/components/editor/EditorTopBar";
+import { useModerationScan } from "@/features/moderation/use-moderation-scan";
 import { PublishDialog } from "@/features/posts/components/editor/PublishDialog";
 import type { CoverValue } from "@/features/posts/cover/cover-schema";
 import { useArticleEditor } from "@/features/posts/components/editor/use-article-editor";
@@ -119,6 +120,8 @@ export function PostEditor({
   useAiDrawerShortcut(() => setDrawer(!aiOpen));
 
   const canPublish = status === "draft" || status === "rejected" || status === "pending_review";
+  // El título también se revisa: es parte del artículo que se está escribiendo.
+  const moderation = useModerationScan(`${title}\n\n${content}`);
 
   // Manual insertion goes through the same engine (and the same length check) as the AI proposals.
   function insertMarkdown(markdown: string, target: InsertTarget): ApplyOutcome {
@@ -163,6 +166,7 @@ export function PostEditor({
         previewing={previewing}
         canPublish={canPublish}
         contentLength={content.length}
+        moderation={moderation}
         onTogglePreview={() => setPreviewing((current) => !current)}
         onContinue={() => setPublishOpen(true)}
         aiOpen={aiOpen}
@@ -273,6 +277,7 @@ export function PostEditor({
         open={publishOpen}
         onOpenChange={setPublishOpen}
         canPublish={canPublish}
+        moderation={moderation}
         title={title}
         userId={userId}
         initialCover={initialCover}

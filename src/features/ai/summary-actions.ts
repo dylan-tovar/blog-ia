@@ -6,7 +6,7 @@ import { saveAiCache } from "./cache.server";
 import { runCachedFeature } from "./cached-feature";
 import { DEFAULT_TIMEOUT_MS, MIN_WORDS_SUMMARY } from "./constants";
 import { AiError, isAiError, mapGeminiError, type AiErrorKind } from "./errors";
-import { generateText } from "./gemini";
+import { generateText } from "./provider.server";
 import { cleanSummary } from "./output";
 import { buildSummaryPrompt } from "./prompts";
 import { checkAiRateLimit } from "./rate-limit.server";

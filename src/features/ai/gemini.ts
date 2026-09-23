@@ -2,13 +2,14 @@ import "server-only";
 import { FunctionCallingConfigMode, GoogleGenAI, type GenerateContentConfig, type GenerateContentResponse } from "@google/genai";
 import { getAiEnv } from "@/lib/env.server";
 import { CHAT_FIRST_CHUNK_TIMEOUT_MS } from "./constants";
-import { AiError, describeUpstreamError, mapGeminiError } from "./errors";
+import { AiError } from "./errors";
+import { FEATURE_CONFIG } from "./feature-config";
 import { withFirstChunkDeadline } from "./first-chunk-deadline";
 import { CHAT_TOOL_DECLARATIONS, modelPartsToStreamParts } from "./function-calls";
+import { logged, loggedStream } from "./provider-telemetry";
 import { toResponseJsonSchema } from "./schemas";
 import { thinkingConfigFor } from "./thinking";
 import type {
-  AiFeature,
   ChatStreamPart,
   GenerateStructured,
   GenerateText,
@@ -16,17 +17,6 @@ import type {
   StreamText,
   StreamTextInput,
 } from "./types";
-
-const FEATURE_CONFIG: Record<AiFeature, { temperature: number; maxOutputTokens: number }> = {
-  outline: { temperature: 0.8, maxOutputTokens: 2048 },
-  titles: { temperature: 0.9, maxOutputTokens: 512 },
-  tone: { temperature: 0.6, maxOutputTokens: 8192 },
-  score: { temperature: 0.2, maxOutputTokens: 2048 },
-  moderation: { temperature: 0, maxOutputTokens: 512 },
-  summary: { temperature: 0.3, maxOutputTokens: 512 },
-  // Room for a text answer plus edit proposals that carry Markdown.
-  chat: { temperature: 0.7, maxOutputTokens: 8192 },
-};
 
 // Finish reasons that mean the content itself tripped Gemini's safety filters.
 const BLOCKED_FINISH_REASONS = new Set(["SAFETY", "BLOCKLIST", "PROHIBITED_CONTENT", "SPII"]);
@@ -41,8 +31,15 @@ function getClient() {
     throw new AiError("not_configured");
   }
 
-  if (!cached || cached.key !== env.GEMINI_API_KEY) {
-    cached = { key: env.GEMINI_API_KEY, client: new GoogleGenAI({ apiKey: env.GEMINI_API_KEY }) };
+  // El esquema ya exige la clave cuando AI_PROVIDER=gemini; esto la estrecha
+  // para el compilador y cubre el caso de llamar a este adaptador directamente.
+  const apiKey = env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new AiError("not_configured");
+  }
+
+  if (!cached || cached.key !== apiKey) {
+    cached = { key: apiKey, client: new GoogleGenAI({ apiKey }) };
   }
 
   return { client: cached.client, model: env.GEMINI_MODEL };
@@ -153,26 +150,6 @@ function callModelStream(input: StreamTextInput): AsyncGenerator<ChatStreamPart>
   );
 }
 
-// Logs metadata only: never the prompt, the response or the API key.
-async function logged<T>(feature: AiFeature, run: () => Promise<T>): Promise<T> {
-  const startedAt = Date.now();
-  try {
-    const value = await run();
-    console.info("[ai]", { feature, ms: Date.now() - startedAt, ok: true });
-    return value;
-  } catch (error) {
-    const mapped = mapGeminiError(error);
-    console.info("[ai]", {
-      feature,
-      ms: Date.now() - startedAt,
-      ok: false,
-      kind: mapped.kind,
-      ...describeUpstreamError(error),
-    });
-    throw mapped;
-  }
-}
-
 export const generateText: GenerateText = (input) => logged(input.feature, () => callModel(input));
 
 export const generateStructured: GenerateStructured = (input) =>
@@ -194,20 +171,5 @@ export const generateStructured: GenerateStructured = (input) =>
     return parsed.data;
   });
 
-export const streamText: StreamText = async function* (input) {
-  const startedAt = Date.now();
-  try {
-    yield* callModelStream(input);
-    console.info("[ai]", { feature: input.feature, ms: Date.now() - startedAt, ok: true });
-  } catch (error) {
-    const mapped = mapGeminiError(error);
-    console.info("[ai]", {
-      feature: input.feature,
-      ms: Date.now() - startedAt,
-      ok: false,
-      kind: mapped.kind,
-      ...describeUpstreamError(error),
-    });
-    throw mapped;
-  }
-};
+export const streamText: StreamText = (input) =>
+  loggedStream(input.feature, () => callModelStream(input));

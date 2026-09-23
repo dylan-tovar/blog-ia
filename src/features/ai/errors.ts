@@ -18,7 +18,7 @@ export const AI_ERROR_MESSAGES: Record<AiErrorKind, string> = {
   unavailable: "La IA no está disponible en este momento. Intentá de nuevo en un rato.",
   invalid_response: "La IA devolvió una respuesta que no pudimos usar. Intentá de nuevo.",
   blocked: "El contenido fue bloqueado por los filtros de seguridad de la IA.",
-  not_configured: "La IA no está configurada en este entorno. Revisá la clave y el modelo (GEMINI_MODEL).",
+  not_configured: "La IA no está configurada en este entorno. Revisá la clave y el modelo del proveedor activo (AI_PROVIDER).",
   input_too_long: "El texto es demasiado largo para procesarlo con IA.",
   input_too_short: "Escribí un poco más antes de usar esta función.",
   not_allowed: "Esta función de IA no está disponible para este contenido.",

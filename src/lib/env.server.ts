@@ -13,22 +13,51 @@ export function getServerEnv() {
   });
 }
 
-const aiEnvSchema = z.object({
-  GEMINI_API_KEY: z.string().min(1),
-  GEMINI_MODEL: z.string().min(1).default("gemini-3.5-flash-lite"),
-  AI_RATE_LIMIT_USER_PER_MIN: z.coerce.number().int().min(1).max(600).default(5),
-  AI_RATE_LIMIT_GLOBAL_PER_MIN: z.coerce.number().int().min(1).max(6000).default(6),
-  AI_RATE_LIMIT_MODERATION_GLOBAL_PER_MIN: z.coerce.number().int().min(1).max(6000).default(4),
-});
+export const AI_PROVIDERS = ["gemini", "openrouter"] as const;
+export type AiProvider = (typeof AI_PROVIDERS)[number];
 
-// Lazy for the same reason: without a Gemini key only the AI features degrade.
+// Claves y modelo exigidos por cada proveedor. Solo se valida el activo: con
+// AI_PROVIDER=openrouter no hace falta tener una clave de Gemini, y al revés.
+const PROVIDER_REQUIREMENTS = {
+  gemini: ["GEMINI_API_KEY"],
+  openrouter: ["OPENROUTER_API_KEY", "OPENROUTER_MODEL"],
+} as const satisfies Record<AiProvider, readonly string[]>;
+
+const aiEnvSchema = z
+  .object({
+    AI_PROVIDER: z.enum(AI_PROVIDERS).default("gemini"),
+    GEMINI_API_KEY: z.string().min(1).optional(),
+    GEMINI_MODEL: z.string().min(1).default("gemini-3.5-flash-lite"),
+    OPENROUTER_API_KEY: z.string().min(1).optional(),
+    // Sin valor por defecto a propósito: el catálogo de OpenRouter cambia y un id
+    // inventado fallaría con un 404 difícil de leer. Se elige en openrouter.ai/models.
+    OPENROUTER_MODEL: z.string().min(1).optional(),
+    AI_RATE_LIMIT_USER_PER_MIN: z.coerce.number().int().min(1).max(600).default(5),
+    AI_RATE_LIMIT_GLOBAL_PER_MIN: z.coerce.number().int().min(1).max(6000).default(6),
+    AI_RATE_LIMIT_MODERATION_GLOBAL_PER_MIN: z.coerce.number().int().min(1).max(6000).default(4),
+  })
+  .superRefine((env, ctx) => {
+    for (const variable of PROVIDER_REQUIREMENTS[env.AI_PROVIDER]) {
+      if (env[variable]) continue;
+      ctx.addIssue({
+        code: "custom",
+        path: [variable],
+        message: `Falta ${variable} para AI_PROVIDER=${env.AI_PROVIDER}.`,
+      });
+    }
+  });
+
+// Lazy for the same reason: without the provider key only the AI features degrade.
 // Blank values (e.g. `GEMINI_MODEL=` in .env) fall back to the defaults.
 export function getAiEnv() {
   const blankToUndefined = (value: string | undefined) => (value?.trim() ? value.trim() : undefined);
 
   return aiEnvSchema.parse({
+    AI_PROVIDER: blankToUndefined(process.env.AI_PROVIDER),
     GEMINI_API_KEY: blankToUndefined(process.env.GEMINI_API_KEY),
     GEMINI_MODEL: blankToUndefined(process.env.GEMINI_MODEL),
+    OPENROUTER_API_KEY: blankToUndefined(process.env.OPENROUTER_API_KEY),
+    OPENROUTER_MODEL: blankToUndefined(process.env.OPENROUTER_MODEL),
     AI_RATE_LIMIT_USER_PER_MIN: blankToUndefined(process.env.AI_RATE_LIMIT_USER_PER_MIN),
     AI_RATE_LIMIT_GLOBAL_PER_MIN: blankToUndefined(process.env.AI_RATE_LIMIT_GLOBAL_PER_MIN),
     AI_RATE_LIMIT_MODERATION_GLOBAL_PER_MIN: blankToUndefined(
