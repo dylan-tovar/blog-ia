@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getViewer } from "@/lib/viewer";
+import { SuggestedPeopleWidget } from "@/features/discovery/components/SuggestedPeopleWidget";
 import { FeedList } from "@/features/posts/components/FeedList";
 import { getAllTagNames, getFeedPage } from "@/features/posts/queries";
 import { tagNameSchema } from "@/features/posts/schemas";
@@ -19,6 +20,12 @@ export default async function ExplorePage(props: PageProps<"/explore">) {
   return (
     <>
       <h1 className="sr-only">Explorar</h1>
+
+      {/* lg:+ already shows this in AppShell's RightRail sidebar — avoid rendering it
+          (and its own query chain) twice on wide screens. */}
+      {viewer && (
+        <SuggestedPeopleWidget viewerId={viewer.id} className="border-b px-4 py-3 lg:hidden" />
+      )}
 
       {tags.length > 0 && (
         <div className="flex items-center gap-2 overflow-x-auto border-b px-4 py-3 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">

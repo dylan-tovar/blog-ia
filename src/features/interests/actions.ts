@@ -5,10 +5,64 @@ import { getInterestOptions } from "@/features/interests/queries";
 import { interestsSchema } from "@/features/interests/schemas";
 import { planInterestChanges, validateSelection } from "@/features/interests/selection";
 import { requireUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export type InterestsActionState = { error?: string } | undefined;
 
 const SAVE_ERROR = "No pudimos guardar tus intereses. Intentá de nuevo.";
+
+type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
+
+// Replaces the stored interests by diff so retries and resumes are safe: nothing is
+// deleted just to be re-inserted, and a double submit ignores rows that already exist.
+// Shared by `saveInterests` (onboarding, with redirect) and `updateInterests` (sidebar,
+// without it).
+async function applyInterestChanges(
+  supabase: SupabaseClient,
+  userId: string,
+  tagIds: string[],
+): Promise<string | null> {
+  const { data: current, error: currentError } = await supabase
+    .from("user_interests")
+    .select("tag_id")
+    .eq("user_id", userId);
+
+  if (currentError) {
+    return SAVE_ERROR;
+  }
+
+  const { toAdd, toRemove } = planInterestChanges(
+    (current ?? []).map(({ tag_id }) => tag_id),
+    tagIds,
+  );
+
+  if (toRemove.length > 0) {
+    const { error } = await supabase
+      .from("user_interests")
+      .delete()
+      .eq("user_id", userId)
+      .in("tag_id", toRemove);
+
+    if (error) {
+      return SAVE_ERROR;
+    }
+  }
+
+  if (toAdd.length > 0) {
+    const { error } = await supabase
+      .from("user_interests")
+      .upsert(
+        toAdd.map((tag_id) => ({ user_id: userId, tag_id })),
+        { onConflict: "user_id,tag_id", ignoreDuplicates: true },
+      );
+
+    if (error) {
+      return SAVE_ERROR;
+    }
+  }
+
+  return null;
+}
 
 export async function saveInterests(
   _state: InterestsActionState,
@@ -54,45 +108,9 @@ export async function saveInterests(
     return { error: invalid };
   }
 
-  const { data: current, error: currentError } = await supabase
-    .from("user_interests")
-    .select("tag_id")
-    .eq("user_id", user.id);
-
-  if (currentError) {
-    return { error: SAVE_ERROR };
-  }
-
-  // Replace by diff so retries and resumes are safe: nothing is deleted just to be
-  // re-inserted, and a double submit ignores rows that already exist.
-  const { toAdd, toRemove } = planInterestChanges(
-    (current ?? []).map(({ tag_id }) => tag_id),
-    tagIds,
-  );
-
-  if (toRemove.length > 0) {
-    const { error } = await supabase
-      .from("user_interests")
-      .delete()
-      .eq("user_id", user.id)
-      .in("tag_id", toRemove);
-
-    if (error) {
-      return { error: SAVE_ERROR };
-    }
-  }
-
-  if (toAdd.length > 0) {
-    const { error } = await supabase
-      .from("user_interests")
-      .upsert(
-        toAdd.map((tag_id) => ({ user_id: user.id, tag_id })),
-        { onConflict: "user_id,tag_id", ignoreDuplicates: true },
-      );
-
-    if (error) {
-      return { error: SAVE_ERROR };
-    }
+  const applyError = await applyInterestChanges(supabase, user.id, tagIds);
+  if (applyError) {
+    return { error: applyError };
   }
 
   const { error: doneError } = await supabase
@@ -106,4 +124,40 @@ export async function saveInterests(
   }
 
   redirect("/");
+}
+
+// Same diff/upsert/delete as `saveInterests`, for editing interests from the sidebar
+// after onboarding: no `onboarded_at` gate and no redirect, just the result.
+export async function updateInterests(tagIds: string[]): Promise<InterestsActionState> {
+  const parsed = interestsSchema.safeParse({ tagIds });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  const { supabase, user } = await requireUser();
+
+  // The eligible set is recomputed here too: the client's list is never trusted.
+  const eligible = await getInterestOptions();
+  if (!eligible.ok) {
+    return { error: "No pudimos cargar los temas. Intentá de nuevo." };
+  }
+
+  // Same rule as onboarding, including the minimum-interest-count invariant: editing
+  // from the sidebar must not be a way to end up with fewer interests than onboarding
+  // would have allowed.
+  const invalid = validateSelection(
+    parsed.data.tagIds,
+    eligible.options.map(({ id }) => id),
+  );
+  if (invalid) {
+    return { error: invalid };
+  }
+
+  const applyError = await applyInterestChanges(supabase, user.id, parsed.data.tagIds);
+  if (applyError) {
+    return { error: applyError };
+  }
+
+  return {};
 }

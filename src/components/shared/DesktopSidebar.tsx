@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { isNavItemActive } from "@/components/shared/navigation";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { UserAvatar } from "@/components/shared/UserAvatar";
+import { SearchModal } from "@/features/discovery/components/SearchModal";
 import { CreatePostMenu } from "@/features/posts/components/CreatePostMenu";
 import { LoginDrawer } from "@/features/auth/components/LoginDrawer";
 import { signOut } from "@/features/auth/actions";
@@ -115,6 +116,8 @@ export function DesktopSidebar({ viewer, initialUnreadCount = 0 }: DesktopSideba
               </Link>
             );
           })}
+
+          <SearchModal variant="nav" />
 
           {!viewer && (
             <LoginDrawer
