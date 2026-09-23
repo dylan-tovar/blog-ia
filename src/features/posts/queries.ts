@@ -219,7 +219,21 @@ export async function getOwnPost(id: string) {
   return flattenTags(post);
 }
 
-export async function getOwnPosts() {
+export type OwnPostItem = {
+  id: string;
+  title: string | null;
+  content: string;
+  excerpt: string;
+  wordCount: number;
+  readingTimeMinutes: number;
+  status: "draft" | "pending_review" | "published" | "rejected";
+  updated_at: string;
+  published_at: string | null;
+  cover: ResolvedCover;
+  rejection_reason: string | null;
+};
+
+export async function getOwnPosts(): Promise<OwnPostItem[]> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -231,7 +245,7 @@ export async function getOwnPosts() {
 
   const { data: posts } = await supabase
     .from("posts")
-    .select("id, title, content, status, updated_at, rejection_reason")
+    .select("id, title, content, status, updated_at, published_at, cover_image_url, cover_text, cover_color, rejection_reason")
     .eq("author_id", user.id)
     .eq("type", "article")
     .order("updated_at", { ascending: false });
@@ -254,7 +268,27 @@ export async function getOwnPosts() {
     await supabase.from("posts").delete().in("id", emptyDraftIds);
   }
 
-  return posts.filter((p) => !emptyDraftIds.includes(p.id));
+  const activePosts = posts.filter((p) => !emptyDraftIds.includes(p.id));
+
+  return activePosts.map((p) => {
+    const words = countWords(p.content);
+    return {
+      id: p.id,
+      title: p.title,
+      content: p.content,
+      excerpt: excerpt(p.content, 140),
+      wordCount: words,
+      readingTimeMinutes: Math.max(1, Math.ceil(words / 200)),
+      status: p.status as OwnPostItem["status"],
+      updated_at: p.updated_at,
+      published_at: p.published_at,
+      cover: resolveCover(
+        { imageUrl: p.cover_image_url, text: p.cover_text, color: p.cover_color },
+        env.NEXT_PUBLIC_SUPABASE_URL,
+      ),
+      rejection_reason: p.rejection_reason,
+    };
+  });
 }
 
 export async function getPublishedPost(id: string) {
