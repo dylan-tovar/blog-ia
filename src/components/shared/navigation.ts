@@ -11,8 +11,6 @@ const PAGE_TITLES: Record<string, string> = {
   activity: "Actividad",
   settings: "Settings",
   profile: "Perfil",
-  post: "Post",
-  author: "Autor",
 };
 
 export function getPageTitle(pathname: string) {
@@ -20,13 +18,17 @@ export function getPageTitle(pathname: string) {
   return (firstSegment && PAGE_TITLES[firstSegment]) || "Inicio";
 }
 
-export function isNavItemActive(pathname: string, href: string) {
+// `/[username]` is a bare top-level segment indistinguishable from any other
+// by prefix alone — unlike the old `/author/[id]`, there's no static
+// "author" prefix to match against. The viewer's own username has to be
+// passed in to recognize "I'm looking at my own profile" as active.
+export function isNavItemActive(pathname: string, href: string, viewerUsername?: string | null) {
   if (href === "/") {
     return pathname === "/";
   }
 
-  if (href === "/profile" && (pathname.startsWith("/author/") || pathname === "/profile")) {
-    return true;
+  if (href === "/profile") {
+    return pathname === "/profile" || (!!viewerUsername && pathname === `/${viewerUsername}`);
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);

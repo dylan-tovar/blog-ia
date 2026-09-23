@@ -23,8 +23,10 @@ describe("getPageTitle", () => {
     ["/posts", "Mis posts"],
     ["/activity", "Actividad"],
     ["/settings", "Settings"],
-    ["/post/3f2b8c1e-6a4d-4f1b-9c7e-2d5a8b0e1f34", "Post"],
-    ["/author/3f2b8c1e-6a4d-4f1b-9c7e-2d5a8b0e1f34", "Autor"],
+    // A bare post id or username has no static title to key off of — falls
+    // through to the default, same as any other unmapped segment.
+    ["/p/3f2b8c1e-6a4d-4f1b-9c7e-2d5a8b0e1f34", "Inicio"],
+    ["/algunusername", "Inicio"],
   ])("%s -> %s", (pathname, title) => {
     expect(getPageTitle(pathname)).toBe(title);
   });
@@ -61,11 +63,29 @@ describe("isNavItemActive", () => {
       expect(isNavItemActive("/", "/")).toBe(true);
     });
 
-    it.each(["/posts", "/settings", "/post/abc", "/author/abc", "/editor/abc"])(
+    it.each(["/posts", "/settings", "/p/abc", "/algunusername", "/editor/abc"])(
       "is not active on %s",
       (pathname) => {
         expect(isNavItemActive(pathname, "/")).toBe(false);
       },
     );
+  });
+
+  describe("Perfil (/profile, own username page)", () => {
+    it("is active on /profile itself", () => {
+      expect(isNavItemActive("/profile", "/profile")).toBe(true);
+    });
+
+    it("is active on the viewer's own username page", () => {
+      expect(isNavItemActive("/dylan", "/profile", "dylan")).toBe(true);
+    });
+
+    it("is not active on someone else's username page", () => {
+      expect(isNavItemActive("/otra_persona", "/profile", "dylan")).toBe(false);
+    });
+
+    it("is not active on any username page when the viewer's username is unknown", () => {
+      expect(isNavItemActive("/dylan", "/profile", null)).toBe(false);
+    });
   });
 });

@@ -47,7 +47,7 @@ async function SignedInChrome({ fab }: { fab?: (viewer: Viewer) => ReactNode }) 
   return (
     <>
       {fab?.(viewer)}
-      <BottomNav initialUnreadCount={unreadCount} />
+      <BottomNav initialUnreadCount={unreadCount} viewerUsername={viewer.username} />
     </>
   );
 }

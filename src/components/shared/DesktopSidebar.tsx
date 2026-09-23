@@ -76,7 +76,7 @@ export function DesktopSidebar({ viewer, initialUnreadCount = 0 }: DesktopSideba
         {/* Navigation list */}
         <nav aria-label="Navegación de escritorio" className="flex w-full flex-col gap-1 mt-2">
           {navLinks.map((item) => {
-            const active = isNavItemActive(pathname, item.href);
+            const active = isNavItemActive(pathname, item.href, viewer?.username);
             const Icon = item.icon;
 
             return (
