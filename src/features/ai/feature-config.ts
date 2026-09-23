@@ -2,7 +2,11 @@ import type { AiFeature } from "./types";
 
 // Política de generación por función, independiente del proveedor: describe qué
 // necesita cada tarea (la moderación no debe improvisar, los títulos sí), no cómo
-// la implementa Gemini o OpenRouter. Cada adaptador la traduce a su propia API.
+// la implementa cada proveedor. Cada adaptador la traduce a su propia API.
+//
+// `temperature` la usan Gemini y OpenRouter. El adaptador de Claude la ignora: los
+// modelos actuales la rechazan con un 400 y gradúan lo mismo con el esfuerzo, que
+// se define en `CLAUDE_EFFORT` (`claude-protocol.ts`).
 export const FEATURE_CONFIG: Record<AiFeature, { temperature: number; maxOutputTokens: number }> = {
   outline: { temperature: 0.8, maxOutputTokens: 2048 },
   titles: { temperature: 0.9, maxOutputTokens: 512 },

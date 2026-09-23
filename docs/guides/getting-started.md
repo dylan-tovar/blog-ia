@@ -29,7 +29,9 @@ Para levantar el proyecto hace falta un proyecto de Supabase con las diez migrac
 | `NEXT_PUBLIC_SUPABASE_URL` | Sí | — | URL válida | Navegador y servidor |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Sí | — | Texto no vacío | Navegador y servidor |
 | `SUPABASE_SECRET_KEY` | Sí para login por username, publicar y el límite de IA | — | Texto no vacío (el código solo exige que no esté vacío) | Solo servidor. **Salta RLS** ([ADR 0007](../adr/0007-login-por-username-con-secret-key.md), [ADR 0012](../adr/0012-integridad-de-escritura-de-posts.md)) |
-| `AI_PROVIDER` | No | `gemini` | `gemini` u `openrouter` | Proveedor de IA activo. Solo se exige la configuración del que esté activo ([ADR 0031](../adr/0031-proveedor-de-ia-intercambiable-openrouter.md)) |
+| `AI_PROVIDER` | No | `claude` | `claude`, `gemini` u `openrouter` | Proveedor de IA activo. Solo se exige la configuración del que esté activo ([ADR 0031](../adr/0031-proveedor-de-ia-intercambiable-openrouter.md), [ADR 0033](../adr/0033-claude-como-proveedor-por-defecto.md)) |
+| `CLAUDE_API_KEY` | Con `AI_PROVIDER=claude` | — | Texto no vacío | Solo servidor ([console.anthropic.com](https://console.anthropic.com/)) |
+| `CLAUDE_MODEL` | No | `claude-opus-5` | Texto no vacío | Modelo a usar. Verificar con `pnpm ai:smoke:claude` |
 | `GEMINI_API_KEY` | Con `AI_PROVIDER=gemini` | — | Texto no vacío | Solo servidor (Google AI Studio) |
 | `GEMINI_MODEL` | No | `gemini-3.5-flash-lite` | Texto no vacío; un valor en blanco usa el defecto | Modelo a usar. Verificar con `pnpm ai:smoke` que esté disponible en la capa gratuita ([ADR 0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md)) |
 | `OPENROUTER_API_KEY` | Con `AI_PROVIDER=openrouter` | — | Texto no vacío | Solo servidor ([openrouter.ai/keys](https://openrouter.ai/keys)) |
@@ -41,7 +43,7 @@ Para levantar el proyecto hace falta un proyecto de Supabase con las diez migrac
 | `RESEND_API_KEY` | Para mandar correos | — | Texto no vacío | Solo servidor (`src/lib/email/`) |
 | `RESEND_FROM_EMAIL` | Para mandar correos | — | Texto no vacío (ej. `Blog IA <no-reply@tu-dominio.com>`) | Solo servidor |
 
-Sin la clave del proveedor activo (`GEMINI_API_KEY`, o `OPENROUTER_API_KEY` y `OPENROUTER_MODEL`): las funciones de IA responden "La IA no está configurada en este entorno", y publicar sigue funcionando (sin tags automáticos). En la capa gratuita de Gemini, Google puede usar el texto enviado para mejorar sus productos ([ADR 0011](../adr/0011-ia-con-gemini.md)); la interfaz lo avisa. Sin `RESEND_API_KEY`, `sendEmail` falla en silencio (logueado, nunca lanza): la confirmación/recuperación de contraseña dependen del SMTP de Supabase, no de esta variable (ver más abajo).
+Sin la clave del proveedor activo (`CLAUDE_API_KEY`, o `GEMINI_API_KEY`, o `OPENROUTER_API_KEY` y `OPENROUTER_MODEL`): las funciones de IA responden "La IA no está configurada en este entorno", y publicar sigue funcionando (sin tags automáticos). En la capa gratuita de Gemini, Google puede usar el texto enviado para mejorar sus productos ([ADR 0011](../adr/0011-ia-con-gemini.md)); la interfaz lo avisa. Sin `RESEND_API_KEY`, `sendEmail` falla en silencio (logueado, nunca lanza): la confirmación/recuperación de contraseña dependen del SMTP de Supabase, no de esta variable (ver más abajo).
 
 ## Correo con Resend (fuera del repo)
 
@@ -132,6 +134,7 @@ Requiere `.env.local` con las tres variables de Supabase y las migraciones `0001
 | `pnpm test:watch` | Vitest en modo watch |
 | `pnpm test:e2e` | Tests end-to-end (`playwright test`); ver el [estado de los e2e](testing.md#problemas-conocidos) |
 | `pnpm seed:dev` | Carga usuarios y posts de prueba ([Datos de prueba](#datos-de-prueba)) |
+| `pnpm ai:smoke:claude` | Comprueba con la `CLAUDE_API_KEY` configurada que el modelo existe, que la salida estructurada funciona por las dos vías y que el streaming con function calling devuelve una propuesta utilizable. Consume saldo de la cuenta |
 | `pnpm ai:smoke` | Comprueba con la `GEMINI_API_KEY` configurada que el modelo responde y devuelve JSON válido; muestra la latencia. No imprime la clave |
 | `pnpm ai:smoke:openrouter` | Lo mismo contra OpenRouter: confirma que `OPENROUTER_MODEL` existe en el catálogo y admite `tools` y `response_format`, y prueba la salida JSON estructurada y el streaming con function calling. Consume saldo de la cuenta |
 | `pnpm verify:writes` | Como usuario sembrado, intenta escrituras prohibidas sobre `posts` y las permitidas, y limpia lo que crea. Falla con código distinto de cero si algo no coincide. Requiere `0007` y el seed |

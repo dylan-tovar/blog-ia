@@ -1,6 +1,7 @@
 import "server-only";
 import { getAiEnv } from "@/lib/env.server";
 import { AiError } from "./errors";
+import * as claude from "./claude";
 import * as gemini from "./gemini";
 import * as openrouter from "./openrouter";
 import { logNotConfigured } from "./provider-telemetry";
@@ -9,7 +10,7 @@ import type { AiFeature, GenerateStructured, GenerateText, StreamText } from "./
 // Punto único donde se elige el proveedor de IA. El resto de la capa depende del
 // puerto de `types.ts` (GenerateText, GenerateStructured, StreamText) y no sabe
 // cuál está activo. Un proveedor a la vez, según AI_PROVIDER (ADR 0031).
-const ADAPTERS = { gemini, openrouter } as const;
+const ADAPTERS = { claude, gemini, openrouter } as const;
 
 function adapter(feature: AiFeature) {
   try {

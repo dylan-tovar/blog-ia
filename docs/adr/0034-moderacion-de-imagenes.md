@@ -1,4 +1,4 @@
-# 0033. Moderación de imágenes con IA en la publicación
+# 0034. Moderación de imágenes con IA en la publicación
 
 - **Estado:** Aceptada. Extiende la moderación del [ADR 0011](0011-ia-con-gemini.md) a las imágenes del artículo.
 - **Fecha:** 2026-09-23
@@ -50,3 +50,7 @@ Bajar cada imagen desde Storage tiene su propio timeout (`MODERATION_IMAGE_FETCH
 - **A favor:** cierra un hueco real (ninguna imagen se revisaba); reusa la infraestructura de moderación existente (`moderateArticle`, el carril de rate limit `"moderation"`) sin gastar cuota extra en borradores.
 - **En contra:** con más de `MAX_MODERATION_IMAGES` imágenes, las que exceden el tope no se revisan. Con `AI_PROVIDER=openrouter`, las imágenes no se revisan en absoluto (el texto sí).
 - **Cuándo revisar:** si se decide dar soporte de visión a OpenRouter, si el tope de imágenes resulta insuficiente en la práctica, o si conviene mostrarle al autor una miniatura junto al motivo de rechazo en vez de solo la etiqueta de texto.
+
+## Actualización (2026-09-23)
+
+Claude pasó a ser un tercer proveedor y luego el proveedor por defecto ([ADR 0033](0033-claude-como-proveedor-por-defecto.md)), y su adapter (`claude.ts`) también recibió soporte real de visión: `toClaudeContent` (`claude-protocol.ts`) mapea `AiContentPart[]` al bloque de imagen de Anthropic (`source.media_type` anidado, distinto del `inlineData` de Gemini). La sección "Solo Gemini; OpenRouter se degrada, no se cae" sigue describiendo correctamente el diseño (un tercer proveedor puede sumarse sin tocar la orquestación) pero ya no es exacta en el alcance: hoy la moderación de imágenes funciona con Gemini y con Claude, y solo se degrada con gracia en OpenRouter.
