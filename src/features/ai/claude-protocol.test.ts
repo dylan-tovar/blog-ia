@@ -8,10 +8,29 @@ import {
   deltaText,
   finishBlock,
   startBlock,
+  toClaudeContent,
   type ToolBlocks,
 } from "./claude-protocol";
 import { PRESENT_ANALYSIS, PROPOSE_EDIT } from "./function-calls";
 import type { AiFeature } from "./types";
+
+describe("toClaudeContent", () => {
+  it("pasa el string tal cual, sin envolverlo en bloques", () => {
+    expect(toClaudeContent("el artículo")).toBe("el artículo");
+  });
+
+  it("mapea las partes de texto e imagen, anidando el mime type en source", () => {
+    const content = toClaudeContent([
+      { type: "text", text: "Imagen 1 (portada):" },
+      { type: "image", mimeType: "image/webp", data: "QUFB" },
+    ]);
+
+    expect(content).toEqual([
+      { type: "text", text: "Imagen 1 (portada):" },
+      { type: "image", source: { type: "base64", media_type: "image/webp", data: "QUFB" } },
+    ]);
+  });
+});
 
 const start = (index: number, type: string, name?: string) =>
   ({ type: "content_block_start", index, content_block: { type, name } }) as const;

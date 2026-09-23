@@ -1,9 +1,28 @@
 import { CHAT_TOOL_DECLARATIONS, type ModelPart } from "./function-calls";
-import type { AiFeature } from "./types";
+import type { AiContent, AiContentPart, AiFeature } from "./types";
 
 // Traducción entre el protocolo de la API de Claude y los tipos internos. Vive
 // aparte de `claude.ts` y sin `server-only` para poder probarla sin red, igual que
 // `openrouter-protocol.ts` y `function-calls.ts` con sus respectivos formatos.
+
+// Subconjunto estructural del bloque de contenido de Anthropic: el mismo motivo que
+// `ClaudeStreamEvent` más abajo, para no depender del SDK acá. `claude.ts` lo angosta
+// al tipo real (`Anthropic.ContentBlockParam`) en el borde.
+export type ClaudeContentBlock =
+  | { type: "text"; text: string }
+  | { type: "image"; source: { type: "base64"; media_type: string; data: string } };
+
+// El bloque de imagen de Anthropic anida el mime type en `source` en vez de tenerlo
+// al lado de `data`, como en el resto del proyecto (Gemini, y AiContentPart mismo).
+export function toClaudeContent(contents: AiContent): string | ClaudeContentBlock[] {
+  if (typeof contents === "string") return contents;
+
+  return contents.map((part: AiContentPart) =>
+    part.type === "text"
+      ? { type: "text" as const, text: part.text }
+      : { type: "image" as const, source: { type: "base64" as const, media_type: part.mimeType, data: part.data } },
+  );
+}
 
 // Subconjunto estructural de los eventos del SDK, para que este módulo no dependa
 // de él y siga siendo comprobable con objetos literales.
