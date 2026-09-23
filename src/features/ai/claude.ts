@@ -11,6 +11,7 @@ import {
   deltaText,
   finishBlock,
   startBlock,
+  toClaudeContent,
   type ClaudeStreamEvent,
   type ToolBlocks,
 } from "./claude-protocol";
@@ -25,6 +26,22 @@ import type {
   StreamText,
   StreamTextInput,
 } from "./types";
+
+// `toClaudeContent` (claude-protocol.ts) no depende del SDK, así que su `media_type`
+// es un `string` suelto; se angosta acá a la unión cerrada que exige el SDK. Es un
+// cast seguro porque quien arma las partes de imagen (fetchModerationImage, en
+// moderation.ts) ya valida contra IMAGE_ACCEPTED_TYPES (jpeg/png/webp), subconjunto
+// de los 4 formatos que Anthropic acepta.
+function toRequestContent(contents: GenerateTextInput["contents"]): string | Anthropic.MessageParam["content"] {
+  const content = toClaudeContent(contents);
+  if (typeof content === "string") return content;
+
+  return content.map((block) =>
+    block.type === "text"
+      ? block
+      : { ...block, source: { ...block.source, media_type: block.source.media_type as Anthropic.Base64ImageSource["media_type"] } },
+  );
+}
 
 let cached: { key: string; client: Anthropic } | undefined;
 
@@ -84,7 +101,7 @@ async function callText(input: GenerateTextInput): Promise<string> {
       model,
       max_tokens: claudeMaxTokens(maxOutputTokens),
       system: input.system,
-      messages: [{ role: "user", content: input.contents }],
+      messages: [{ role: "user", content: toRequestContent(input.contents) }],
       output_config: { effort: CLAUDE_EFFORT[input.feature] },
     },
     requestOptions(input),
@@ -186,7 +203,7 @@ export const generateStructured: GenerateStructured = (input) =>
         model,
         max_tokens: claudeMaxTokens(maxOutputTokens),
         system: input.system,
-        messages: [{ role: "user", content: input.contents }],
+        messages: [{ role: "user", content: toRequestContent(input.contents) }],
         output_config: { format: zodOutputFormat(input.schema), effort: CLAUDE_EFFORT[input.feature] },
       },
       requestOptions(input),
