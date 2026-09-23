@@ -19,6 +19,7 @@
 | ¿Por qué el límite de IA está en Postgres y hay dos carriles? | Sin Redis; la asistencia no puede agotar la cuota de la que depende publicar | [0011](../adr/0011-ia-con-gemini.md) |
 | ¿Por qué se configura así Gemini? | Thinking mínimo, sin reintentos, timeouts por función | [0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) |
 | ¿Cómo se cambia de proveedor de IA? | Una variable de entorno: el resto de la capa depende de un puerto, no del SDK | [0031](../adr/0031-proveedor-de-ia-intercambiable-openrouter.md) |
+| ¿Cuál es el proveedor por defecto? | Claude, con el SDK oficial de Anthropic | [0033](../adr/0033-claude-como-proveedor-por-defecto.md) |
 | ¿Por qué hay un filtro de palabras además de la IA? | Es inmediato, gratis y explicable; la IA sigue decidiendo la publicación | [0032](../adr/0032-diccionario-de-moderacion-en-el-editor.md) |
 | ¿Por qué las migraciones son manuales y no hay CI? | Cero herramientas nuevas para un equipo pequeño; el costo está documentado | [0016](../adr/0016-migraciones-sql-manuales.md), [0018](../adr/0018-sin-ci-gates-manuales.md) |
 | ¿Por qué el feed está en `/` y los tags no se ven? | Decisiones de producto documentadas | [0021](../adr/0021-feed-en-raiz-y-global.md), [0020](../adr/0020-tags-como-metadato-interno.md) |
@@ -53,7 +54,7 @@ src/
 │   ├── ui/                   # primitivas shadcn/ui, incluye bubble, marker y message (ADR 0005)
 │   └── shared/               # AppShell, MainNav, BottomNav, HeaderTitle, HeaderAccount, AccountDrawer, UserAvatar, navigation.ts
 ├── features/                 # código por dominio (ADR 0006)
-│   ├── ai/                   # proveedor (Gemini u OpenRouter), chat, moderación, límite por minuto, caché, resumen
+│   ├── ai/                   # proveedor (Claude, Gemini u OpenRouter), chat, moderación, límite por minuto, caché, resumen
 │   ├── auth/
 │   ├── interests/            # paso 2 del onboarding: elegir temas de interés (ADR 0025)
 │   ├── likes/

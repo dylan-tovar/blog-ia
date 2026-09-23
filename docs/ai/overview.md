@@ -1,6 +1,6 @@
 # La capa de IA
 
-Toda la IA del proyecto vive en `src/features/ai/`, solo en el servidor, y pasa por un **proveedor intercambiable**: Gemini (por defecto) u OpenRouter, según `AI_PROVIDER` ([ADR 0031](../adr/0031-proveedor-de-ia-intercambiable-openrouter.md)). Esta página es el mapa: qué hace la IA, por dónde entra cada función, qué límites y protecciones tiene y cómo agregar una función nueva. Las decisiones y sus motivos están en los ADRs enlazados.
+Toda la IA del proyecto vive en `src/features/ai/`, solo en el servidor, y pasa por un **proveedor intercambiable**: Claude (por defecto), Gemini u OpenRouter, según `AI_PROVIDER` ([ADR 0031](../adr/0031-proveedor-de-ia-intercambiable-openrouter.md), [ADR 0033](../adr/0033-claude-como-proveedor-por-defecto.md)). Esta página es el mapa: qué hace la IA, por dónde entra cada función, qué límites y protecciones tiene y cómo agregar una función nueva. Las decisiones y sus motivos están en los ADRs enlazados.
 
 ## Proveedor: un puerto, dos adaptadores
 
@@ -10,6 +10,8 @@ Toda la IA del proyecto vive en `src/features/ai/`, solo en el servidor, y pasa 
 | :--- | :--- |
 | `types.ts` | El puerto: las tres funciones que consume el resto de la capa |
 | `provider.server.ts` | Único lugar que elige el adaptador según `AI_PROVIDER`. Es lo que se importa |
+| `claude.ts` | Adaptador de Claude (`@anthropic-ai/sdk`, el SDK oficial), el proveedor por defecto |
+| `claude-protocol.ts` | Traducción pura del protocolo de Claude, sin I/O y con pruebas sin red |
 | `gemini.ts` | Adaptador de Gemini (`@google/genai`) |
 | `openrouter.ts` | Adaptador de OpenRouter (`fetch` contra su API compatible con OpenAI, sin dependencia nueva) |
 | `openrouter-protocol.ts` | Traducción pura del protocolo de OpenRouter, sin I/O y con pruebas sin red |
@@ -94,14 +96,15 @@ Tipos de error (`AiErrorKind`, `errors.ts`): `rate_limited`, `quota`, `timeout`,
 
 | Aspecto | Valor | ADR |
 | :--- | :--- | :--- |
-| Proveedor | `AI_PROVIDER`, por defecto `gemini`. Solo se exige la configuración del proveedor activo | [0031](../adr/0031-proveedor-de-ia-intercambiable-openrouter.md) |
+| Proveedor | `AI_PROVIDER`, por defecto `claude`. Solo se exige la configuración del proveedor activo | [0031](../adr/0031-proveedor-de-ia-intercambiable-openrouter.md), [0033](../adr/0033-claude-como-proveedor-por-defecto.md) |
+| Modelo con Claude | `CLAUDE_MODEL`, por defecto `claude-opus-5` | [0033](../adr/0033-claude-como-proveedor-por-defecto.md) |
 | Modelo con Gemini | `GEMINI_MODEL`, por defecto `gemini-3.5-flash-lite` | [0011](../adr/0011-ia-con-gemini.md) |
 | Modelo con OpenRouter | `OPENROUTER_MODEL`, **sin valor por defecto**. Debe admitir `tools` y `response_format` | [0031](../adr/0031-proveedor-de-ia-intercambiable-openrouter.md) |
 | Thinking | Solo Gemini (2.5 Flash: presupuesto 0; 3.x: nivel `MINIMAL`). El protocolo de OpenAI no tiene equivalente | [0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) |
 | Reintentos | Ninguno. En Gemini `attempts: 1`; en OpenRouter `fetch` no reintenta por su cuenta | [0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) |
 | Timeouts | Moderación 8 s; defecto 15 s; tono 25 s; chat 45 s, con 15 s para el primer fragmento | [0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) |
-| Temperatura / tokens máx. | Por función en `FEATURE_CONFIG` (`feature-config.ts`), compartida por ambos proveedores | [0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) |
-| Verificación | `pnpm ai:smoke` (Gemini) y `pnpm ai:smoke:openrouter` (OpenRouter, comprueba además el streaming con function calling) | [getting-started](../guides/getting-started.md) |
+| Temperatura / tokens máx. | Por función en `FEATURE_CONFIG` (`feature-config.ts`). **Claude ignora la temperatura**: sus modelos la rechazan y usan `CLAUDE_EFFORT` en su lugar | [0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md), [0033](../adr/0033-claude-como-proveedor-por-defecto.md) |
+| Verificación | `pnpm ai:smoke:claude`, `pnpm ai:smoke` (Gemini) y `pnpm ai:smoke:openrouter`. Los dos primeros comprueban además el streaming con function calling | [getting-started](../guides/getting-started.md) |
 
 ## Protecciones
 

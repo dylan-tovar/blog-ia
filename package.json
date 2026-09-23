@@ -13,10 +13,12 @@
     "test:e2e": "playwright test",
     "seed:dev": "node --env-file=.env.local scripts/seed-dev.mjs",
     "ai:smoke": "node --env-file=.env.local scripts/ai-smoke.mjs",
+    "ai:smoke:claude": "node --env-file=.env.local scripts/ai-smoke-claude.mjs",
     "ai:smoke:openrouter": "node --env-file=.env.local scripts/ai-smoke-openrouter.mjs",
     "verify:writes": "node --env-file=.env.local scripts/verify-post-writes.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.127.0",
     "@base-ui/react": "^1.8.0",
     "@google/genai": "^2.23.0",
     "@supabase/ssr": "^0.12.7",

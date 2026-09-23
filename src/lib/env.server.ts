@@ -13,19 +13,24 @@ export function getServerEnv() {
   });
 }
 
-export const AI_PROVIDERS = ["gemini", "openrouter"] as const;
+export const AI_PROVIDERS = ["claude", "gemini", "openrouter"] as const;
 export type AiProvider = (typeof AI_PROVIDERS)[number];
 
 // Claves y modelo exigidos por cada proveedor. Solo se valida el activo: con
 // AI_PROVIDER=openrouter no hace falta tener una clave de Gemini, y al revés.
 const PROVIDER_REQUIREMENTS = {
+  claude: ["CLAUDE_API_KEY"],
   gemini: ["GEMINI_API_KEY"],
   openrouter: ["OPENROUTER_API_KEY", "OPENROUTER_MODEL"],
 } as const satisfies Record<AiProvider, readonly string[]>;
 
 const aiEnvSchema = z
   .object({
-    AI_PROVIDER: z.enum(AI_PROVIDERS).default("gemini"),
+    AI_PROVIDER: z.enum(AI_PROVIDERS).default("claude"),
+    CLAUDE_API_KEY: z.string().min(1).optional(),
+    // El catálogo de Claude sí es estable, a diferencia del de OpenRouter, así que
+    // sí lleva valor por defecto.
+    CLAUDE_MODEL: z.string().min(1).default("claude-opus-5"),
     GEMINI_API_KEY: z.string().min(1).optional(),
     GEMINI_MODEL: z.string().min(1).default("gemini-3.5-flash-lite"),
     OPENROUTER_API_KEY: z.string().min(1).optional(),
@@ -54,6 +59,8 @@ export function getAiEnv() {
 
   return aiEnvSchema.parse({
     AI_PROVIDER: blankToUndefined(process.env.AI_PROVIDER),
+    CLAUDE_API_KEY: blankToUndefined(process.env.CLAUDE_API_KEY),
+    CLAUDE_MODEL: blankToUndefined(process.env.CLAUDE_MODEL),
     GEMINI_API_KEY: blankToUndefined(process.env.GEMINI_API_KEY),
     GEMINI_MODEL: blankToUndefined(process.env.GEMINI_MODEL),
     OPENROUTER_API_KEY: blankToUndefined(process.env.OPENROUTER_API_KEY),
