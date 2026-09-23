@@ -20,7 +20,7 @@ import {
   savePostSchema,
   tagNameSchema,
 } from "@/features/posts/schemas";
-import { scan } from "@/features/moderation/scan";
+import { scanArticle } from "@/features/moderation/scan";
 import { getFeedPage, type FeedScope } from "@/features/posts/queries";
 import { buildFinalUpdate, classifyPublishClaim } from "@/features/posts/publish";
 
@@ -352,7 +352,7 @@ export async function publishPost(postId: string): Promise<PublishPostResult> {
     // llamada a la IA: es determinista, no cuesta cuota y evita dejar un reclamo
     // colgado. El editor ya deshabilita el botón, pero eso es interfaz: la regla
     // vale acá, como el resto de las que protegen la publicación (ADR 0012).
-    if (scan(`${post.title ?? ""}\n\n${post.content}`).blocked) {
+    if (scanArticle(post.title ?? "", post.content).blocked) {
       return { ok: false, error: PUBLISH_BLOCKED_BY_DICTIONARY };
     }
 
@@ -386,6 +386,7 @@ export async function publishPost(postId: string): Promise<PublishPostResult> {
         .eq("status", "pending_review");
 
     const outcome = await moderateArticle({
+      title: post.title ?? "",
       content: post.content,
       generate: generateStructured,
       rateLimit: () => checkAiRateLimit(user.id, "moderation"),

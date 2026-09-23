@@ -73,12 +73,24 @@ export function normalize(text: string): { text: string; map: number[] } {
     index += char.length;
   }
 
-  for (let index = 0; index < chars.length; index += 1) {
+  // Se procesa por corridas, no carácter por carácter: en "35tup1d0" el "3" inicial
+  // no tiene una letra a su izquierda todavía convertida, pero sí la tiene la corrida
+  // completa "35" si se la mira como un bloque (su vecino derecho, "t", es letra).
+  for (let index = 0; index < chars.length; ) {
     const replacement = LEET[chars[index]];
-    if (!replacement) continue;
-    if (isLetter(chars[index - 1]) || isLetter(chars[index + 1])) {
-      chars[index] = replacement;
+    if (!replacement) {
+      index += 1;
+      continue;
     }
+
+    let end = index + 1;
+    while (end < chars.length && LEET[chars[end]]) end += 1;
+
+    if (isLetter(chars[index - 1]) || isLetter(chars[end])) {
+      for (let i = index; i < end; i += 1) chars[i] = LEET[chars[i]];
+    }
+
+    index = end;
   }
 
   return { text: chars.join(""), map };
@@ -100,22 +112,31 @@ function termPattern(term: string): string {
     .join("");
 }
 
-// Un solo recorrido por categoría: los grupos con nombre identifican qué término
-// coincidió sin tener que volver a probar la lista entera.
-function compile(terms: readonly string[]): RegExp {
-  const alternation = terms
-    .map((term, index) => `(?<t${index}>${termPattern(term)})`)
-    .join("|");
+type DictionaryEntry = { category: ModerationCategory; severity: ModerationSeverity; term: string };
 
-  return new RegExp(`${BOUNDARY_BEFORE}(?:${alternation})s?${BOUNDARY_AFTER}`, "gu");
+// Todo el diccionario en una sola alternación, con los grupos con nombre identificando
+// qué término coincidió: un solo recorrido del texto en vez de uno por categoría.
+//
+// El orden importa: la alternación regex toma la primera alternativa que matchea, no
+// la más larga, así que los términos se ordenan por longitud normalizada descendente
+// para que una frase ("sudaca de mierda") se pruebe antes que un término que empieza
+// igual ("sudaca") y no quede tapada por él.
+function buildDictionary(): { regex: RegExp; entries: DictionaryEntry[] } {
+  const all = MODERATION_CATEGORIES.flatMap((category) =>
+    DICTIONARY[category].map((term) => ({ category, severity: CATEGORY_SEVERITY[category], term })),
+  );
+
+  const entries = [...all].sort((a, b) => normalize(b.term).text.length - normalize(a.term).text.length);
+
+  const alternation = entries.map((entry, index) => `(?<t${index}>${termPattern(entry.term)})`).join("|");
+  // Plural español: "-s" tras vocal ("pendejos"), "-es" tras consonante ("imbeciles",
+  // "cabrones"). Se prueba "es" primero porque la alternación se queda con la que matchea.
+  const regex = new RegExp(`${BOUNDARY_BEFORE}(?:${alternation})(?:es|s)?${BOUNDARY_AFTER}`, "gu");
+
+  return { regex, entries };
 }
 
-const COMPILED = MODERATION_CATEGORIES.map((category) => ({
-  category,
-  severity: CATEGORY_SEVERITY[category],
-  terms: DICTIONARY[category],
-  regex: compile(DICTIONARY[category]),
-}));
+const { regex: DICTIONARY_REGEX, entries: DICTIONARY_ENTRIES } = buildDictionary();
 
 const SEVERITY_ORDER: Record<ModerationSeverity, number> = { grave: 0, leve: 1 };
 
@@ -145,22 +166,19 @@ export function scanText(text: string): ModerationMatch[] {
   const { text: haystack, map } = normalize(text);
   const matches: ModerationMatch[] = [];
 
-  for (const { category, severity, terms, regex } of COMPILED) {
-    regex.lastIndex = 0;
+  DICTIONARY_REGEX.lastIndex = 0;
+  for (const match of haystack.matchAll(DICTIONARY_REGEX)) {
+    const groupName = Object.entries(match.groups ?? {}).find(([, value]) => value !== undefined)?.[0];
+    if (!groupName) continue;
 
-    for (const match of haystack.matchAll(regex)) {
-      const groupName = Object.entries(match.groups ?? {}).find(([, value]) => value !== undefined)?.[0];
-      if (!groupName) continue;
+    const { category, severity, term } = DICTIONARY_ENTRIES[Number(groupName.slice(1))];
+    const from = match.index;
+    const to = from + match[0].length;
 
-      const term = terms[Number(groupName.slice(1))];
-      const from = match.index;
-      const to = from + match[0].length;
+    const start = map[from] ?? 0;
+    const end = to < map.length ? map[to] : text.length;
 
-      const start = map[from] ?? 0;
-      const end = to < map.length ? map[to] : text.length;
-
-      matches.push({ term, category, severity, start, end, excerpt: text.slice(start, end) });
-    }
+    matches.push({ term, category, severity, start, end, excerpt: text.slice(start, end) });
   }
 
   return dropContained(matches);
@@ -187,4 +205,12 @@ export function summarize(matches: ModerationMatch[]): ModerationSummary {
 
 export function scan(text: string): ModerationSummary {
   return summarize(scanText(text));
+}
+
+// Título y contenido se escanean por separado, nunca unidos con un separador: el
+// separador de frases del diccionario ("[\s._-]+") matchea un salto de línea, así
+// que una frase grave podría armarse cruzando el límite entre los dos campos aunque
+// ninguno la contenga por sí solo.
+export function scanArticle(title: string, content: string): ModerationSummary {
+  return summarize([...scanText(title), ...scanText(content)]);
 }

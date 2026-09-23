@@ -98,16 +98,18 @@ export function buildScorePrompt(content: string): Prompt {
   };
 }
 
-export function buildModerationPrompt(content: string): Prompt {
+export function buildModerationPrompt(title: string, content: string): Prompt {
+  const combined = title.trim() ? `Título: ${title.trim()}\n\nContenido:\n${content}` : content;
+
   return {
     systemInstruction: [
       "Sos un moderador de un blog público.",
-      "Evaluá si el texto es apropiado para publicar: no debe contener odio, acoso, amenazas, violencia explícita, contenido sexual explícito, spam evidente ni contenido ilegal. Las opiniones críticas o polémicas son apropiadas si son respetuosas.",
+      "Evaluá si el título y el contenido son apropiados para publicar: no deben contener odio, acoso, amenazas, violencia explícita, contenido sexual explícito, spam evidente ni contenido ilegal. Las opiniones críticas o polémicas son apropiadas si son respetuosas.",
       "Devolvé is_appropriate, reason (una frase breve dirigida al autor que explique el motivo si no es apropiado; vacía si lo es) y suggested_tags.",
-      `suggested_tags son hasta ${MAX_AI_TAGS} etiquetas temáticas cortas, en minúsculas y sin símbolos.`,
+      `suggested_tags son hasta ${MAX_AI_TAGS} etiquetas temáticas cortas, en minúsculas y sin símbolos, considerando también el título.`,
       COMMON_RULES,
     ].join(" "),
-    contents: wrapUserText(content),
+    contents: wrapUserText(combined),
   };
 }
 

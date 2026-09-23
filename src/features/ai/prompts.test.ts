@@ -23,7 +23,7 @@ const BUILDERS = [
   ["outline", (text: string) => buildOutlinePrompt(text)],
   ["titles", (text: string) => buildTitlesPrompt(text)],
   ["score", (text: string) => buildScorePrompt(text)],
-  ["moderation", (text: string) => buildModerationPrompt(text)],
+  ["moderation", (text: string) => buildModerationPrompt("", text)],
   ["summary", (text: string) => buildSummaryPrompt(text)],
   ["tone", (text: string) => buildTonePrompt(text, "formal")],
 ] as const;
@@ -124,6 +124,21 @@ describe("buildTitlesPrompt", () => {
 describe("buildOutlinePrompt", () => {
   it("puts the topic inside the delimiters", () => {
     expect(buildOutlinePrompt("Arquitectura hexagonal").contents).toContain("Arquitectura hexagonal");
+  });
+});
+
+describe("buildModerationPrompt", () => {
+  it("includes the title along with the content, inside the delimiters", () => {
+    const { contents } = buildModerationPrompt("Título ofensivo", "contenido normal");
+
+    expect(contents).toContain("Título ofensivo");
+    expect(contents).toContain("contenido normal");
+  });
+
+  it("omits the title line when there is none", () => {
+    const { contents } = buildModerationPrompt("", "contenido normal");
+
+    expect(contents).not.toContain("Título:");
   });
 });
 

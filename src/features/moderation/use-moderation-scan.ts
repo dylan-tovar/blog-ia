@@ -1,27 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { scan, type ModerationSummary } from "./scan";
+import { scanArticle, summarize, type ModerationSummary } from "./scan";
 
 // Se revisa con rebote, como el autoguardado: el escaneo es barato pero no hace
 // falta rehacerlo en cada tecla, y avisar a mitad de una palabra sería ruido.
 const DEBOUNCE_MS = 400;
 
-const EMPTY: ModerationSummary = {
-  matches: [],
-  grave: 0,
-  leve: 0,
-  blocked: false,
-  categories: [],
-};
+const EMPTY: ModerationSummary = summarize([]);
 
-export function useModerationScan(text: string): ModerationSummary {
+export function useModerationScan(title: string, content: string): ModerationSummary {
   const [summary, setSummary] = useState<ModerationSummary>(EMPTY);
 
   useEffect(() => {
-    const timer = setTimeout(() => setSummary(scan(text)), DEBOUNCE_MS);
+    const timer = setTimeout(() => setSummary(scanArticle(title, content)), DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [text]);
+  }, [title, content]);
 
   return summary;
 }

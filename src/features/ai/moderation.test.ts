@@ -130,6 +130,7 @@ describe("moderateArticle", () => {
     };
 
     const outcome = await moderateArticle({
+      title: "Un titulo normal",
       content: "Un articulo normal",
       generate,
       rateLimit: async () => allowed,
@@ -141,6 +142,24 @@ describe("moderateArticle", () => {
     expect(received?.contents).toContain("Un articulo normal");
   });
 
+  it("sends the title along with the content, so the AI can judge both", async () => {
+    let received: GenerateInput<unknown> | undefined;
+    const generate: GenerateStructured = async (input) => {
+      received = input as GenerateInput<unknown>;
+      return okResult() as never;
+    };
+
+    await moderateArticle({
+      title: "Titulo ofensivo",
+      content: "Contenido normal",
+      generate,
+      rateLimit: async () => allowed,
+    });
+
+    expect(received?.contents).toContain("Titulo ofensivo");
+    expect(received?.contents).toContain("Contenido normal");
+  });
+
   it("does not call the model when the rate limit is exceeded", async () => {
     let calls = 0;
     const generate: GenerateStructured = async () => {
@@ -148,7 +167,7 @@ describe("moderateArticle", () => {
       return okResult() as never;
     };
 
-    const outcome = await moderateArticle({ content: "texto", generate, rateLimit: async () => limited });
+    const outcome = await moderateArticle({ title: "", content: "texto", generate, rateLimit: async () => limited });
 
     expect(calls).toBe(0);
     expect(outcome.kind).toBe("error");
@@ -164,6 +183,7 @@ describe("moderateArticle", () => {
     };
 
     const outcome = await moderateArticle({
+      title: "",
       content: "texto",
       generate,
       rateLimit: async () => ({ ok: false, kind: "unavailable", retryAfter: 0 }),
@@ -178,7 +198,7 @@ describe("moderateArticle", () => {
       throw new AiError("blocked");
     };
 
-    const outcome = await moderateArticle({ content: "texto", generate, rateLimit: async () => allowed });
+    const outcome = await moderateArticle({ title: "", content: "texto", generate, rateLimit: async () => allowed });
 
     expect(outcome.kind === "error" && outcome.error.kind).toBe("blocked");
   });
@@ -188,7 +208,7 @@ describe("moderateArticle", () => {
       throw Object.assign(new Error("boom"), { status: 429 });
     };
 
-    const outcome = await moderateArticle({ content: "texto", generate, rateLimit: async () => allowed });
+    const outcome = await moderateArticle({ title: "", content: "texto", generate, rateLimit: async () => allowed });
 
     expect(outcome.kind === "error" && outcome.error.kind).toBe("quota");
   });
@@ -202,6 +222,7 @@ describe("moderateArticle", () => {
     };
 
     await moderateArticle({
+      title: "",
       content: "texto",
       generate,
       rateLimit: async () => allowed,

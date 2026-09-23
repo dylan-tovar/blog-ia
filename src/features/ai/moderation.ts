@@ -59,11 +59,13 @@ export function decideModeration(outcome: ModerationOutcome, existingTags: strin
 }
 
 export async function moderateArticle({
+  title,
   content,
   generate,
   rateLimit,
   signal,
 }: {
+  title: string;
   content: string;
   generate: GenerateStructured;
   rateLimit: () => Promise<RateLimitResult>;
@@ -75,7 +77,7 @@ export async function moderateArticle({
   }
 
   try {
-    const { systemInstruction, contents } = buildModerationPrompt(content);
+    const { systemInstruction, contents } = buildModerationPrompt(title, content);
     const result = await generate({
       feature: "moderation",
       system: systemInstruction,
