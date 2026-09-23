@@ -92,25 +92,7 @@ export function AccountDrawer({ viewer }: AccountDrawerProps) {
             className="flex items-center gap-4 px-4 py-2.5 text-[15px] text-foreground transition-colors hover:bg-muted/60 cursor-pointer"
           >
             <House className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-            <span>Home</span>
-          </Link>
-
-          <Link
-            href="/subscriptions"
-            onClick={close}
-            className="flex items-center gap-4 px-4 py-2.5 text-[15px] text-foreground transition-colors hover:bg-muted/60 cursor-pointer"
-          >
-            <Inbox className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-            <span>Subscriptions</span>
-          </Link>
-
-          <Link
-            href="/saved"
-            onClick={close}
-            className="flex items-center gap-4 px-4 py-2.5 text-[15px] text-foreground transition-colors hover:bg-muted/60 cursor-pointer"
-          >
-            <Bookmark className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-            <span>Saved</span>
+            <span>Inicio</span>
           </Link>
 
           <Link
@@ -119,7 +101,7 @@ export function AccountDrawer({ viewer }: AccountDrawerProps) {
             className="flex items-center gap-4 px-4 py-2.5 text-[15px] text-foreground transition-colors hover:bg-muted/60 cursor-pointer"
           >
             <Bell className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-            <span>Activity</span>
+            <span>Actividad</span>
           </Link>
 
           <Link
@@ -128,7 +110,7 @@ export function AccountDrawer({ viewer }: AccountDrawerProps) {
             className="flex items-center gap-4 px-4 py-2.5 text-[15px] text-foreground transition-colors hover:bg-muted/60 cursor-pointer"
           >
             <Search className="size-5 shrink-0 text-muted-foreground" aria-hidden />
-            <span>Explore</span>
+            <span>Explorar</span>
           </Link>
         </div>
 
@@ -141,15 +123,7 @@ export function AccountDrawer({ viewer }: AccountDrawerProps) {
             onClick={close}
             className="px-4 py-2.5 text-[15px] text-muted-foreground transition-colors hover:bg-muted/60 cursor-pointer"
           >
-            Settings
-          </Link>
-
-          <Link
-            href="/support"
-            onClick={close}
-            className="px-4 py-2.5 text-[15px] text-muted-foreground transition-colors hover:bg-muted/60 cursor-pointer"
-          >
-            Support
+            Ajustes
           </Link>
 
           <button
@@ -159,7 +133,7 @@ export function AccountDrawer({ viewer }: AccountDrawerProps) {
             className="flex items-center gap-2 px-4 py-2.5 text-left text-[15px] text-muted-foreground transition-colors hover:bg-muted/60 cursor-pointer disabled:opacity-50"
           >
             {isSigningOut && <Loader2 className="size-4 animate-spin" />}
-            <span>Sign out</span>
+            <span>Cerrar sesión</span>
           </button>
         </div>
 
@@ -168,20 +142,11 @@ export function AccountDrawer({ viewer }: AccountDrawerProps) {
         {/* FOOTER LINKS */}
         <DrawerFooter className="px-4 pt-3 pb-1">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-            <Link href="/about" onClick={close} className="hover:text-foreground transition-colors">
-              About
-            </Link>
             <Link href="/privacy" onClick={close} className="hover:text-foreground transition-colors">
               Privacy
             </Link>
             <Link href="/terms" onClick={close} className="hover:text-foreground transition-colors">
               Terms
-            </Link>
-            <Link href="/data" onClick={close} className="hover:text-foreground transition-colors">
-              Data
-            </Link>
-            <Link href="/accessibility" onClick={close} className="hover:text-foreground transition-colors">
-              Accessibility
             </Link>
           </div>
         </DrawerFooter>
