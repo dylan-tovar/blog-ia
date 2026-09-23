@@ -10,7 +10,7 @@ import { notifyFollowersOfNewArticle } from "@/features/subscriptions/notify-fol
 import { createCoverSchema } from "@/features/posts/cover/cover-schema";
 import { MAX_TAGS_PER_POST } from "@/features/ai/constants";
 import type { AiErrorKind } from "@/features/ai/errors";
-import { generateStructured } from "@/features/ai/gemini";
+import { generateStructured } from "@/features/ai/provider.server";
 import { decideModeration, moderateArticle } from "@/features/ai/moderation";
 import { checkAiRateLimit } from "@/features/ai/rate-limit.server";
 import {
@@ -344,6 +344,7 @@ export async function publishPost(postId: string): Promise<PublishPostResult> {
     if (!post.content.trim()) {
       return { ok: false, error: "El artículo no puede estar vacío para publicarlo." };
     }
+
 
     const existingTags = (post.post_tags ?? []).flatMap((link) => (link.tags ? [link.tags.name] : []));
     const previousStatus = post.status === "rejected" ? "rejected" : "draft";

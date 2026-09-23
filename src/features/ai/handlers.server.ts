@@ -17,7 +17,7 @@ import {
 } from "./constants";
 import { runChatStream } from "./chat-stream";
 import { AiError } from "./errors";
-import { generateStructured, generateText, streamText } from "./gemini";
+import { generateStructured, generateText, streamText } from "./provider.server";
 import { cleanToneOutput } from "./output";
 import { loadOwnArticleForAi } from "./posts.server";
 import {

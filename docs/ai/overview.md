@@ -1,6 +1,22 @@
 # La capa de IA
 
-Toda la IA del proyecto usa **Gemini** (`@google/genai`, solo en el servidor) y vive en `src/features/ai/`. Esta página es el mapa: qué hace la IA, por dónde entra cada función, qué límites y protecciones tiene y cómo agregar una función nueva. Las decisiones y sus motivos están en los ADRs enlazados.
+Toda la IA del proyecto vive en `src/features/ai/`, solo en el servidor, y pasa por un **proveedor intercambiable**: Gemini (por defecto) u OpenRouter, según `AI_PROVIDER` ([ADR 0031](../adr/0031-proveedor-de-ia-intercambiable-openrouter.md)). Esta página es el mapa: qué hace la IA, por dónde entra cada función, qué límites y protecciones tiene y cómo agregar una función nueva. Las decisiones y sus motivos están en los ADRs enlazados.
+
+## Proveedor: un puerto, dos adaptadores
+
+`types.ts` define el puerto (`GenerateText`, `GenerateStructured`, `StreamText`) y toda la orquestación depende de esas firmas, nunca del SDK. Cambiar de proveedor o de modelo es una variable de entorno.
+
+| Archivo | Rol |
+| :--- | :--- |
+| `types.ts` | El puerto: las tres funciones que consume el resto de la capa |
+| `provider.server.ts` | Único lugar que elige el adaptador según `AI_PROVIDER`. Es lo que se importa |
+| `gemini.ts` | Adaptador de Gemini (`@google/genai`) |
+| `openrouter.ts` | Adaptador de OpenRouter (`fetch` contra su API compatible con OpenAI, sin dependencia nueva) |
+| `openrouter-protocol.ts` | Traducción pura del protocolo de OpenRouter, sin I/O y con pruebas sin red |
+| `feature-config.ts` | Temperatura y tope de tokens por función, comunes a ambos |
+| `provider-telemetry.ts` | Registro de metadatos y conversión de cualquier fallo en `AiError`, común a ambos |
+
+Diferencia de comportamiento a tener presente: en Gemini cada fragmento del stream trae la llamada a herramienta completa, mientras que en OpenRouter los argumentos llegan troceados y solo se pueden validar al terminar el stream. Con OpenRouter, entonces, el texto de la respuesta aparece primero y las tarjetas de propuesta después, todas juntas. Lo que se valida y cómo es idéntico: ambas pasan por `modelPartsToStreamParts`.
 
 ## Qué hace la IA hoy
 
@@ -78,12 +94,14 @@ Tipos de error (`AiErrorKind`, `errors.ts`): `rate_limited`, `quota`, `timeout`,
 
 | Aspecto | Valor | ADR |
 | :--- | :--- | :--- |
-| Modelo | `GEMINI_MODEL`, por defecto `gemini-3.5-flash-lite` | [0011](../adr/0011-ia-con-gemini.md) |
-| Thinking | 2.5 Flash: presupuesto 0; 3.x: nivel `MINIMAL` | [0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) |
-| Reintentos del SDK | Ninguno (`attempts: 1`) | [0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) |
+| Proveedor | `AI_PROVIDER`, por defecto `gemini`. Solo se exige la configuración del proveedor activo | [0031](../adr/0031-proveedor-de-ia-intercambiable-openrouter.md) |
+| Modelo con Gemini | `GEMINI_MODEL`, por defecto `gemini-3.5-flash-lite` | [0011](../adr/0011-ia-con-gemini.md) |
+| Modelo con OpenRouter | `OPENROUTER_MODEL`, **sin valor por defecto**. Debe admitir `tools` y `response_format` | [0031](../adr/0031-proveedor-de-ia-intercambiable-openrouter.md) |
+| Thinking | Solo Gemini (2.5 Flash: presupuesto 0; 3.x: nivel `MINIMAL`). El protocolo de OpenAI no tiene equivalente | [0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) |
+| Reintentos | Ninguno. En Gemini `attempts: 1`; en OpenRouter `fetch` no reintenta por su cuenta | [0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) |
 | Timeouts | Moderación 8 s; defecto 15 s; tono 25 s; chat 45 s, con 15 s para el primer fragmento | [0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) |
-| Temperatura / tokens máx. | Por función en `FEATURE_CONFIG` (`gemini.ts`) | [0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) |
-| Verificación | `pnpm ai:smoke` comprueba modelo y salida JSON | [getting-started](../guides/getting-started.md) |
+| Temperatura / tokens máx. | Por función en `FEATURE_CONFIG` (`feature-config.ts`), compartida por ambos proveedores | [0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) |
+| Verificación | `pnpm ai:smoke` (Gemini) y `pnpm ai:smoke:openrouter` (OpenRouter, comprueba además el streaming con function calling) | [getting-started](../guides/getting-started.md) |
 
 ## Protecciones
 
