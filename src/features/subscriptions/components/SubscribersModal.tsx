@@ -79,7 +79,7 @@ export function SubscribersModal({
               className="flex items-center justify-between gap-3 py-3 first:pt-1 last:pb-1"
             >
               <Link
-                href={`/author/${sub.id}`}
+                href={`/${sub.username}`}
                 onClick={() => setOpen(false)}
                 className="flex min-w-0 flex-1 items-center gap-3 transition-opacity hover:opacity-85"
               >

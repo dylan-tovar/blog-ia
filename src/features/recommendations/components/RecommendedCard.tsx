@@ -4,7 +4,7 @@ import type { RecommendedPost } from "@/features/recommendations/queries";
 export function RecommendedCard({ post }: { post: RecommendedPost }) {
   return (
     <Link
-      href={`/post/${post.id}`}
+      href={`/p/${post.id}`}
       className="flex h-full flex-col rounded-xl border border-border/80 bg-card p-4 transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
     >
       {post.author && (

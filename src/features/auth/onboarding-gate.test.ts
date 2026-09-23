@@ -101,7 +101,7 @@ describe("isProtectedPath", () => {
   });
 
   it("does not match public paths", () => {
-    for (const p of ["/", "/login", "/explore", "/post/1", "/author/1"]) {
+    for (const p of ["/", "/login", "/explore", "/p/1", "/algunusername"]) {
       expect(isProtectedPath(p)).toBe(false);
     }
   });

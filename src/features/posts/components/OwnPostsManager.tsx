@@ -212,7 +212,7 @@ export function OwnPostsManager({ initialPosts }: OwnPostsManagerProps) {
           filteredPosts.map((post) => {
             const isPublished = post.status === "published";
             const isCopied = copiedId === post.id;
-            const primaryHref = isPublished ? `/post/${post.id}` : `/editor/${post.id}`;
+            const primaryHref = isPublished ? `/p/${post.id}` : `/editor/${post.id}`;
 
             return (
               <article
@@ -258,7 +258,7 @@ export function OwnPostsManager({ initialPosts }: OwnPostsManagerProps) {
                         <>
                           <DropdownMenuItem
                             className="cursor-pointer gap-2 text-xs font-medium"
-                            render={<Link href={`/post/${post.id}`} />}
+                            render={<Link href={`/p/${post.id}`} />}
                           >
                             <ExternalLink className="size-3.5" />
                             <span>Ver artículo público</span>
@@ -340,7 +340,7 @@ export function OwnPostsManager({ initialPosts }: OwnPostsManagerProps) {
                   {isPublished && (
                     <>
                       <Link
-                        href={`/post/${post.id}`}
+                        href={`/p/${post.id}`}
                         className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       >
                         <ExternalLink className="size-3.5" />

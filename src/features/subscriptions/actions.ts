@@ -3,6 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth";
 import { idSchema } from "@/features/posts/schemas";
+import { getUsernameById } from "@/features/profile/queries";
+
+// Same reasoning as posts/actions.ts's revalidateAuthorProfile: the public
+// profile route is /[username], and these actions only have the followed
+// author's id.
+async function revalidateAuthorProfile(authorId: string) {
+  const username = await getUsernameById(authorId);
+  if (username) {
+    revalidatePath(`/${username}`);
+  }
+}
 
 export type FollowResult = { ok: boolean };
 
@@ -25,7 +36,7 @@ export async function followAuthor(authorId: string): Promise<FollowResult> {
     );
 
   revalidatePath("/");
-  revalidatePath(`/author/${authorId}`);
+  await revalidateAuthorProfile(authorId);
   return { ok: !error };
 }
 
@@ -43,6 +54,6 @@ export async function unfollowAuthor(authorId: string): Promise<FollowResult> {
     .eq("author_id", authorId);
 
   revalidatePath("/");
-  revalidatePath(`/author/${authorId}`);
+  await revalidateAuthorProfile(authorId);
   return { ok: !error };
 }

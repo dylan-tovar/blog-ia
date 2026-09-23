@@ -6,7 +6,7 @@ import type { NotificationType } from "@/lib/supabase/database.types";
 // `notifications` has two FKs to `profiles` (recipient_id, actor_id): PostgREST
 // needs the FK name to disambiguate which one `actor` embeds, or it rejects the
 // query with PGRST201.
-const ACTOR_EMBED = "actor:profiles!notifications_actor_id_fkey(id, display_name)";
+const ACTOR_EMBED = "actor:profiles!notifications_actor_id_fkey(id, display_name, username)";
 const NOTE_EXCERPT_MAX_LENGTH = 140;
 
 export const NOTIFICATIONS_PAGE_SIZE = 20;
@@ -16,7 +16,7 @@ export type Notification = {
   type: NotificationType;
   createdAt: string;
   readAt: string | null;
-  actor: { id: string; displayName: string } | null;
+  actor: { id: string; displayName: string; username: string | null } | null;
   // 'like': post likeado. 'note': post padre (para navegar al hilo). 'follow': null.
   postId: string | null;
   // Solo 'note': primeras líneas de la nota dejada.
@@ -30,7 +30,7 @@ type NotificationRow = {
   note_id: string | null;
   read_at: string | null;
   created_at: string;
-  actor: { id: string; display_name: string } | null;
+  actor: { id: string; display_name: string; username: string | null } | null;
 };
 
 async function getNoteExcerpts(noteIds: string[]) {
@@ -62,7 +62,9 @@ function toNotification(row: NotificationRow, noteExcerpts: Map<string, string>)
     type: row.type,
     createdAt: row.created_at,
     readAt: row.read_at,
-    actor: row.actor ? { id: row.actor.id, displayName: row.actor.display_name } : null,
+    actor: row.actor
+      ? { id: row.actor.id, displayName: row.actor.display_name, username: row.actor.username }
+      : null,
     postId: row.post_id,
     noteExcerpt: row.note_id ? (noteExcerpts.get(row.note_id) ?? null) : null,
   };

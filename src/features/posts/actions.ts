@@ -23,6 +23,17 @@ import {
 import { scanArticle } from "@/features/moderation/scan";
 import { getFeedPage, type FeedScope } from "@/features/posts/queries";
 import { buildFinalUpdate, buildModerationImages, classifyPublishClaim } from "@/features/posts/publish";
+import { getUsernameById } from "@/features/profile/queries";
+
+// The public profile route is /[username], not /author/[id] — revalidatePath
+// needs the username, which mutations here only have the author's id for.
+// No-ops (nothing to invalidate) if the lookup comes back empty.
+async function revalidateAuthorProfile(authorId: string) {
+  const username = await getUsernameById(authorId);
+  if (username) {
+    revalidatePath(`/${username}`);
+  }
+}
 
 export type CreateNoteState = { ok?: boolean; error?: string } | undefined;
 
@@ -61,9 +72,9 @@ export async function createNote(
   }
 
   revalidatePath("/");
-  revalidatePath(`/author/${user.id}`);
+  await revalidateAuthorProfile(user.id);
   if (parentPostId) {
-    revalidatePath(`/post/${parentPostId}`);
+    revalidatePath(`/p/${parentPostId}`);
   }
   return { ok: true };
 }
@@ -88,11 +99,11 @@ export async function deleteNote(postId: string): Promise<{ ok: boolean }> {
   }
 
   revalidatePath("/");
-  revalidatePath(`/author/${user.id}`);
-  revalidatePath(`/post/${postId}`);
+  await revalidateAuthorProfile(user.id);
+  revalidatePath(`/p/${postId}`);
   const parentPostId = data[0].parent_post_id;
   if (parentPostId) {
-    revalidatePath(`/post/${parentPostId}`);
+    revalidatePath(`/p/${parentPostId}`);
   }
   return { ok: true };
 }
@@ -128,11 +139,11 @@ export async function updateNote(
   }
 
   revalidatePath("/");
-  revalidatePath(`/author/${user.id}`);
-  revalidatePath(`/post/${postId}`);
+  await revalidateAuthorProfile(user.id);
+  revalidatePath(`/p/${postId}`);
   const parentPostId = data[0].parent_post_id;
   if (parentPostId) {
-    revalidatePath(`/post/${parentPostId}`);
+    revalidatePath(`/p/${parentPostId}`);
   }
   return { ok: true };
 }
@@ -240,7 +251,7 @@ export async function savePostCover(postId: string, input: unknown): Promise<Sav
 
   revalidatePath("/");
   revalidatePath("/explore");
-  revalidatePath(`/author/${user.id}`);
+  await revalidateAuthorProfile(user.id);
   return { ok: true };
 }
 
@@ -429,9 +440,9 @@ export async function publishPost(postId: string): Promise<PublishPostResult> {
 
     revalidatePath("/");
     revalidatePath("/posts");
-    revalidatePath(`/post/${post.id}`);
+    revalidatePath(`/p/${post.id}`);
     revalidatePath(`/editor/${post.id}`);
-    revalidatePath(`/author/${user.id}`);
+    await revalidateAuthorProfile(user.id);
 
     if (decision.status === "rejected") {
       return { ok: true, status: "rejected", reason: decision.reason };
@@ -558,7 +569,7 @@ export async function deletePost(postId: string): Promise<{ ok: boolean; error?:
 
   revalidatePath("/posts");
   revalidatePath("/");
-  revalidatePath(`/author/${user.id}`);
-  revalidatePath(`/post/${postId}`);
+  await revalidateAuthorProfile(user.id);
+  revalidatePath(`/p/${postId}`);
   return { ok: true };
 }

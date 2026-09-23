@@ -16,7 +16,13 @@ const ICONS: Record<(typeof NAV_ITEMS)[number]["href"], LucideIcon> = {
   "/profile": User,
 };
 
-export function BottomNav({ initialUnreadCount = 0 }: { initialUnreadCount?: number }) {
+export function BottomNav({
+  initialUnreadCount = 0,
+  viewerUsername,
+}: {
+  initialUnreadCount?: number;
+  viewerUsername?: string | null;
+}) {
   const pathname = usePathname();
 
   return (
@@ -27,7 +33,7 @@ export function BottomNav({ initialUnreadCount = 0 }: { initialUnreadCount?: num
       <ul className="mx-auto flex max-w-2xl">
         {NAV_ITEMS.map((item) => {
           const Icon = ICONS[item.href];
-          const active = isNavItemActive(pathname, item.href);
+          const active = isNavItemActive(pathname, item.href, viewerUsername);
           return (
             <li key={item.href} className="flex-1">
               <Link

@@ -46,6 +46,22 @@ describe("usernameSchema", () => {
     expect(usernameSchema.safeParse(undefined).success).toBe(false);
     expect(usernameSchema.safeParse(42).success).toBe(false);
   });
+
+  it.each(["login", "settings", "explore", "author", "post", "p", "api", "unsubscribe"])(
+    "rejects the reserved word %j (shadowed by a real route)",
+    (value) => {
+      expect(usernameSchema.safeParse(value).success).toBe(false);
+    },
+  );
+
+  it("reserved-word check is case/whitespace insensitive (normalizes first)", () => {
+    expect(usernameSchema.safeParse("  Login  ").success).toBe(false);
+  });
+
+  it("explains why a reserved word is rejected", () => {
+    const result = usernameSchema.safeParse("settings");
+    expect(result.error?.issues[0].message).toBe("Ese nombre de usuario no está disponible.");
+  });
 });
 
 describe("updateProfileSchema", () => {

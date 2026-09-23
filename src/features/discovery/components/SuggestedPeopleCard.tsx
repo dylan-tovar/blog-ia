@@ -65,7 +65,7 @@ export function SuggestedPeopleCard({
               </button>
 
               <Link
-                href={`/author/${person.id}`}
+                href={person.username ? `/${person.username}` : "#"}
                 className="flex w-full flex-col items-center pt-1 transition-opacity hover:opacity-85"
               >
                 <UserAvatar name={person.displayName} className="size-14 text-base" />
@@ -126,7 +126,7 @@ export function SuggestedPeopleCard({
         {people.map((person) => (
           <li key={person.id} className="flex items-center justify-between gap-2.5">
             <Link
-              href={`/author/${person.id}`}
+              href={person.username ? `/${person.username}` : "#"}
               className="flex min-w-0 flex-1 items-center gap-3 rounded-md transition-opacity hover:opacity-85"
             >
               <UserAvatar name={person.displayName} className="size-10 shrink-0" />

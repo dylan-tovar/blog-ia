@@ -323,7 +323,7 @@ export function AuthorProfileView({
                   className="flex items-center justify-between gap-3 py-3.5"
                 >
                   <Link
-                    href={`/author/${sub.id}`}
+                    href={`/${sub.username}`}
                     className="flex min-w-0 flex-1 items-center gap-3 transition-opacity hover:opacity-85"
                   >
                     <UserAvatar name={sub.displayName} className="size-11 shrink-0" />
