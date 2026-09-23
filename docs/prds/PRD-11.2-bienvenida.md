@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | :--- | :--- |
-| Estado | **Por implementar** |
+| Estado | **Implementado.** Auditoría 2026-09-23: `welcomeEmail` en `src/lib/email/templates/welcome.ts`, enviado desde `src/features/profile/actions.ts` (`completeOnboarding`) |
 | Depende de | [PRD-11](PRD-11-emails-transaccionales.md) (setup compartido de `src/lib/email/`), [PRD-1](PRD-1-auth.md) (onboarding y `completeOnboarding`) |
 | Migraciones | Ninguna |
 | ADRs relacionados | [0028](../adr/0028-emails-transaccionales-resend.md) |

@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | :--- | :--- |
-| Estado | **Por implementar** |
+| Estado | **Implementado.** Auditoría 2026-09-23: `newArticleEmail` en `src/lib/email/templates/new-article.ts`, fan-out en `src/features/subscriptions/notify-followers.ts`, opt-out (`notify_new_article_email`) y baja sin login (`/unsubscribe/[token]`) en el código ([ADR 0028](../adr/0028-emails-transaccionales-resend.md)) |
 | Depende de | [PRD-11](PRD-11-emails-transaccionales.md) (setup compartido), [PRD-3.1](PRD-3.1-follow-system.md) (`subscriptions`), [PRD-5.3](PRD-5.3-publish-moderation.md) (`publishPost`) |
 | Migraciones | `0012_email_preferences.sql` (nueva) |
 | ADRs relacionados | [0028](../adr/0028-emails-transaccionales-resend.md), [0007](../adr/0007-login-por-username-con-secret-key.md) (precedente de `SECURITY DEFINER` sobre `auth.users`) |
