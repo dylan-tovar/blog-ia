@@ -25,6 +25,11 @@
 | ¿Por qué las migraciones son manuales y no hay CI? | Cero herramientas nuevas para un equipo pequeño; el costo está documentado | [0016](../adr/0016-migraciones-sql-manuales.md), [0018](../adr/0018-sin-ci-gates-manuales.md) |
 | ¿Por qué el feed está en `/` y los tags no se ven? | Decisiones de producto documentadas | [0021](../adr/0021-feed-en-raiz-y-global.md), [0020](../adr/0020-tags-como-metadato-interno.md) |
 | ¿Por qué `/` muestra solo a quienes sigo, con recomendados intercalados? | Seguir tiene efecto visible y el descubrimiento sigue dentro del flujo; el feed global queda para visitantes, sin seguidos y `?tag=` | [0026](../adr/0026-feed-de-seguidos-con-recomendados.md) |
+| ¿De dónde salen las notificaciones de Actividad? | Triggers SQL sobre `subscriptions`, `likes` y `posts`, no la app | [0027](../adr/0027-notificaciones-por-triggers-sql.md) |
+| ¿Cómo se mandan los emails transaccionales? | Resend, plantillas propias, sin cola: fan-out directo al publicar | [0028](../adr/0028-emails-transaccionales-resend.md) |
+| ¿Se puede responder a una respuesta? | Sí, con hilo plano (siempre la misma raíz) reconstruido en memoria, no un árbol real | [0029](../adr/0029-respuestas-a-respuestas.md) |
+| ¿Cómo se busca y se descubre gente para seguir? | 3ra columna en desktop (búsqueda ILIKE, sugeridos por afinidad de tags, temas); en mobile vía `/explore` y un ícono en el header | [0030](../adr/0030-descubrimiento-busqueda-sugeridos-temas.md) |
+| ¿Por qué `/author/[id]` y `/post/[id]` ya no son las URLs que se linkean? | Pasaron a `/[username]` y `/p/[id]`; las viejas siguen andando con redirect permanente | [0035](../adr/0035-renombrado-de-rutas-post-y-author.md) |
 
 ## Estructura del repositorio
 
@@ -44,7 +49,7 @@ blog-ia/
 src/
 ├── app/                      # rutas (App Router)
 │   ├── (auth)/               # login, register, onboarding (sin AppShell)
-│   ├── (public)/             # /, /explore, /post/[id], /author/[id] (con AppShell)
+│   ├── (public)/             # /, /explore, /[username], /p/[id] (con AppShell); /author/[id] y /post/[id] quedan como redirect permanente (ADR 0035)
 │   ├── (dashboard)/          # /posts, /profile, /settings, /activity (con AppShell)
 │   ├── (editor)/             # /editor/[id] (pantalla completa, sin AppShell)
 │   ├── api/ai/               # Route Handlers de IA: chat (stream), outline, titles, tone, score
@@ -55,11 +60,13 @@ src/
 │   ├── ui/                   # primitivas shadcn/ui, incluye bubble, marker y message (ADR 0005)
 │   └── shared/               # AppShell, MainNav, BottomNav, HeaderTitle, HeaderAccount, AccountDrawer, UserAvatar, navigation.ts
 ├── features/                 # código por dominio (ADR 0006)
-│   ├── ai/                   # proveedor (Claude, Gemini u OpenRouter), chat, moderación, límite por minuto, caché, resumen
+│   ├── ai/                   # proveedor (Claude, Gemini u OpenRouter), chat, moderación (texto e imágenes), límite por minuto, caché, resumen
 │   ├── auth/
+│   ├── discovery/            # búsqueda ILIKE, gente sugerida por afinidad de tags (ADR 0030)
 │   ├── interests/            # paso 2 del onboarding: elegir temas de interés (ADR 0025)
 │   ├── likes/
 │   ├── moderation/           # diccionario determinista de odio, amenazas e insultos (ADR 0032)
+│   ├── notifications/        # feed de Actividad: follow, like, nota (ADR 0027)
 │   ├── posts/                # incluye el editor Tiptap y el motor de aplicar ediciones
 │   ├── profile/
 │   ├── recommendations/
@@ -85,8 +92,8 @@ Los paréntesis no forman parte de la URL: `(dashboard)/posts/page.tsx` responde
 | Grupo | Rutas | Acceso |
 | :--- | :--- | :--- |
 | `(auth)` | `/login`, `/register`, `/onboarding` | `/login` y `/register` son públicos; `/onboarding` exige sesión y onboarding pendiente (paso 1: perfil; paso 2: intereses). Sin barra de navegación |
-| `(public)` | `/` (el feed), `/explore`, `/post/[id]`, `/author/[id]` | Público. `/` es global para visitantes; con sesión y siguiendo a alguien muestra solo seguidos y propios con recomendados intercalados ([ADR 0026](../adr/0026-feed-de-seguidos-con-recomendados.md)). El feed, `/explore` y `/post/[id]` solo muestran posts `published`. Seguir, dar like y registrar lecturas requieren sesión (las actions redirigen a `/login`) |
-| `(dashboard)` | `/posts`, `/profile`, `/settings`, `/activity` | Requiere sesión. `/profile` redirige a `/author/<id>` del usuario. `/activity` es hoy una pantalla vacía |
+| `(public)` | `/` (el feed), `/explore`, `/p/[id]`, `/[username]` | Público. `/` es global para visitantes; con sesión y siguiendo a alguien muestra solo seguidos y propios con recomendados intercalados ([ADR 0026](../adr/0026-feed-de-seguidos-con-recomendados.md)). El feed, `/explore` y `/p/[id]` solo muestran posts `published`. Seguir, dar like y registrar lecturas requieren sesión (las actions redirigen a `/login`). `/post/[id]` y `/author/[id]` siguen respondiendo con un redirect permanente a `/p/[id]` y `/[username]` ([ADR 0035](../adr/0035-renombrado-de-rutas-post-y-author.md)) |
+| `(dashboard)` | `/posts`, `/profile`, `/settings`, `/activity` | Requiere sesión. `/profile` redirige a `/<username>` del usuario. `/activity` lista las notificaciones reales (follow, like, nota) de `notifications`, paginadas, y las marca leídas al visitarla ([ADR 0027](../adr/0027-notificaciones-por-triggers-sql.md)) |
 | `(editor)` | `/editor/[id]` (`new` o el id de un artículo) | Requiere sesión. Layout propio sin `AppShell`; solo desde computadora (`DesktopOnly`) |
 | `api/ai` | `POST /api/ai/chat` (stream NDJSON) y `/outline`, `/titles`, `/tone`, `/score` (JSON, deprecadas: [ADR 0019](../adr/0019-rutas-legacy-de-ia-deprecadas.md)) | Autentican dentro del handler; responden 401 en JSON |
 
@@ -117,7 +124,7 @@ flowchart LR
   RH --> Z
   Z --> S[(Supabase<br/>RLS)]
   SC --> S
-  RH --> G[Gemini]
+  RH --> G["Proveedor de IA<br/>(Claude por defecto)"]
 ```
 
 | Paso | Detalle |
@@ -152,21 +159,21 @@ Clientes de Supabase:
 
 ## Publicar: moderación con reclamo
 
-`publishPost` no publica directo: reclama el artículo con un compare-and-set, lo modera con Gemini y decide. Las transiciones de estado las hace solo el servidor ([ADR 0011](../adr/0011-ia-con-gemini.md), [ADR 0012](../adr/0012-integridad-de-escritura-de-posts.md)).
+`publishPost` no publica directo: reclama el artículo con un compare-and-set, lo modera con el proveedor de IA activo (Claude por defecto, [ADR 0033](../adr/0033-claude-como-proveedor-por-defecto.md)) y decide. Las transiciones de estado las hace solo el servidor ([ADR 0011](../adr/0011-ia-con-gemini.md), [ADR 0012](../adr/0012-integridad-de-escritura-de-posts.md)).
 
 ```mermaid
 sequenceDiagram
   participant A as Autor (PublishDialog)
   participant S as publishPost
   participant D as Postgres
-  participant G as Gemini
+  participant G as Proveedor de IA
   A->>S: publishPost(id)
   S->>D: lee el artículo con el cliente del usuario (dueño y tipo)
   S->>D: reclamo: status = pending_review<br/>donde status y updated_at siguen iguales
   alt otro reclamo activo
     S-->>A: "ya se está revisando"
   else reclamo obtenido
-    S->>G: moderar (carril moderation)
+    S->>G: moderar texto e imágenes (carril moderation)
     alt límite de peticiones
       S->>D: libera el reclamo
       S-->>A: "reintenta en N s" (no se publica)
@@ -174,7 +181,7 @@ sequenceDiagram
       S->>D: published + published_at<br/>solo si updated_at == reclamo
       S->>D: adjunta tags sugeridos (máx. 5 de IA, 8 en total)
       S-->>A: publicado
-    else inapropiado o bloqueado por Gemini
+    else inapropiado o bloqueado por el proveedor
       S->>D: rejected + rejection_reason
       S-->>A: rechazado con el motivo
     end
@@ -190,7 +197,7 @@ sequenceDiagram
   participant U as Autor
   participant C as Cajón del chat (cliente)
   participant R as POST /api/ai/chat
-  participant G as Gemini
+  participant G as Proveedor de IA
   U->>C: mensaje (o acción rápida)
   C->>C: snapshot del editor (bloques b0.., selección)
   C->>R: JSON con estado del editor + historial
@@ -243,12 +250,11 @@ Las features de los PRDs 0 a 9 existen en código, con las limitaciones que cada
 | `update_plan` del chat sin declarar como herramienta | El manejo existe pero el modelo no puede emitirlo | [ADR 0013](../adr/0013-chat-ia-protocolo-ndjson-y-function-calling.md) |
 | Re-moderar artículos ya publicados al editarlos | No se hace | [ADR 0011](../adr/0011-ia-con-gemini.md) |
 | Imágenes en el editor (subida y render a lectores) | No existe almacenamiento | [ADR 0010](../adr/0010-editor-markdown.md) |
-| `/activity` con notificaciones reales | Pantalla vacía | [PRD-9](../prds/PRD-9-explore-activity.md) |
-| Opciones de `PostOptionsDrawer` (Guardar, Seguir, Ocultar publicación, Bloquear, Reportar) | Solo cierran el panel; no hay funcionalidad detrás | [PRD-9](../prds/PRD-9-explore-activity.md) |
+| Opciones de `PostOptionsDrawer` (Guardar, Ocultar publicación, Bloquear, Reportar) | Solo cierran el panel; no hay funcionalidad detrás (Seguir y Eliminar sí funcionan) | [PRD-9](../prds/PRD-9-explore-activity.md) |
 | Ajustes de cuenta: email | Solo lectura | [PRD-1](../prds/PRD-1-auth.md) |
 | `AccountDrawer`: 8 de sus 13 enlaces no tienen página (`/subscriptions`, `/saved`, `/support`, `/about`, `/privacy`, `/terms`, `/data`, `/accessibility`) | 404 al hacer clic | [PRD-9](../prds/PRD-9-explore-activity.md) |
 | Pestaña "Subscriptions" del perfil | Siempre vacía; las pestañas tienen etiquetas en inglés | [PRD-3](../prds/PRD-3-feed-follows.md) |
-| Búsqueda por texto | No existe | [PRD-3](../prds/PRD-3-feed-follows.md) |
+| Búsqueda semántica (`pg_trgm`/`tsvector`) | Hoy es ILIKE con índice `lower(...)`, suficiente al volumen actual | [ADR 0030](../adr/0030-descubrimiento-busqueda-sugeridos-temas.md) |
 | Avatares | `profiles.avatar_url` existe sin uso; se muestran iniciales | [PRD-1](../prds/PRD-1-auth.md) |
 | CI, hooks y e2e vigentes | Sin CI; los e2e necesitan arreglos | [ADR 0018](../adr/0018-sin-ci-gates-manuales.md) |
 | Migraciones con CLI y tipos generados | Manual | [ADR 0016](../adr/0016-migraciones-sql-manuales.md) |
