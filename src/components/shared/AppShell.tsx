@@ -5,6 +5,7 @@ import { BottomNav } from "@/components/shared/BottomNav";
 import { HeaderAccount } from "@/components/shared/HeaderAccount";
 import { HeaderTitle } from "@/components/shared/HeaderTitle";
 import { DesktopSidebar } from "@/components/shared/DesktopSidebar";
+import { RightRail } from "@/components/shared/RightRail";
 import { getUnreadNotificationCount } from "@/features/notifications/queries";
 import { getViewer } from "@/lib/viewer";
 
@@ -53,9 +54,14 @@ async function SignedInChrome({ fab }: { fab?: (viewer: Viewer) => ReactNode }) 
 export function AppShell({
   children,
   fab,
+  rightRail = false,
 }: {
   children: ReactNode;
   fab?: (viewer: Viewer) => ReactNode;
+  // Opt-in: the discovery sidebar (search/suggested people/topics) only makes sense on
+  // the public feed, not on dashboard pages like the editor or settings — those would
+  // otherwise pay for its query chain on every load for no reason.
+  rightRail?: boolean;
 }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -94,8 +100,14 @@ export function AppShell({
             {children}
           </main>
 
-          {/* Right Column: Reserved for desktop discovery widgets */}
-          <aside className="sticky top-0 hidden h-screen w-80 shrink-0 flex-col p-6 xl:block" />
+          {/* Right Column: desktop discovery widgets (search/suggested people/topics) */}
+          <aside className="sticky top-0 hidden h-screen w-80 shrink-0 flex-col overflow-y-auto p-6 xl:flex">
+            {rightRail && (
+              <Suspense fallback={null}>
+                <RightRail />
+              </Suspense>
+            )}
+          </aside>
         </div>
       </div>
 

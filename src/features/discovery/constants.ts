@@ -1,0 +1,4 @@
+export const SUGGESTED_PEOPLE_LIMIT = 5;
+export const SUGGESTED_PEOPLE_POOL = 50;
+export const SEARCH_RESULTS_LIMIT = 8;
+export const SEARCH_QUERY_MAX_LENGTH = 100;

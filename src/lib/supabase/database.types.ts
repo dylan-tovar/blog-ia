@@ -401,6 +401,10 @@ export type Database = {
         Args: { p_limit?: number };
         Returns: { id: string; name: string; uses: number }[];
       };
+      popular_authors: {
+        Args: { p_exclude?: string[]; p_limit?: number };
+        Returns: { id: string; follower_count: number }[];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
