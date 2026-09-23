@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AI_DRAWER_ID } from "@/features/ai/components/chat/ai-drawer";
+import { ModerationBadge } from "@/features/moderation/components/ModerationNotice";
+import type { ModerationSummary } from "@/features/moderation/scan";
 import { PostStatusBadge } from "@/features/posts/components/PostStatusBadge";
 import type { SaveState } from "@/features/posts/components/editor/use-autosave";
 import { contentCounter } from "@/features/posts/limits";
@@ -24,6 +26,7 @@ interface EditorTopBarProps {
   previewing: boolean;
   canPublish: boolean;
   contentLength: number;
+  moderation: ModerationSummary;
   onTogglePreview: () => void;
   onContinue: () => void;
   aiOpen: boolean;
@@ -37,6 +40,7 @@ export function EditorTopBar({
   previewing,
   canPublish,
   contentLength,
+  moderation,
   onTogglePreview,
   onContinue,
   aiOpen,
@@ -82,6 +86,8 @@ export function EditorTopBar({
               : `${Math.abs(counter.remaining).toLocaleString("es")} caracteres de más`}
           </span>
         )}
+
+        <ModerationBadge summary={moderation} />
 
         <div className="ml-auto flex items-center gap-2">
           <Button

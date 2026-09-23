@@ -20,6 +20,7 @@ import {
   savePostSchema,
   tagNameSchema,
 } from "@/features/posts/schemas";
+import { scan } from "@/features/moderation/scan";
 import { getFeedPage, type FeedScope } from "@/features/posts/queries";
 import { buildFinalUpdate, classifyPublishClaim } from "@/features/posts/publish";
 
@@ -251,6 +252,8 @@ export type PublishPostResult =
 
 const PUBLISH_FAILED = "No pudimos publicar el artículo. Intentá de nuevo.";
 const PUBLISH_IN_PROGRESS = "Este artículo ya se está revisando. Probá de nuevo en unos segundos.";
+const PUBLISH_BLOCKED_BY_DICTIONARY =
+  "El artículo contiene términos de odio o de amenaza a una persona. Revisalos en el editor para poder publicarlo.";
 const PUBLISH_CHANGED = "El artículo cambió mientras lo revisábamos. Volvé a publicar.";
 
 type SupabaseUserClient = Awaited<ReturnType<typeof createClient>>;
@@ -321,7 +324,7 @@ export async function publishPost(postId: string): Promise<PublishPostResult> {
   try {
     const { data: post } = await supabase
       .from("posts")
-      .select("id, content, status, updated_at, post_tags(tags(name))")
+      .select("id, title, content, status, updated_at, post_tags(tags(name))")
       .eq("id", postId)
       .eq("author_id", user.id)
       .eq("type", "article")
@@ -345,6 +348,13 @@ export async function publishPost(postId: string): Promise<PublishPostResult> {
       return { ok: false, error: "El artículo no puede estar vacío para publicarlo." };
     }
 
+    // El diccionario se revisa antes de reclamar el artículo y antes de gastar una
+    // llamada a la IA: es determinista, no cuesta cuota y evita dejar un reclamo
+    // colgado. El editor ya deshabilita el botón, pero eso es interfaz: la regla
+    // vale acá, como el resto de las que protegen la publicación (ADR 0012).
+    if (scan(`${post.title ?? ""}\n\n${post.content}`).blocked) {
+      return { ok: false, error: PUBLISH_BLOCKED_BY_DICTIONARY };
+    }
 
     const existingTags = (post.post_tags ?? []).flatMap((link) => (link.tags ? [link.tags.name] : []));
     const previousStatus = post.status === "rejected" ? "rejected" : "draft";

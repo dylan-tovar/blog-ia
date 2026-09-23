@@ -15,6 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MAX_TAGS_PER_POST } from "@/features/ai/constants";
+import { ModerationDetails } from "@/features/moderation/components/ModerationNotice";
+import type { ModerationSummary } from "@/features/moderation/scan";
 import { formatRetry } from "@/features/ai/components/ai-ui";
 import { useCountdown } from "@/features/ai/components/use-countdown";
 import { addTag, publishPost, removeTag, savePostCover } from "@/features/posts/actions";
@@ -34,6 +36,7 @@ interface PublishDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   canPublish: boolean;
+  moderation: ModerationSummary;
   title: string;
   userId: string;
   initialCover: CoverValue;
@@ -74,6 +77,7 @@ export function PublishDialog({
   open,
   onOpenChange,
   canPublish,
+  moderation,
   title,
   userId,
   initialCover,
@@ -357,6 +361,8 @@ export function PublishDialog({
           )}
         </div>
 
+        <ModerationDetails summary={moderation} />
+
         <DialogFooter>
           {outcome ? (
             <>
@@ -375,7 +381,16 @@ export function PublishDialog({
                 {canPublish ? "Seguir editando" : "Listo"}
               </Button>
               {canPublish && (
-                <Button type="button" onClick={handlePublish} disabled={locked}>
+                <Button
+                  type="button"
+                  onClick={handlePublish}
+                  disabled={locked || moderation.blocked}
+                  title={
+                    moderation.blocked
+                      ? "Resolvé los términos marcados para poder publicar"
+                      : undefined
+                  }
+                >
                   {isPending && <Loader2 className="animate-spin" aria-hidden />}
                   {isPending ? "Revisando contenido…" : "Publicar"}
                 </Button>

@@ -47,6 +47,7 @@ Un ADR registra una decisión de arquitectura: qué se decidió, por qué y qué
 | [0026](0026-feed-de-seguidos-con-recomendados.md) | El inicio muestra a quienes seguís, con recomendados intercalados | Aceptada |
 | [0029](0029-respuestas-a-respuestas.md) | Se puede responder a una respuesta, con hilo plano y no árbol real | Aceptada |
 | [0031](0031-proveedor-de-ia-intercambiable-openrouter.md) | El proveedor de IA se elige por variable de entorno: Gemini u OpenRouter, detrás del mismo puerto | Aceptada |
+| [0032](0032-diccionario-de-moderacion-en-el-editor.md) | Diccionario determinista de odio, amenazas e insultos mientras se escribe un artículo; lo grave impide publicar | Aceptada |
 
 > Faltan en esta tabla los ADR [0027](0027-notificaciones-por-triggers-sql.md), [0028](0028-emails-transaccionales-resend.md) y [0030](0030-descubrimiento-busqueda-sugeridos-temas.md), que existen como archivo pero no se agregaron al índice.
 

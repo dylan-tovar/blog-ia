@@ -68,6 +68,7 @@ Lo que existe en el código hoy. Las limitaciones y pendientes están en la [tab
 | Imágenes en el editor (subir, arrastrar, pegar) y verlas en el lector | Implementado ([ADR 0022](adr/0022-imagenes-en-supabase-storage.md)) | `src/features/posts/images/` |
 | Portada del artículo (imagen o texto sobre color) en las tarjetas del feed | Implementado con limitaciones: el texto de la portada no se modera ([ADR 0023](adr/0023-portada-de-articulos.md)) | `src/features/posts/cover/` |
 | Moderación con auto-tagging al publicar | Implementado | `publishPost`, `src/features/ai/moderation.ts` |
+| Diccionario de odio, amenazas e insultos mientras se escribe un artículo | Implementado ([ADR 0032](adr/0032-diccionario-de-moderacion-en-el-editor.md)); no cubre notas ni portadas | `src/features/moderation/` |
 | Resumen de IA para lectores | Implementado | `src/features/ai/summary-actions.ts` |
 | Herramientas de IA "legacy" (outline, títulos, tono, score) | Código sin llamador; deprecadas ([ADR 0019](adr/0019-rutas-legacy-de-ia-deprecadas.md)) | `src/app/api/ai/{outline,titles,tone,score}` |
 | Actividad (`/activity`) | Pantalla vacía; no hay notificaciones | `src/app/(dashboard)/activity/` |
