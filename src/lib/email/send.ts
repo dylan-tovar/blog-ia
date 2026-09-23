@@ -5,6 +5,7 @@ export type SendEmailInput = {
   to: string;
   subject: string;
   html: string;
+  headers?: Record<string, string>;
 };
 
 export type SendEmailResult = { ok: true } | { ok: false; error: unknown };
@@ -12,10 +13,15 @@ export type SendEmailResult = { ok: true } | { ok: false; error: unknown };
 // Best-effort on purpose: every caller (welcome email, new-article fanout)
 // must be able to fire this without risking the action/route that triggered
 // it. A missing RESEND_API_KEY or a Resend API error is logged, never thrown.
-export async function sendEmail({ to, subject, html }: SendEmailInput): Promise<SendEmailResult> {
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  headers,
+}: SendEmailInput): Promise<SendEmailResult> {
   try {
     const { client, from } = getResendClient();
-    const { error } = await client.emails.send({ from, to, subject, html });
+    const { error } = await client.emails.send({ from, to, subject, html, headers });
 
     if (error) {
       console.error("[email] send failed", { to, subject, error });

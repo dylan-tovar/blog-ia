@@ -30,18 +30,31 @@ export async function notifyFollowersOfNewArticle({
 
   const bodyHtml = await markdownToEmailHtml(post.content);
   const results = await Promise.allSettled(
-    followers.map((follower) =>
-      sendEmail({
+    followers.map((follower) => {
+      const unsubscribeUrl = `${env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${follower.unsubscribe_token}`;
+
+      return sendEmail({
         to: follower.email,
         ...newArticleEmail({
           authorName: author.display_name,
           title: post.title ?? "Nuevo artículo",
           bodyHtml,
           postUrl: `${env.NEXT_PUBLIC_SITE_URL}/post/${postId}`,
-          unsubscribeUrl: `${env.NEXT_PUBLIC_SITE_URL}/unsubscribe/${follower.unsubscribe_token}`,
+          unsubscribeUrl,
         }),
-      }),
-    ),
+        // RFC 8058 one-click unsubscribe: without these headers Gmail/Yahoo
+        // flag bulk-looking mail (article body, per-recipient link) as
+        // spam even with SPF/DKIM/DMARC green. See /unsubscribe/[token]
+        // for the GET+POST handler this header points at.
+        headers: {
+          // Points at the dedicated one-click route, not `unsubscribeUrl`
+          // (that one is the human-facing page linked in the email body) —
+          // see one-click/route.ts for why they can't be the same path.
+          "List-Unsubscribe": `<${unsubscribeUrl}/one-click>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        },
+      });
+    }),
   );
 
   const failed = results.filter((r) => r.status === "rejected").length;
