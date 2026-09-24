@@ -6,6 +6,7 @@ import {
   Bold,
   ChevronDown,
   Code,
+  Highlighter,
   ImagePlus,
   Italic,
   Link2,
@@ -112,6 +113,7 @@ export function EditorToolbar({
         italic: current.isActive("italic"),
         strike: current.isActive("strike"),
         code: current.isActive("code"),
+        highlight: current.isActive("highlight"),
         link: current.isActive("link"),
         bulletList: current.isActive("bulletList"),
         orderedList: current.isActive("orderedList"),
@@ -228,6 +230,13 @@ export function EditorToolbar({
           onClick={() => editor.chain().focus().toggleCode().run()}
         >
           <Code />
+        </ToolbarButton>
+        <ToolbarButton
+          label="Resaltado"
+          active={state.highlight}
+          onClick={() => editor.chain().focus().toggleHighlight().run()}
+        >
+          <Highlighter />
         </ToolbarButton>
         <ToolbarButton label="Enlace" active={state.link || linkOpen} onClick={openLink}>
           <Link2 />

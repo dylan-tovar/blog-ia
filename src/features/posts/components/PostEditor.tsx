@@ -16,6 +16,7 @@ import { TONE_LABELS } from "@/features/ai/components/ai-ui";
 import { POST_TITLE_MAX_LENGTH } from "@/features/posts/constants";
 import type { ApplyOutcome } from "@/features/posts/components/editor/apply-action";
 import { createEditorBridge } from "@/features/posts/components/editor/editor-bridge";
+import { EditorOutline } from "@/features/posts/components/editor/EditorOutline";
 import { EditorToolbar } from "@/features/posts/components/editor/EditorToolbar";
 import { EditorTopBar } from "@/features/posts/components/editor/EditorTopBar";
 import { useModerationScan } from "@/features/moderation/use-moderation-scan";
@@ -242,6 +243,8 @@ export function PostEditor({
             </div>
           </main>
         </div>
+
+        {!previewing && !aiOpen && <EditorOutline editor={editor} />}
 
         <AiChatDrawer
           ref={drawerRef}
