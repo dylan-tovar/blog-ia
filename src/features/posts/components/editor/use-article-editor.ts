@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useEditor, type Editor } from "@tiptap/react";
 import { Markdown } from "@tiptap/markdown";
+import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
 import Italic from "@tiptap/extension-italic";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
@@ -44,6 +45,7 @@ export function useArticleEditor(initialContent: string, onChange: (markdown: st
       }),
       ShiftItalic,
       SafeLink,
+      Highlight,
       Markdown,
       TaskList,
       TaskItem.configure({ nested: true }),

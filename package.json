@@ -23,6 +23,7 @@
     "@google/genai": "^2.23.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.116.0",
+    "@tiptap/extension-highlight": "3.31.3",
     "@tiptap/extension-image": "3.31.3",
     "@tiptap/extension-italic": "3.31.3",
     "@tiptap/extension-link": "3.31.3",
