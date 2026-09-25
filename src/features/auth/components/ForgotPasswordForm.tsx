@@ -22,14 +22,9 @@ export function ForgotPasswordForm() {
           {state.error}
         </p>
       )}
-      {state?.notice && (
-        <p role="status" className="text-sm text-success">
-          {state.notice}
-        </p>
-      )}
       <Button type="submit" disabled={pending} className="w-full min-h-11 font-medium">
         {pending && <Loader2 className="animate-spin" />}
-        Enviar enlace
+        Enviar código
       </Button>
       <p className="text-center text-sm text-muted-foreground">
         <Link href="/login" className="font-medium text-primary hover:underline">
