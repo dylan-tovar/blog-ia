@@ -32,7 +32,7 @@ La parte del sistema donde una equivocación es un problema de seguridad: cómo 
 | `findEmailByUsername` y la función SQL `login_email_for_username` | Edición de perfil: [PRD-1.3](PRD-1.3-profile-settings.md) |
 | `proxy.ts`: refresco de sesión, rutas protegidas y la puerta hacia `/onboarding` | Rate limit de la IA (usa también la secret key): [PRD-5.2](PRD-5.2-rate-limit.md) |
 | Clientes de Supabase (`server`, `client`, `admin`) y `env` | Políticas RLS de `posts`: [PRD-2.1](PRD-2.1-posts-data-rls.md) |
-| RLS de `profiles` | Recuperar contraseña, login social, roles (no existen) |
+| RLS de `profiles` | Recuperar contraseña ([implementado, PRD-11.1](PRD-11.1-confirmacion-y-recuperacion.md)), OTP de registro y cambio de contraseña autenticado ([PRD-1.4](PRD-1.4-auth-otp-y-cambio-password.md)), login social, roles (no existen) |
 
 ## Cómo funciona
 

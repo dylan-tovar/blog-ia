@@ -126,6 +126,44 @@ export async function saveInterests(
   redirect("/");
 }
 
+// Skips selecting interests in onboarding: clears any saved interests, marks onboarded_at, and redirects to home.
+export async function skipInterests(): Promise<InterestsActionState> {
+  const { supabase, user } = await requireUser();
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, onboarded_at")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (profileError) {
+    return { error: SAVE_ERROR };
+  }
+  if (!profile) {
+    redirect("/onboarding");
+  }
+  if (profile.onboarded_at !== null) {
+    redirect("/");
+  }
+
+  const applyError = await applyInterestChanges(supabase, user.id, []);
+  if (applyError) {
+    return { error: applyError };
+  }
+
+  const { error: doneError } = await supabase
+    .from("profiles")
+    .update({ onboarded_at: new Date().toISOString() })
+    .eq("id", user.id)
+    .is("onboarded_at", null);
+
+  if (doneError) {
+    return { error: SAVE_ERROR };
+  }
+
+  redirect("/");
+}
+
 // Same diff/upsert/delete as `saveInterests`, for editing interests from the sidebar
 // after onboarding: no `onboarded_at` gate, no redirect, and no minimum interest count.
 export async function updateInterests(tagIds: string[]): Promise<InterestsActionState> {

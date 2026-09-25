@@ -95,11 +95,6 @@ export function RegisterForm() {
           {state.error}
         </p>
       )}
-      {state?.notice && (
-        <p role="status" className="text-sm text-success">
-          {state.notice}
-        </p>
-      )}
       <Button type="submit" disabled={pending || !canSubmit} className="w-full">
         {pending && <Loader2 className="animate-spin" />}
         Crear cuenta

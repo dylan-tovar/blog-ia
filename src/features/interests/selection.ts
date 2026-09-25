@@ -20,8 +20,11 @@ export function validateSelection(tagIds: string[], eligibleIds: string[]): stri
 export function interestCounterLabel(count: number, required: number, max: number): string {
   const picked = `${count} ${count === 1 ? "elegido" : "elegidos"}`;
 
-  if (count < required) {
+  if (required > 0 && count < required) {
     return `Elegí al menos ${required} · ${picked}`;
+  }
+  if (count === 0 && required === 0) {
+    return "0 elegidos (opcional)";
   }
   return count >= max ? `${picked} · Llegaste al máximo` : picked;
 }

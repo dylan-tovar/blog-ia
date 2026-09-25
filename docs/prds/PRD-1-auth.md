@@ -35,7 +35,7 @@ Una persona se registra con **email y contraseña (fuerte y con confirmación)**
 | Dentro | Fuera |
 | :--- | :--- |
 | Registro, login (email o username), logout | Roles de usuario ([ADR 0002](../adr/0002-un-solo-tipo-de-usuario.md)) |
-| `profiles` con `display_name` y `username` únicos | Login social, recuperación de contraseña propia, panel de administración |
+| `profiles` con `display_name` y `username` únicos | Login social, panel de administración |
 | Edición de nombre y username en `/settings` | **Subida de avatar** (`avatar_url` existe en la tabla y no se usa) |
 | Protección de rutas privadas | Edición real del email (ver limitaciones) |
 | Verificación de email | Solo la que traiga por defecto la configuración de Supabase Auth: la app no la exige ni la gestiona |
@@ -180,7 +180,7 @@ Las Server Actions que escriben usan `requireUser()` (`src/lib/auth.ts`), que re
 | Textos en inglés | `AccountSettings` usa "Account", "Profile", "Edit", "Handle", "Publications" |
 | Contador "Publications" engañoso | Cuenta todos los artículos del autor (`type = 'article'`), incluidos borradores y rechazados, porque `src/app/(dashboard)/settings/page.tsx` no filtra por `status`. Ver [PRD-1.3](PRD-1.3-profile-settings.md) |
 | Sin avatar | `avatar_url` existe en la tabla y `getCurrentProfile` lo selecciona, pero ninguna pantalla lo muestra ni hay subida; solo iniciales |
-| Sin recuperación de contraseña | No hay pantalla ni flujo propio |
+| ~~Sin recuperación de contraseña~~ (resuelto) | Implementado en [PRD-11.1](PRD-11.1-confirmacion-y-recuperacion.md); OTP de registro y cambio de contraseña autenticado en [PRD-1.4](PRD-1.4-auth-otp-y-cambio-password.md) |
 | Sin borrado de cuenta | Ver RLS: no hay política DELETE |
 
 ## Pruebas
