@@ -2,12 +2,15 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth";
 import { env } from "@/lib/env";
 import {
+  changePasswordSchema,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  verifyOtpSchema,
 } from "@/features/auth/schemas";
 import { findEmailByUsername } from "@/features/auth/queries";
 import { isEmailIdentifier, resolveAuthRedirect } from "@/features/auth/utils";
@@ -60,14 +63,10 @@ export async function signUp(
     return { error: "No pudimos crear tu cuenta. Intentá de nuevo.", email };
   }
 
-  // With "Confirm email" enabled in Supabase there is no session yet, and
-  // /onboarding would silently bounce to /login. Say what to do instead.
+  // With "Confirm email" enabled in Supabase there is no session yet: send
+  // the user to enter the 6-digit code we just emailed them.
   if (!data.session) {
-    return {
-      notice:
-        "Te enviamos un email para confirmar tu cuenta. Confirmalo y después iniciá sesión.",
-      email,
-    };
+    redirect(`/verify?email=${encodeURIComponent(email)}`);
   }
 
   // The profile (display name + username) is created in /onboarding.
@@ -169,4 +168,102 @@ export async function resetPassword(
   }
 
   redirect("/login");
+}
+
+export async function verifySignupOtp(
+  _state: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const parsed = verifyOtpSchema.safeParse({
+    email: formData.get("email"),
+    token: formData.get("token"),
+  });
+
+  if (!parsed.success) {
+    const typedEmail = formData.get("email");
+    return {
+      error: parsed.error.issues[0]?.message ?? "Datos inválidos.",
+      email: typeof typedEmail === "string" ? typedEmail : undefined,
+    };
+  }
+
+  const { email, token } = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({ email, token, type: "signup" });
+
+  if (error) {
+    return { error: "El código es inválido o venció. Pedí uno nuevo.", email };
+  }
+
+  // The profile (display name + username) is created in /onboarding.
+  redirect("/onboarding");
+}
+
+// Always the same generic notice, whether or not resend actually succeeded:
+// leaking that would let anyone probe which emails have a pending signup
+// (the same reasoning as FORGOT_PASSWORD_NOTICE above).
+const RESEND_OTP_NOTICE = "Si el email tiene un registro pendiente, te enviamos un código nuevo.";
+
+export async function resendSignupOtp(
+  _state: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const parsed = forgotPasswordSchema.safeParse({ email: formData.get("email") });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  const { email } = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({ type: "signup", email });
+
+  if (error) {
+    console.error("[resendSignupOtp] failed", error);
+  }
+
+  // Same message either way (see RESEND_OTP_NOTICE above).
+  return { notice: RESEND_OTP_NOTICE, email };
+}
+
+export type ChangePasswordActionState = { error?: string; success?: boolean } | undefined;
+
+export async function changePassword(
+  _state: ChangePasswordActionState,
+  formData: FormData,
+): Promise<ChangePasswordActionState> {
+  const parsed = changePasswordSchema.safeParse({
+    currentPassword: formData.get("currentPassword"),
+    newPassword: formData.get("newPassword"),
+    confirmNewPassword: formData.get("confirmNewPassword"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  const { supabase, user } = await requireUser();
+
+  if (!user.email) {
+    return { error: "No pudimos verificar tu contraseña actual." };
+  }
+
+  // Reauthenticate with the current password before allowing the change:
+  // an open session on a shared device shouldn't be enough on its own.
+  const { error: reauthError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: parsed.data.currentPassword,
+  });
+
+  if (reauthError) {
+    return { error: "La contraseña actual es incorrecta." };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.newPassword });
+
+  if (error) {
+    return { error: "No pudimos actualizar tu contraseña. Intentá de nuevo." };
+  }
+
+  return { success: true };
 }
