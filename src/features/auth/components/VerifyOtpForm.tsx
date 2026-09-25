@@ -4,18 +4,26 @@ import { startTransition, useActionState, useEffect, useRef, useState } from "re
 import { Loader2 } from "lucide-react";
 import { cn } from "cn";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { resendSignupOtp, verifySignupOtp } from "@/features/auth/actions";
+import {
+  resendPasswordResetOtp,
+  resendSignupOtp,
+  verifyRecoveryOtp,
+  verifySignupOtp,
+} from "@/features/auth/actions";
 
 interface VerifyOtpFormProps {
   email: string;
+  verifyType?: "signup" | "recovery";
 }
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 48;
 
-export function VerifyOtpForm({ email }: VerifyOtpFormProps) {
-  const [state, action, pending] = useActionState(verifySignupOtp, { email });
-  const [resendState, resendAction, resendPending] = useActionState(resendSignupOtp, undefined);
+export function VerifyOtpForm({ email, verifyType = "signup" }: VerifyOtpFormProps) {
+  const verifyAction = verifyType === "recovery" ? verifyRecoveryOtp : verifySignupOtp;
+  const resendActionFn = verifyType === "recovery" ? resendPasswordResetOtp : resendSignupOtp;
+  const [state, action, pending] = useActionState(verifyAction, { email });
+  const [resendState, resendAction, resendPending] = useActionState(resendActionFn, undefined);
 
   const [token, setToken] = useState("");
   const [secondsLeft, setSecondsLeft] = useState(RESEND_COOLDOWN_SECONDS);

@@ -3,7 +3,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth";
-import { env } from "@/lib/env";
 import {
   changePasswordSchema,
   forgotPasswordSchema,
@@ -122,8 +121,13 @@ export async function signOut() {
 // Always the same generic notice, whether or not the email is registered:
 // leaking that would let anyone probe which emails have an account.
 const FORGOT_PASSWORD_NOTICE =
-  "Si existe una cuenta con ese email, te enviamos un correo para restablecer tu contraseña.";
+  "Si existe una cuenta con ese email, te enviamos un código para restablecer tu contraseña.";
 
+// Recovery uses a 6-digit code, not a link: Gmail and corporate security
+// scanners prefetch email links and consume Supabase's one-time token before
+// the user ever clicks it, so the link looked "expired" on the very first
+// try. A typed code can't be consumed by an automated scan.
+// https://supabase.com/docs/guides/troubleshooting/otp-verification-failures-token-has-expired-or-otp_expired-errors-5ee4d0
 export async function requestPasswordReset(
   _state: AuthActionState,
   formData: FormData,
@@ -134,17 +138,65 @@ export async function requestPasswordReset(
     return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
   }
 
+  const { email } = parsed.data;
   const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${env.NEXT_PUBLIC_SITE_URL}/auth/confirm?type=recovery&next=/reset-password`,
-  });
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
 
   if (error) {
     console.error("[requestPasswordReset] failed", error);
   }
 
-  // Same message either way (see FORGOT_PASSWORD_NOTICE above).
-  return { notice: FORGOT_PASSWORD_NOTICE };
+  redirect(`/verify?type=recovery&email=${encodeURIComponent(email)}`);
+}
+
+// Same anti-enumeration reasoning as resendSignupOtp: always the same notice.
+export async function resendPasswordResetOtp(
+  _state: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const parsed = forgotPasswordSchema.safeParse({ email: formData.get("email") });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
+  }
+
+  const { email } = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
+
+  if (error) {
+    console.error("[resendPasswordResetOtp] failed", error);
+  }
+
+  return { notice: FORGOT_PASSWORD_NOTICE, email };
+}
+
+export async function verifyRecoveryOtp(
+  _state: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const parsed = verifyOtpSchema.safeParse({
+    email: formData.get("email"),
+    token: formData.get("token"),
+  });
+
+  if (!parsed.success) {
+    const typedEmail = formData.get("email");
+    return {
+      error: parsed.error.issues[0]?.message ?? "Datos inválidos.",
+      email: typeof typedEmail === "string" ? typedEmail : undefined,
+    };
+  }
+
+  const { email, token } = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({ email, token, type: "recovery" });
+
+  if (error) {
+    return { error: "El código es inválido o venció. Pedí uno nuevo.", email };
+  }
+
+  redirect("/reset-password");
 }
 
 export async function resetPassword(
@@ -164,7 +216,7 @@ export async function resetPassword(
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
 
   if (error) {
-    return { error: "No pudimos actualizar tu contraseña. Pedí un nuevo enlace e intentá de nuevo." };
+    return { error: "No pudimos actualizar tu contraseña. Pedí un código nuevo e intentá de nuevo." };
   }
 
   redirect("/login");
