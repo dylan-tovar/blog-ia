@@ -2,6 +2,11 @@ export const ONBOARDING_PATH = "/onboarding";
 
 const PROTECTED_PATHS = ["/settings", "/editor", "/posts", ONBOARDING_PATH];
 
+// A signed-in user mid-onboarding (e.g. verified a password-recovery link
+// before finishing /onboarding) must still be able to reach these — otherwise
+// the gate strands them, unable to ever set the new password.
+const EXEMPT_FROM_ONBOARDING_GATE = ["/reset-password", "/forgot-password"];
+
 export function isProtectedPath(pathname: string) {
   return PROTECTED_PATHS.some((path) => pathname.startsWith(path));
 }
@@ -41,6 +46,10 @@ export function getGateRedirect({
   }
 
   if (onboardingState === null) {
+    return null;
+  }
+
+  if (EXEMPT_FROM_ONBOARDING_GATE.includes(pathname)) {
     return null;
   }
 
