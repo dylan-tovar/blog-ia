@@ -99,10 +99,10 @@ export function PostCard({
     <article className="grid grid-cols-[auto_1fr] gap-3 border-b px-4 md:px-0 pt-4 pb-2">
       {post.author?.username ? (
         <Link href={`/${post.author.username}`} aria-label={authorName} className="h-fit">
-          <UserAvatar name={authorName} size="default" />
+          <UserAvatar name={authorName} avatarUrl={post.author?.avatar_url} size="default" />
         </Link>
       ) : (
-        <UserAvatar name={authorName} size="default" />
+        <UserAvatar name={authorName} avatarUrl={post.author?.avatar_url} size="default" />
       )}
 
       <div className="min-w-0">

@@ -10,10 +10,16 @@ export type SuggestedPerson = {
   id: string;
   displayName: string | null;
   username: string | null;
+  avatarUrl: string | null;
   followerCount: number;
 };
 
-export type SearchPerson = { id: string; displayName: string | null; username: string | null };
+export type SearchPerson = {
+  id: string;
+  displayName: string | null;
+  username: string | null;
+  avatarUrl: string | null;
+};
 export type SearchPost = { id: string; title: string | null };
 export type SearchTag = { id: string; name: string };
 export type SearchResults = { people: SearchPerson[]; posts: SearchPost[]; tags: SearchTag[] };
@@ -104,7 +110,7 @@ async function loadSuggestedPeople(viewerId: string): Promise<SuggestedPerson[]>
 
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("id, display_name, username")
+    .select("id, display_name, username, avatar_url")
     .in(
       "id",
       ranked.map(({ author_id }) => author_id),
@@ -124,6 +130,7 @@ async function loadSuggestedPeople(viewerId: string): Promise<SuggestedPerson[]>
             id: profile.id,
             displayName: profile.display_name,
             username: profile.username,
+            avatarUrl: profile.avatar_url,
             followerCount: followerCountById.get(author_id) ?? 0,
           },
         ]
@@ -159,12 +166,12 @@ async function searchPeople(supabase: SupabaseClient, pattern: string, viewerId?
   // parsing to escape around, so it's safe even with those characters in `pattern`.
   let byUsername = supabase
     .from("profiles")
-    .select("id, display_name, username")
+    .select("id, display_name, username, avatar_url")
     .ilike("username", pattern)
     .limit(SEARCH_RESULTS_LIMIT);
   let byDisplayName = supabase
     .from("profiles")
-    .select("id, display_name, username")
+    .select("id, display_name, username, avatar_url")
     .ilike("display_name", pattern)
     .limit(SEARCH_RESULTS_LIMIT);
 
@@ -183,7 +190,12 @@ async function searchPeople(supabase: SupabaseClient, pattern: string, viewerId?
 
   const byId = new Map<string, SearchPerson>();
   for (const row of [...(usernameResult.data ?? []), ...(displayNameResult.data ?? [])]) {
-    byId.set(row.id, { id: row.id, displayName: row.display_name, username: row.username });
+    byId.set(row.id, {
+      id: row.id,
+      displayName: row.display_name,
+      username: row.username,
+      avatarUrl: row.avatar_url,
+    });
   }
 
   return [...byId.values()].slice(0, SEARCH_RESULTS_LIMIT);

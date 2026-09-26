@@ -61,7 +61,11 @@ export function SearchResults({ query, results, isPending, onNavigate }: SearchR
                   onClick={onNavigate}
                   className="flex items-center gap-3 rounded-xl px-2.5 py-2 transition-colors hover:bg-muted/70"
                 >
-                  <UserAvatar name={person.displayName} className="size-9 shrink-0" />
+                  <UserAvatar
+                    name={person.displayName}
+                    avatarUrl={person.avatarUrl}
+                    className="size-9 shrink-0"
+                  />
                   <div className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-foreground">
                       {person.displayName || "Usuario"}

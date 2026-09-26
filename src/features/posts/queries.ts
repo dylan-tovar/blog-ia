@@ -17,14 +17,19 @@ const COVER_COLUMNS = "cover_image_url, cover_text, cover_color";
 const POST_COLUMNS = `id, author_id, title, content, status, rejection_reason, created_at, updated_at, published_at, ${COVER_COLUMNS}`;
 const TAGS_EMBED = "tags:post_tags(tag:tags(id, name))";
 const CARD_COLUMNS = `id, type, title, content, published_at, parent_post_id, reply_to_post_id, ${COVER_COLUMNS}`;
-export const AUTHOR_EMBED = "author:profiles(id, display_name, username)";
+export const AUTHOR_EMBED = "author:profiles(id, display_name, username, avatar_url)";
 const LIKES_EMBED = "likes(count)";
 
 export const FEED_PAGE_SIZE = 20;
 const AUTHOR_POSTS_LIMIT = 50;
 const NOTES_PER_POST_LIMIT = 100;
 
-type FeedAuthor = { id: string; display_name: string; username: string | null } | null;
+type FeedAuthor = {
+  id: string;
+  display_name: string;
+  username: string | null;
+  avatar_url: string | null;
+} | null;
 
 type FeedPostBase = {
   id: string;

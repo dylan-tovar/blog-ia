@@ -68,7 +68,11 @@ export function SuggestedPeopleCard({
                 href={person.username ? `/${person.username}` : "#"}
                 className="flex w-full flex-col items-center pt-1 transition-opacity hover:opacity-85"
               >
-                <UserAvatar name={person.displayName} className="size-14 text-base" />
+                <UserAvatar
+                  name={person.displayName}
+                  avatarUrl={person.avatarUrl}
+                  className="size-14 text-base"
+                />
                 <span className="mt-2.5 block w-full truncate text-[13px] font-semibold text-foreground leading-tight hover:underline">
                   {person.displayName || "Usuario"}
                 </span>
@@ -129,7 +133,11 @@ export function SuggestedPeopleCard({
               href={person.username ? `/${person.username}` : "#"}
               className="flex min-w-0 flex-1 items-center gap-3 rounded-md transition-opacity hover:opacity-85"
             >
-              <UserAvatar name={person.displayName} className="size-10 shrink-0" />
+              <UserAvatar
+                name={person.displayName}
+                avatarUrl={person.avatarUrl}
+                className="size-10 shrink-0"
+              />
               <div className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-semibold text-foreground leading-tight hover:underline">
                   {person.displayName || "Usuario"}
