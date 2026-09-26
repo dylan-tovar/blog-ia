@@ -36,10 +36,9 @@ interface DesktopSidebarProps {
     displayName: string | null;
     username?: string | null;
   } | null;
-  initialUnreadCount?: number;
 }
 
-export function DesktopSidebar({ viewer, initialUnreadCount = 0 }: DesktopSidebarProps) {
+export function DesktopSidebar({ viewer }: DesktopSidebarProps) {
   const pathname = usePathname();
   const [isSigningOut, startSignOut] = useTransition();
 
@@ -95,9 +94,7 @@ export function DesktopSidebar({ viewer, initialUnreadCount = 0 }: DesktopSideba
                 <div className="relative grid size-7 place-items-center">
                   {item.href === "/activity" ? (
                     <NotificationBell
-                      initialCount={initialUnreadCount}
                       className="size-6 transition-transform group-hover:scale-110"
-                      pollQuery="(min-width: 768px)"
                     />
                   ) : (
                     Icon && (
