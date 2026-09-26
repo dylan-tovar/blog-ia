@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { signUp } from "@/features/auth/actions";
 import { PasswordField } from "@/features/auth/components/PasswordField";
 import { PasswordStrength } from "@/features/auth/components/PasswordStrength";
+import { TurnstileWidget } from "@/features/auth/components/TurnstileWidget";
 import { isPasswordValid } from "@/features/auth/password-rules";
 
 export function RegisterForm() {
@@ -18,6 +19,18 @@ export function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [confirmTouched, setConfirmTouched] = useState(false);
+
+  // Turnstile tokens are single-use: a server-side rejection (weak password,
+  // duplicate email, expired captcha) leaves a spent token in the DOM with no
+  // way to retry. Remounting forces the widget to issue a fresh one. Computed
+  // during render (not in an effect) per React's "adjusting state when a prop
+  // changes" pattern, to avoid an extra render pass.
+  const [prevState, setPrevState] = useState(state);
+  const [turnstileAttempt, setTurnstileAttempt] = useState(0);
+  if (state !== prevState) {
+    setPrevState(state);
+    if (state?.error) setTurnstileAttempt((n) => n + 1);
+  }
 
   const passwordsMatch = password === confirmPassword;
   // Don't flag a mismatch while the user is still typing the confirmation:
@@ -90,6 +103,7 @@ export function RegisterForm() {
           )}
         </div>
       </div>
+      <TurnstileWidget key={turnstileAttempt} />
       {state?.error && (
         <p role="alert" className="text-sm text-destructive">
           {state.error}
