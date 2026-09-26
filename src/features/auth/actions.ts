@@ -103,6 +103,11 @@ export async function signIn(
 
   const { identifier, password } = parsed.data;
 
+  const captchaToken = formData.get("cf-turnstile-response");
+  if (typeof captchaToken !== "string" || captchaToken.length === 0) {
+    return { error: "Completá la verificación anti-bot." };
+  }
+
   let email: string | null = identifier;
   if (!isEmailIdentifier(identifier)) {
     try {
@@ -119,9 +124,13 @@ export async function signIn(
   const { error } = await supabase.auth.signInWithPassword({
     email: email ?? UNKNOWN_USER_EMAIL,
     password,
+    options: { captchaToken },
   });
 
   if (error) {
+    if (error.code === "captcha_failed") {
+      return { error: "La verificación anti-bot venció o falló. Intentá de nuevo." };
+    }
     return { error: "Credenciales inválidas." };
   }
 
@@ -155,9 +164,21 @@ export async function requestPasswordReset(
   }
 
   const { email } = parsed.data;
-  const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(email);
 
+  const captchaToken = formData.get("cf-turnstile-response");
+  if (typeof captchaToken !== "string" || captchaToken.length === 0) {
+    return { error: "Completá la verificación anti-bot." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { captchaToken });
+
+  // A captcha failure is a client-side mistake, not an enumeration risk (it
+  // fires the same way whether or not the email exists) — surface it instead
+  // of silently redirecting like every other failure here.
+  if (error?.code === "captcha_failed") {
+    return { error: "La verificación anti-bot venció o falló. Intentá de nuevo." };
+  }
   if (error) {
     console.error("[requestPasswordReset] failed", error);
   }
@@ -177,9 +198,20 @@ export async function resendPasswordResetOtp(
   }
 
   const { email } = parsed.data;
-  const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(email);
 
+  const captchaToken = formData.get("cf-turnstile-response");
+  if (typeof captchaToken !== "string" || captchaToken.length === 0) {
+    return { error: "Completá la verificación anti-bot.", email };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { captchaToken });
+
+  // A captcha failure is a client-side mistake, not an enumeration risk (see
+  // requestPasswordReset above) — surface it instead of the generic notice.
+  if (error?.code === "captcha_failed") {
+    return { error: "La verificación anti-bot venció o falló. Intentá de nuevo.", email };
+  }
   if (error) {
     console.error("[resendPasswordResetOtp] failed", error);
   }
@@ -283,9 +315,20 @@ export async function resendSignupOtp(
   }
 
   const { email } = parsed.data;
-  const supabase = await createClient();
-  const { error } = await supabase.auth.resend({ type: "signup", email });
 
+  const captchaToken = formData.get("cf-turnstile-response");
+  if (typeof captchaToken !== "string" || captchaToken.length === 0) {
+    return { error: "Completá la verificación anti-bot.", email };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resend({ type: "signup", email, options: { captchaToken } });
+
+  // Same reasoning as resendPasswordResetOtp: a captcha failure isn't an
+  // enumeration risk, so it gets surfaced instead of the generic notice.
+  if (error?.code === "captcha_failed") {
+    return { error: "La verificación anti-bot venció o falló. Intentá de nuevo.", email };
+  }
   if (error) {
     console.error("[resendSignupOtp] failed", error);
   }
@@ -310,6 +353,11 @@ export async function changePassword(
     return { error: parsed.error.issues[0]?.message ?? "Datos inválidos." };
   }
 
+  const captchaToken = formData.get("cf-turnstile-response");
+  if (typeof captchaToken !== "string" || captchaToken.length === 0) {
+    return { error: "Completá la verificación anti-bot." };
+  }
+
   const { supabase, user } = await requireUser();
 
   if (!user.email) {
@@ -321,9 +369,13 @@ export async function changePassword(
   const { error: reauthError } = await supabase.auth.signInWithPassword({
     email: user.email,
     password: parsed.data.currentPassword,
+    options: { captchaToken },
   });
 
   if (reauthError) {
+    if (reauthError.code === "captcha_failed") {
+      return { error: "La verificación anti-bot venció o falló. Intentá de nuevo." };
+    }
     return { error: "La contraseña actual es incorrecta." };
   }
 

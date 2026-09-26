@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +11,25 @@ import { updateProfile } from "@/features/profile/actions";
 interface SettingsFormProps {
   initialDisplayName: string;
   initialUsername: string;
+  onSuccess?: () => void;
 }
 
 export function SettingsForm({
   initialDisplayName,
   initialUsername,
+  onSuccess,
 }: SettingsFormProps) {
+  const router = useRouter();
   const [state, action, pending] = useActionState(updateProfile, undefined);
+
+  useEffect(() => {
+    if (state?.success) {
+      router.refresh();
+      onSuccess?.();
+    }
+    // Only re-run when a new successful submission comes in.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
 
   return (
     <form action={action} className="flex flex-col gap-4">

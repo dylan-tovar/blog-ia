@@ -4,6 +4,7 @@ import { startTransition, useActionState, useEffect, useRef, useState } from "re
 import { Loader2 } from "lucide-react";
 import { cn } from "cn";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { TurnstileWidget } from "@/features/auth/components/TurnstileWidget";
 import {
   resendPasswordResetOtp,
   resendSignupOtp,
@@ -30,6 +31,7 @@ export function VerifyOtpForm({ email, verifyType = "signup" }: VerifyOtpFormPro
   // One interval for the component's whole life instead of one per tick.
   // `Date.now()` can't run during render, so the end time is set in the effect.
   const cooldownEndAt = useRef<number | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     cooldownEndAt.current ??= Date.now() + RESEND_COOLDOWN_SECONDS * 1000;
@@ -39,10 +41,22 @@ export function VerifyOtpForm({ email, verifyType = "signup" }: VerifyOtpFormPro
     return () => clearInterval(interval);
   }, []);
 
+  // Resend hits a captcha-gated endpoint. Turnstile tokens are single-use, so
+  // once a resend attempt consumes the current one, remount the widget for a
+  // fresh token before the next click (same pattern as RegisterForm).
+  const [prevResendState, setPrevResendState] = useState(resendState);
+  const [turnstileAttempt, setTurnstileAttempt] = useState(0);
+  if (resendState !== prevResendState) {
+    setPrevResendState(resendState);
+    setTurnstileAttempt((n) => n + 1);
+  }
+
   function handleResend() {
     startTransition(() => {
-      const formData = new FormData();
-      formData.append("email", email);
+      // Built from the actual form element (not from scratch) so it picks up
+      // the Turnstile widget's auto-injected cf-turnstile-response field.
+      const formData = new FormData(formRef.current ?? undefined);
+      formData.set("email", email);
       resendAction(formData);
       cooldownEndAt.current = Date.now() + RESEND_COOLDOWN_SECONDS * 1000;
       setSecondsLeft(RESEND_COOLDOWN_SECONDS);
@@ -53,7 +67,7 @@ export function VerifyOtpForm({ email, verifyType = "signup" }: VerifyOtpFormPro
 
   return (
     <div className="flex flex-1 flex-col justify-between">
-      <form action={action} className="flex flex-1 flex-col justify-between">
+      <form ref={formRef} action={action} className="flex flex-1 flex-col justify-between">
         <input type="hidden" name="email" value={state?.email ?? email} />
 
         <div>
@@ -114,6 +128,10 @@ export function VerifyOtpForm({ email, verifyType = "signup" }: VerifyOtpFormPro
               {resendState.error}
             </p>
           )}
+
+          <div className="mt-4">
+            <TurnstileWidget key={turnstileAttempt} />
+          </div>
 
           {state?.error && (
             <p role="alert" className="mt-4 text-center text-sm text-destructive">

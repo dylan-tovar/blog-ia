@@ -34,14 +34,12 @@ function readNaturalWidth(file: File): Promise<number> {
 // Decodes with EXIF orientation applied. Huge sources are decoded already downscaled
 // (resizeWidth) so a 12000px photo is never held in memory at full size; the source width
 // comes from an <img> probe, which reads the header without decoding to a full bitmap.
-async function decode(file: File): Promise<ImageBitmap> {
+async function decode(file: File, maxWidth: number): Promise<ImageBitmap> {
   try {
     const sourceWidth = await readNaturalWidth(file);
     return await createImageBitmap(file, {
       imageOrientation: "from-image",
-      ...(sourceWidth > IMAGE_MAX_WIDTH
-        ? { resizeWidth: IMAGE_MAX_WIDTH, resizeQuality: "high" as const }
-        : {}),
+      ...(sourceWidth > maxWidth ? { resizeWidth: maxWidth, resizeQuality: "high" as const } : {}),
     });
   } catch {
     throw new ImageUploadError("decode");
@@ -52,12 +50,15 @@ function encode(canvas: HTMLCanvasElement, type: string, quality: number): Promi
   return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
 }
 
-// Browser-only: decodes (honouring EXIF orientation), downscales to the max width and
+// Browser-only: decodes (honouring EXIF orientation), downscales to `maxWidth` and
 // re-encodes as WebP so uploads stay small. Browsers without WebP encoding fall back to JPEG.
-export async function compressImage(file: File): Promise<CompressedImage> {
-  const bitmap = await decode(file);
+export async function compressImage(
+  file: File,
+  maxWidth: number = IMAGE_MAX_WIDTH,
+): Promise<CompressedImage> {
+  const bitmap = await decode(file, maxWidth);
   try {
-    const { width, height } = computeTargetSize(bitmap.width, bitmap.height);
+    const { width, height } = computeTargetSize(bitmap.width, bitmap.height, maxWidth);
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;

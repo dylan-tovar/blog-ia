@@ -27,6 +27,7 @@ interface AccountDrawerProps {
     id: string;
     displayName: string | null;
     username?: string | null;
+    avatarUrl?: string | null;
   };
 }
 
@@ -54,7 +55,7 @@ export function AccountDrawer({ viewer }: AccountDrawerProps) {
         aria-label="Menú de cuenta"
         className="grid min-h-11 min-w-11 place-items-center cursor-pointer transition-opacity hover:opacity-80"
       >
-        <UserAvatar name={viewer.displayName} size="lg" />
+        <UserAvatar name={viewer.displayName} avatarUrl={viewer.avatarUrl} size="lg" />
       </DrawerTrigger>
 
       <DrawerContent className="mx-2 sm:mx-auto sm:max-w-md mb-2 pb-3 pt-1 [--drawer-inset:0.5rem] data-[swipe-direction=down]:rounded-2xl data-[swipe-direction=down]:border border-border/80 shadow-2xl after:hidden">
@@ -69,7 +70,7 @@ export function AccountDrawer({ viewer }: AccountDrawerProps) {
           onClick={close}
           className="flex items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-muted/60 cursor-pointer rounded-t-xl"
         >
-          <UserAvatar name={viewer.displayName} size="lg" className="size-11" />
+          <UserAvatar name={viewer.displayName} avatarUrl={viewer.avatarUrl} size="lg" className="size-11" />
           <div className="min-w-0 flex-1">
             <p className="truncate text-base font-semibold leading-tight text-foreground">
               {displayName}

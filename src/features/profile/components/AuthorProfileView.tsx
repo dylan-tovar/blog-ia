@@ -152,6 +152,7 @@ export function AuthorProfileView({
           {/* Large Avatar */}
           <UserAvatar
             name={profile.display_name}
+            avatarUrl={profile.avatar_url}
             className="size-20 shrink-0 text-2xl font-bold ring-1 ring-border/50 sm:size-24 sm:text-3xl"
           />
         </div>

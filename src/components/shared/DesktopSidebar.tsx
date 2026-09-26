@@ -35,6 +35,7 @@ interface DesktopSidebarProps {
     id: string;
     displayName: string | null;
     username?: string | null;
+    avatarUrl?: string | null;
   } | null;
 }
 
@@ -179,7 +180,7 @@ export function DesktopSidebar({ viewer }: DesktopSidebarProps) {
               className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-3 rounded-lg p-2 transition-colors hover:bg-accent/60 lg:justify-between lg:px-3"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <UserAvatar name={viewer.displayName} size="default" className="size-9 shrink-0" />
+                <UserAvatar name={viewer.displayName} avatarUrl={viewer.avatarUrl} size="default" className="size-9 shrink-0" />
                 <div className="hidden flex-col text-left lg:flex min-w-0">
                   <span className="truncate text-sm font-semibold text-foreground leading-tight">
                     {viewer.displayName || "Usuario"}
