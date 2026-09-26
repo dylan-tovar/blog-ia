@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { BookOpen, LogOut } from "lucide-react";
-import { UserAvatar } from "@/components/shared/UserAvatar";
+import { AvatarPicker } from "@/features/profile/components/AvatarPicker";
 import {
   Drawer,
   DrawerContent,
@@ -66,10 +66,7 @@ export function AccountSettings({
           {/* Row 1: Profile */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3.5">
-              <UserAvatar
-                name={displayName}
-                className="size-14 rounded-full ring-1 ring-border/50 text-base font-semibold"
-              />
+              <AvatarPicker displayName={displayName} avatarUrl={profile?.avatar_url} />
               <div className="min-w-0">
                 <p className="text-[15px] font-medium text-foreground">Profile</p>
                 <p className="truncate text-sm text-muted-foreground">{displayName}</p>
@@ -203,6 +200,7 @@ export function AccountSettings({
               <SettingsForm
                 initialDisplayName={displayName}
                 initialUsername={username}
+                onSuccess={() => setDrawerOpen(false)}
               />
             )}
             {drawerSection === "password" && <ChangePasswordForm />}
