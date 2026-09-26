@@ -42,9 +42,19 @@ export async function signUp(
   }
 
   const { email, password } = parsed.data;
+
+  const captchaToken = formData.get("cf-turnstile-response");
+  if (typeof captchaToken !== "string" || captchaToken.length === 0) {
+    return { error: "Completá la verificación anti-bot.", email };
+  }
+
   const supabase = await createClient();
 
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { captchaToken },
+  });
 
   if (error) {
     // Keep the typed email: React resets the form after the action returns.
@@ -56,6 +66,12 @@ export async function signUp(
       return {
         error:
           "La contraseña no cumple los requisitos de seguridad. Probá con una más larga o con otros caracteres.",
+        email,
+      };
+    }
+    if (error.code === "captcha_failed") {
+      return {
+        error: "La verificación anti-bot venció o falló. Intentá de nuevo.",
         email,
       };
     }
