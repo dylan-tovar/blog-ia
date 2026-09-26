@@ -1,15 +1,26 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { requestPasswordReset } from "@/features/auth/actions";
+import { TurnstileWidget } from "@/features/auth/components/TurnstileWidget";
 
 export function ForgotPasswordForm() {
   const [state, action, pending] = useActionState(requestPasswordReset, undefined);
+
+  // Turnstile tokens are single-use: a rejected submit leaves a spent token in
+  // the DOM with no way to retry. Remounting forces a fresh one. Same pattern
+  // as RegisterForm/LoginForm.
+  const [prevState, setPrevState] = useState(state);
+  const [turnstileAttempt, setTurnstileAttempt] = useState(0);
+  if (state !== prevState) {
+    setPrevState(state);
+    if (state?.error) setTurnstileAttempt((n) => n + 1);
+  }
 
   return (
     <form action={action} className="flex flex-col gap-4">
@@ -17,6 +28,7 @@ export function ForgotPasswordForm() {
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" autoComplete="email" required />
       </div>
+      <TurnstileWidget key={turnstileAttempt} />
       {state?.error && (
         <p role="alert" className="text-sm text-destructive">
           {state.error}
