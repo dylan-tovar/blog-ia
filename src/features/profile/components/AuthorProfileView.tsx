@@ -34,6 +34,7 @@ interface AuthorProfileViewProps {
   } | null;
   posts: FeedPost[];
   likedPosts?: FeedPost[];
+  repostedPosts?: FeedPost[];
   followerCount: number;
   following: boolean;
   subscribers?: Subscriber[];
@@ -53,6 +54,7 @@ export function AuthorProfileView({
   viewer,
   posts,
   likedPosts = [],
+  repostedPosts = [],
   followerCount,
   following,
   subscribers = [],
@@ -71,7 +73,13 @@ export function AuthorProfileView({
 
   const displayedPosts = useMemo(() => {
     if (activeTab === "posts") {
-      return posts.filter((p) => p.type === "article" || !p.parent);
+      const ownOnly = posts.filter((p) => p.type === "article" || !p.parent);
+      const combined = [...ownOnly, ...repostedPosts];
+      return combined.sort((a, b) => {
+        const timeA = new Date(a.repostedAt ?? a.publishedAt ?? 0).getTime();
+        const timeB = new Date(b.repostedAt ?? b.publishedAt ?? 0).getTime();
+        return timeB - timeA;
+      });
     }
     if (activeTab === "replies") {
       return posts.filter((p) => p.type === "note" && p.parent !== null);
@@ -80,10 +88,15 @@ export function AuthorProfileView({
       return likedPosts;
     }
     if (activeTab === "activity") {
-      return posts;
+      const combined = [...posts, ...repostedPosts];
+      return combined.sort((a, b) => {
+        const timeA = new Date(a.repostedAt ?? a.publishedAt ?? 0).getTime();
+        const timeB = new Date(b.repostedAt ?? b.publishedAt ?? 0).getTime();
+        return timeB - timeA;
+      });
     }
     return [];
-  }, [activeTab, posts, likedPosts]);
+  }, [activeTab, posts, likedPosts, repostedPosts]);
 
   async function handleCopyLink() {
     const url = typeof window !== "undefined" ? window.location.href : "";

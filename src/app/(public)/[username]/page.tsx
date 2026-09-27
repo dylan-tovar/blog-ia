@@ -1,5 +1,9 @@
 import { getViewer } from "@/lib/viewer";
-import { getLikedPostsByUser, getPublishedPostsByAuthor } from "@/features/posts/queries";
+import {
+  getLikedPostsByUser,
+  getPublishedPostsByAuthor,
+  getRepostedPostsByUser,
+} from "@/features/posts/queries";
 import { getPublicProfileByUsername } from "@/features/profile/queries";
 import { getFollowerCount, getSubscribers, getSubscriptions, isFollowing } from "@/features/subscriptions/queries";
 import { AuthorProfileView } from "@/features/profile/components/AuthorProfileView";
@@ -9,9 +13,10 @@ export default async function AuthorPage(props: PageProps<"/[username]">) {
   const profile = await getPublicProfileByUsername(username);
   const viewer = await getViewer();
 
-  const [posts, likedPosts, followerCount, following, subscribers, subscriptions] = await Promise.all([
+  const [posts, likedPosts, repostedPosts, followerCount, following, subscribers, subscriptions] = await Promise.all([
     getPublishedPostsByAuthor(profile.id),
     getLikedPostsByUser(profile.id),
+    getRepostedPostsByUser(profile.id, profile.display_name),
     getFollowerCount(profile.id),
     viewer && viewer.id !== profile.id
       ? isFollowing(viewer.id, profile.id)
@@ -26,6 +31,7 @@ export default async function AuthorPage(props: PageProps<"/[username]">) {
       viewer={viewer}
       posts={posts}
       likedPosts={likedPosts}
+      repostedPosts={repostedPosts}
       followerCount={followerCount}
       following={following}
       subscribers={subscribers}

@@ -6,6 +6,7 @@ import { getViewer } from "@/lib/viewer";
 import { MIN_WORDS_SUMMARY } from "@/features/ai/constants";
 import { SummaryButton } from "@/features/ai/components/SummaryButton";
 import { LikeButton } from "@/features/likes/components/LikeButton";
+import { RepostButton } from "@/features/reposts/components/RepostButton";
 import { MarkdownContent } from "@/features/posts/components/MarkdownContent";
 import { NoteComposer } from "@/features/posts/components/NoteComposer";
 import { PostCard } from "@/features/posts/components/PostCard";
@@ -147,6 +148,12 @@ export default async function PublicPostPage(props: PageProps<"/p/[id]">) {
             postId={post.id}
             initialLiked={post.viewerLiked}
             initialCount={post.likeCount}
+            viewerId={viewer?.id ?? null}
+          />
+          <RepostButton
+            postId={post.id}
+            initialReposted={post.viewerReposted}
+            initialCount={post.repostCount}
             viewerId={viewer?.id ?? null}
           />
           <a

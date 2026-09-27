@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Repeat } from "lucide-react";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Badge } from "@/components/ui/badge";
 import { FollowButton } from "@/features/subscriptions/components/FollowButton";
 import { LikeButton } from "@/features/likes/components/LikeButton";
+import { RepostButton } from "@/features/reposts/components/RepostButton";
 import { ArticleCard } from "@/features/posts/components/ArticleCard";
 import { NoteComposer } from "@/features/posts/components/NoteComposer";
 import { NoteItem } from "@/features/posts/components/NoteItem";
@@ -96,74 +97,88 @@ export function PostCard({
   const replyToPostId = post.type === "note" ? post.id : undefined;
 
   return (
-    <article className="grid grid-cols-[auto_1fr] gap-3 border-b px-4 md:px-0 pt-4 pb-2">
-      {post.author?.username ? (
-        <Link href={`/${post.author.username}`} aria-label={authorName} className="h-fit">
-          <UserAvatar name={authorName} size="default" />
-        </Link>
-      ) : (
-        <UserAvatar name={authorName} size="default" />
-      )}
-
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          {post.author?.username ? (
-            <Link
-              href={`/${post.author.username}`}
-              className="min-w-0 truncate text-[15px] font-medium text-foreground hover:underline"
-            >
-              {authorName}
-            </Link>
-          ) : (
-            <span className="min-w-0 truncate text-[15px] font-medium text-foreground">{authorName}</span>
-          )}
-          {post.publishedAt && (
-            <time
-              dateTime={post.publishedAt}
-              suppressHydrationWarning
-              className="shrink-0 text-[13px] font-light text-muted-foreground"
-            >
-              {formatRelativeDate(post.publishedAt)}
-            </time>
-          )}
-          {recommended && (
-            <Badge variant="secondary" className="shrink-0">
-              Recomendado
-            </Badge>
-          )}
-          <div className="-my-2 ml-auto flex shrink-0 items-center gap-1">
-            <FollowControl
-              authorId={post.author?.id}
-              viewerId={viewerId}
-              following={following}
-              onFollowChange={setFollowing}
-            />
-            <PostOptionsDrawer
-              post={post}
-              isOwn={isOwn}
-              canDelete={canDelete}
-              canEdit={canEdit}
-              onDeleted={onDeleted}
-              viewerId={viewerId}
-              initialFollowing={following}
-              onFollowChange={setFollowing}
-            />
-          </div>
+    <div className="flex flex-col border-b">
+      {post.reposterName && (
+        <div className="flex items-center gap-1.5 px-4 md:px-0 pt-2.5 text-xs font-medium text-muted-foreground">
+          <Repeat className="size-3.5" aria-hidden />
+          <span>{post.reposterName} republicó</span>
         </div>
-
-        {post.type === "article" ? (
-          <ArticleCard post={post} />
+      )}
+      <article className="grid grid-cols-[auto_1fr] gap-3 px-4 md:px-0 pt-3 pb-2">
+        {post.author?.username ? (
+          <Link href={`/${post.author.username}`} aria-label={authorName} className="h-fit">
+            <UserAvatar name={authorName} size="default" />
+          </Link>
         ) : (
-          <NoteItem post={post} showReplyTo={showReplyTo} />
+          <UserAvatar name={authorName} size="default" />
         )}
 
-        <div className="mt-1 flex items-center gap-2">
-          <LikeButton
-            postId={post.id}
-            initialLiked={post.viewerLiked}
-            initialCount={post.likeCount}
-            viewerId={viewerId}
-          />
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            {post.author?.username ? (
+              <Link
+                href={`/${post.author.username}`}
+                className="min-w-0 truncate text-[15px] font-medium text-foreground hover:underline"
+              >
+                {authorName}
+              </Link>
+            ) : (
+              <span className="min-w-0 truncate text-[15px] font-medium text-foreground">{authorName}</span>
+            )}
+            {post.publishedAt && (
+              <time
+                dateTime={post.publishedAt}
+                suppressHydrationWarning
+                className="shrink-0 text-[13px] font-light text-muted-foreground"
+              >
+                {formatRelativeDate(post.publishedAt)}
+              </time>
+            )}
+            {recommended && (
+              <Badge variant="secondary" className="shrink-0">
+                Recomendado
+              </Badge>
+            )}
+            <div className="-my-2 ml-auto flex shrink-0 items-center gap-1">
+              <FollowControl
+                authorId={post.author?.id}
+                viewerId={viewerId}
+                following={following}
+                onFollowChange={setFollowing}
+              />
+              <PostOptionsDrawer
+                post={post}
+                isOwn={isOwn}
+                canDelete={canDelete}
+                canEdit={canEdit}
+                onDeleted={onDeleted}
+                viewerId={viewerId}
+                initialFollowing={following}
+                onFollowChange={setFollowing}
+              />
+            </div>
+          </div>
+
+          {post.type === "article" ? (
+            <ArticleCard post={post} />
+          ) : (
+            <NoteItem post={post} showReplyTo={showReplyTo} />
+          )}
+
+          <div className="mt-1 flex items-center gap-2">
+            <LikeButton
+              postId={post.id}
+              initialLiked={post.viewerLiked}
+              initialCount={post.likeCount}
+              viewerId={viewerId}
+            />
+
+            <RepostButton
+              postId={post.id}
+              initialReposted={post.viewerReposted}
+              initialCount={post.repostCount}
+              viewerId={viewerId}
+            />
 
           {canReply ? (
             viewerId === null ? (
@@ -220,5 +235,6 @@ export function PostCard({
         )}
       </div>
     </article>
+  </div>
   );
 }
