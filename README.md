@@ -25,5 +25,6 @@ Todo está en [`docs/`](docs/README.md): qué se construyó, cómo funciona y po
 | Saber por qué se hizo así | [`docs/adr/`](docs/adr/README.md) |
 | Entender la IA | [`docs/ai/overview.md`](docs/ai/overview.md) |
 | Agregar una feature | [`docs/guides/contributing.md`](docs/guides/contributing.md) |
+| Saber el límite de longitud de un campo | [`docs/guides/limites-de-campos.md`](docs/guides/limites-de-campos.md) |
 
 > Esta versión de Next.js tiene cambios respecto a lo habitual (`proxy.ts` en lugar de `middleware`, tipos `PageProps`). Antes de escribir código, ver [`AGENTS.md`](AGENTS.md).

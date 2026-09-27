@@ -24,10 +24,13 @@ PostgreSQL gestionado por Supabase (Auth, RLS y PostgREST). El esquema vive en a
 | 12 | `0012_email_preferences.sql` | `profiles.notify_new_article_email`, `profiles.unsubscribe_token` y función `follower_emails_for_author` ([ADR 0028](../adr/0028-emails-transaccionales-resend.md)) | Sí |
 | 13 | `0013_note_reply_to.sql` | `posts.reply_to_post_id` (a qué nota concreta responde una nota) y función `can_reply_to_note` ([ADR 0029](../adr/0029-respuestas-a-respuestas.md)) | Sí |
 | 14 | `0014_discovery_search.sql` | Índices `lower(...)` para la búsqueda ILIKE y función `popular_authors` (pool de sugeridos para seguir) ([ADR 0030](../adr/0030-descubrimiento-busqueda-sugeridos-temas.md)) | Sí |
+| 15 | `0015_notifications_realtime.sql` | `replica identity full` en `notifications` y alta en la publication de Realtime, para que el badge reciba los cambios sin polling ([ADR 0036](../adr/0036-notificaciones-realtime.md)) | Sí |
+| 16 | `0016_profile_avatar.sql` | Bucket público `avatar-images` de Storage, sus políticas y `profiles.avatar_url` con el `CHECK` que ata la URL a la carpeta propia del usuario. Mismo patrón que `0008` y `0009` | Sí |
+| 17 | `0017_reposts.sql` | Tabla `reposts` (repost de artículos y notas) con RLS: lectura pública, insert solo como uno mismo sobre posts publicados, delete solo del propio usuario | Sí |
 
 **`0005` nunca se repite sola.** Recrea la política de INSERT de `posts` sin la condición `type = 'note' or status = 'draft'` (que añade `0007`) y deja el UPDATE limitado a artículos (que abre `0006`). Corrida sola sobre un proyecto ya migrado, reabriría la inserción de artículos ya publicados sin moderación y rompería la edición de notas. Si hay que repetirla, se repite la cadena `0005` → `0006` → `0007`.
 
-No hay tabla de control de migraciones: quien las aplica debe saber cuáles corrió. Para un proyecto nuevo, correr las catorce en orden. Para uno existente, correr solo las que falten, en orden; si `0007` cambió desde la última vez, se puede volver a correr sola (con `0005` y `0006` ya aplicadas). El procedimiento completo, con la verificación posterior, está en [getting-started](../guides/getting-started.md#migraciones).
+No hay tabla de control de migraciones: quien las aplica debe saber cuáles corrió. Para un proyecto nuevo, correr las diecisiete en orden. Para uno existente, correr solo las que falten, en orden; si `0007` cambió desde la última vez, se puede volver a correr sola (con `0005` y `0006` ya aplicadas). El procedimiento completo, con la verificación posterior, está en [getting-started](../guides/getting-started.md#migraciones).
 
 ## Comprobaciones
 
