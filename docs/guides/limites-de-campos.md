@@ -19,7 +19,7 @@ Todos los inputs de la app tienen un límite en Next.js (Zod y/o `maxLength` en 
 | Campo | Mín | Máx Next.js | Máx base de datos | Notas |
 | :--- | :--- | :--- | :--- | :--- |
 | `username` | 3 | **20** — regex `^[a-z0-9_]{3,20}$`, `src/features/profile/schemas.ts:31` | **20** — `check (username ~ '^[a-z0-9_]{3,20}$')`, `supabase/migrations/0004_username.sql:14-15` | Coinciden. Se normaliza `.trim().toLowerCase()` antes de validar; lista de reservados en `schemas.ts:7-25` |
-| `displayName` | 1 | **200** — `DISPLAY_NAME_MAX_LENGTH`, `src/features/profile/constants.ts:1` | **200** — `check (char_length (display_name) <= 200) not valid`, `0020_field_length_checks.sql` | Mismo tier que `title`/`cover_text` (etiquetas cortas de texto libre), por decisión de estandarización. `NOT VALID`: puede haber perfiles existentes que superen el límite |
+| `displayName` | 1 | **50** — `DISPLAY_NAME_MAX_LENGTH`, `src/features/profile/constants.ts:1` | **200** — `check (char_length (display_name) <= 200) not valid`, `0020_field_length_checks.sql` | ⚠️ **Asimetría intencional, no es un gap**: es el nombre de una persona, no una frase larga (a diferencia de `title`), así que Next.js lo limita más estricto (50) que la DB (200). El `CHECK` de 200 se dejó como techo genérico al bajar el límite de producto, para no correr otra migración; no hace falta bajarlo |
 | `avatar_url` | — | sin `.max()` explícito (se valida pertenencia de carpeta, no longitud) | **500** — `check (char_length (avatar_url) <= 500)`, `0016_profile_avatar.sql:62-71` | El límite real de tamaño de archivo lo impone el bucket: 2MB, solo `image/webp\|jpeg\|png` (`0016_profile_avatar.sql:9-16`) |
 | bio de perfil | — | — | — | **No existe este campo hoy** — sin columna, schema ni componente |
 
