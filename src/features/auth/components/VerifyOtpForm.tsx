@@ -4,7 +4,10 @@ import { startTransition, useActionState, useEffect, useRef, useState } from "re
 import { Loader2 } from "lucide-react";
 import { cn } from "cn";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { TurnstileWidget } from "@/features/auth/components/TurnstileWidget";
+import {
+  TurnstileWidget,
+  type TurnstileWidgetHandle,
+} from "@/features/auth/components/TurnstileWidget";
 import {
   resendPasswordResetOtp,
   resendSignupOtp,
@@ -42,14 +45,18 @@ export function VerifyOtpForm({ email, verifyType = "signup" }: VerifyOtpFormPro
   }, []);
 
   // Resend hits a captcha-gated endpoint. Turnstile tokens are single-use, so
-  // once a resend attempt consumes the current one, remount the widget for a
-  // fresh token before the next click (same pattern as RegisterForm).
-  const [prevResendState, setPrevResendState] = useState(resendState);
-  const [turnstileAttempt, setTurnstileAttempt] = useState(0);
-  if (resendState !== prevResendState) {
-    setPrevResendState(resendState);
-    setTurnstileAttempt((n) => n + 1);
-  }
+  // once a resend attempt consumes the current one, reset the widget for a
+  // fresh token before the next click (same pattern as RegisterForm). Skip
+  // the initial mount so a resend isn't wrongly signaled before the first
+  // click.
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
+  const resendMounted = useRef(false);
+  useEffect(() => {
+    if (resendMounted.current) {
+      turnstileRef.current?.reset();
+    }
+    resendMounted.current = true;
+  }, [resendState]);
 
   function handleResend() {
     startTransition(() => {
@@ -130,7 +137,7 @@ export function VerifyOtpForm({ email, verifyType = "signup" }: VerifyOtpFormPro
           )}
 
           <div className="mt-4">
-            <TurnstileWidget key={turnstileAttempt} />
+            <TurnstileWidget ref={turnstileRef} />
           </div>
 
           {state?.error && (

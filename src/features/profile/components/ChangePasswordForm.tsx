@@ -1,13 +1,16 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { changePassword } from "@/features/auth/actions";
 import { PasswordField } from "@/features/auth/components/PasswordField";
 import { PasswordStrength } from "@/features/auth/components/PasswordStrength";
-import { TurnstileWidget } from "@/features/auth/components/TurnstileWidget";
+import {
+  TurnstileWidget,
+  type TurnstileWidgetHandle,
+} from "@/features/auth/components/TurnstileWidget";
 import { isPasswordValid } from "@/features/auth/password-rules";
 
 export function ChangePasswordForm() {
@@ -17,14 +20,12 @@ export function ChangePasswordForm() {
   const [confirmTouched, setConfirmTouched] = useState(false);
 
   // The reauth step is captcha-gated; a Turnstile token is single-use, so a
-  // failed submit leaves a spent one — remount for a fresh token (same
-  // pattern as RegisterForm).
-  const [prevState, setPrevState] = useState(state);
-  const [turnstileAttempt, setTurnstileAttempt] = useState(0);
-  if (state !== prevState) {
-    setPrevState(state);
-    if (state?.error) setTurnstileAttempt((n) => n + 1);
-  }
+  // failed submit leaves a spent one — reset for a fresh token (same pattern
+  // as RegisterForm).
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
+  useEffect(() => {
+    if (state?.error) turnstileRef.current?.reset();
+  }, [state]);
 
   const passwordsMatch = newPassword === confirmNewPassword;
   const mismatch =
@@ -88,7 +89,7 @@ export function ChangePasswordForm() {
           )}
         </div>
       </div>
-      <TurnstileWidget key={turnstileAttempt} />
+      <TurnstileWidget ref={turnstileRef} />
       {state?.error && (
         <p role="alert" className="text-sm text-destructive">
           {state.error}

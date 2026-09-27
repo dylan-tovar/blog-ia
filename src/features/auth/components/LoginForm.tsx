@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,10 @@ import { DrawerFooter } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signIn } from "@/features/auth/actions";
-import { TurnstileWidget } from "@/features/auth/components/TurnstileWidget";
+import {
+  TurnstileWidget,
+  type TurnstileWidgetHandle,
+} from "@/features/auth/components/TurnstileWidget";
 
 interface LoginFormProps {
   redirectTo?: string;
@@ -20,14 +23,12 @@ export function LoginForm({ redirectTo, onRegisterClick, inDrawer = false }: Log
   const [state, action, pending] = useActionState(signIn, undefined);
 
   // Turnstile tokens are single-use: a rejected submit (bad credentials, expired
-  // captcha) leaves a spent token in the DOM with no way to retry. Remounting
-  // forces the widget to issue a fresh one. Same pattern as RegisterForm.
-  const [prevState, setPrevState] = useState(state);
-  const [turnstileAttempt, setTurnstileAttempt] = useState(0);
-  if (state !== prevState) {
-    setPrevState(state);
-    if (state?.error) setTurnstileAttempt((n) => n + 1);
-  }
+  // captcha) leaves a spent token behind. Reset the widget to get a fresh one.
+  // Same pattern as RegisterForm.
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
+  useEffect(() => {
+    if (state?.error) turnstileRef.current?.reset();
+  }, [state]);
 
   const FooterWrapper = inDrawer ? DrawerFooter : "div";
 
@@ -57,7 +58,7 @@ export function LoginForm({ redirectTo, onRegisterClick, inDrawer = false }: Log
           </Link>
         )}
       </div>
-      <TurnstileWidget key={turnstileAttempt} />
+      <TurnstileWidget ref={turnstileRef} />
       {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
       <FooterWrapper className={inDrawer ? "px-0 pt-1 pb-0 gap-3" : "flex flex-col gap-4"}>
         <Button type="submit" disabled={pending} className="w-full min-h-11 font-medium">
