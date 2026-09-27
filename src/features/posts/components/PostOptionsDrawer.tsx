@@ -300,16 +300,6 @@ export function PostOptionsDrawer({
                       }}
                     />
                   )}
-                  {canEdit && post.type === "article" && (
-                    <Option
-                      icon={Pencil}
-                      label="Editar artículo"
-                      onClick={() => {
-                        close();
-                        router.push(`/editor/${post.id}`);
-                      }}
-                    />
-                  )}
                   <Option
                     icon={copied ? Check : Link2}
                     iconClassName={copied ? "text-emerald-500" : undefined}
@@ -394,18 +384,6 @@ export function PostOptionsDrawer({
                 >
                   <Pencil className="size-4 text-muted-foreground" />
                   <span>Editar nota</span>
-                </DropdownMenuItem>
-              )}
-              {canEdit && post.type === "article" && (
-                <DropdownMenuItem
-                  className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal"
-                  onClick={() => {
-                    close();
-                    router.push(`/editor/${post.id}`);
-                  }}
-                >
-                  <Pencil className="size-4 text-muted-foreground" />
-                  <span>Editar artículo</span>
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem
