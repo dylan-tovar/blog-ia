@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { FadeIn } from "@/components/shared/page-transition";
 import { getViewer } from "@/lib/viewer";
 import { getRecommendedPostIds, getRecommendedPosts } from "@/features/recommendations/queries";
 import { RecommendedSection } from "@/features/recommendations/components/RecommendedSection";
@@ -53,42 +54,44 @@ export default async function HomePage(props: PageProps<"/">) {
   ]);
 
   return (
-    <div className="mx-auto w-full max-w-xl">
-      <h1 className="sr-only">Inicio</h1>
+    <FadeIn>
+      <div className="mx-auto w-full max-w-xl">
+        <h1 className="sr-only">Inicio</h1>
 
-      {viewer && (
-        <section aria-label="Crear nota" className="hidden px-4 md:px-0 pt-6 pb-2 md:block">
-          <NoteTriggerBar viewerName={viewer.displayName} avatarUrl={viewer.avatarUrl} />
-        </section>
-      )}
+        {viewer && (
+          <section aria-label="Crear nota" className="hidden px-4 md:px-0 pt-6 pb-2 md:block">
+            <NoteTriggerBar viewerName={viewer.displayName} avatarUrl={viewer.avatarUrl} />
+          </section>
+        )}
 
-      {carouselPromise && (
-        <Suspense fallback={<RecommendedSkeleton />}>
-          <RecommendedSection postsPromise={carouselPromise} />
-        </Suspense>
-      )}
+        {carouselPromise && (
+          <Suspense fallback={<RecommendedSkeleton />}>
+            <RecommendedSection postsPromise={carouselPromise} />
+          </Suspense>
+        )}
 
-      {posts.length === 0 ? (
-        <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-          {tag
-            ? "No hay publicaciones con ese tag."
-            : scope === "following"
-              ? "Las personas que seguís todavía no publicaron nada."
-              : "Todavía no hay publicaciones."}
-        </p>
-      ) : (
-        <FeedList
-          // The follow count is part of the key: following or unfollowing changes the feed,
-          // so the "Cargar más" pages from the old set must be discarded.
-          key={`${scope}:${tag ?? "all"}:${followedIds.length}`}
-          tag={tag}
-          scope={scope}
-          viewerId={viewer?.id ?? null}
-          initialPosts={posts}
-          initialHasMore={hasMore}
-          recommendedPosts={recommendedPosts}
-        />
-      )}
-    </div>
+        {posts.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+            {tag
+              ? "No hay publicaciones con ese tag."
+              : scope === "following"
+                ? "Las personas que seguís todavía no publicaron nada."
+                : "Todavía no hay publicaciones."}
+          </p>
+        ) : (
+          <FeedList
+            // The follow count is part of the key: following or unfollowing changes the feed,
+            // so the "Cargar más" pages from the old set must be discarded.
+            key={`${scope}:${tag ?? "all"}:${followedIds.length}`}
+            tag={tag}
+            scope={scope}
+            viewerId={viewer?.id ?? null}
+            initialPosts={posts}
+            initialHasMore={hasMore}
+            recommendedPosts={recommendedPosts}
+          />
+        )}
+      </div>
+    </FadeIn>
   );
 }
