@@ -4,7 +4,7 @@ import { NewPostButton } from "@/features/posts/components/NewPostButton";
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
-    <AppShell rightRail fab={(viewer) => <NewPostButton viewerName={viewer.displayName} />}>
+    <AppShell rightRail fab={(viewer) => <NewPostButton viewerName={viewer.displayName} avatarUrl={viewer.avatarUrl} />}>
       {children}
     </AppShell>
   );

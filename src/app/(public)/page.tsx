@@ -58,7 +58,7 @@ export default async function HomePage(props: PageProps<"/">) {
 
       {viewer && (
         <section aria-label="Crear nota" className="hidden px-4 md:px-0 pt-6 pb-2 md:block">
-          <NoteTriggerBar viewerName={viewer.displayName} />
+          <NoteTriggerBar viewerName={viewer.displayName} avatarUrl={viewer.avatarUrl} />
         </section>
       )}
 

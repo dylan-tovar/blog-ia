@@ -7,10 +7,11 @@ import { cn } from "@/lib/utils";
 
 interface NoteTriggerBarProps {
   viewerName: string | null;
+  avatarUrl: string | null;
   className?: string;
 }
 
-export function NoteTriggerBar({ viewerName, className }: NoteTriggerBarProps) {
+export function NoteTriggerBar({ viewerName, avatarUrl, className }: NoteTriggerBarProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -24,11 +25,16 @@ export function NoteTriggerBar({ viewerName, className }: NoteTriggerBarProps) {
           className,
         )}
       >
-        <UserAvatar name={viewerName} size="default" className="size-9 shrink-0 ring-1 ring-border transition-transform group-hover:scale-105" />
+        <UserAvatar
+          name={viewerName}
+          avatarUrl={avatarUrl}
+          size="default"
+          className="size-9 shrink-0 ring-1 ring-border transition-transform group-hover:scale-105"
+        />
         <span className="truncate select-none font-normal">¿Qué estás pensando?</span>
       </button>
 
-      <NoteDialog open={open} onOpenChange={setOpen} viewerName={viewerName} />
+      <NoteDialog open={open} onOpenChange={setOpen} viewerName={viewerName} avatarUrl={avatarUrl} />
     </>
   );
 }
