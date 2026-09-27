@@ -22,10 +22,13 @@ export function NoteComposer({
   placeholder = "Escribí una nota…",
   onPublished,
 }: NoteComposerProps) {
-  const { content, setContent, state, formAction, isPending, remaining, showCounter, canSubmit, moderation } =
-    useNoteForm(onPublished);
-
   const [hasAcknowledgedWarning, setHasAcknowledgedWarning] = useState(false);
+
+  const { content, setContent, state, formAction, isPending, remaining, showCounter, canSubmit, moderation } =
+    useNoteForm(() => {
+      setHasAcknowledgedWarning(false);
+      onPublished?.();
+    });
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     if (moderation.leve > 0 && !hasAcknowledgedWarning) {

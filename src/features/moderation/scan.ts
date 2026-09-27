@@ -1,4 +1,4 @@
-﻿import {
+import {
   CATEGORY_SEVERITY,
   DICTIONARY,
   MODERATION_CATEGORIES,

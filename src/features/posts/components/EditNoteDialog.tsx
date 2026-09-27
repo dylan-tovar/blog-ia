@@ -77,9 +77,11 @@ export function EditNoteDialog({
     onOpenChange(next);
     if (next) {
       setContent(initialContent);
+      setHasAcknowledgedWarning(false);
     } else {
       setError(null);
       setContent(initialContent);
+      setHasAcknowledgedWarning(false);
     }
   }
 
