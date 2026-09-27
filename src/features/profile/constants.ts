@@ -1,1 +1,1 @@
-export const DISPLAY_NAME_MAX_LENGTH = 200;
+export const DISPLAY_NAME_MAX_LENGTH = 50;
