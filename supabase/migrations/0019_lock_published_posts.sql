@@ -24,4 +24,10 @@ $$;
 drop trigger if exists posts_block_published_edits on public.posts;
 create trigger posts_block_published_edits
   before update on public.posts
-  for each row execute function public.posts_block_published_edits ();
+  for each row
+  when (
+    old.status = 'published'
+    and old.type = 'article'
+    and (new.title is distinct from old.title or new.content is distinct from old.content)
+  )
+  execute function public.posts_block_published_edits ();
