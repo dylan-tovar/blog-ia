@@ -433,6 +433,7 @@ export async function getFeedPage({
   }
 
   const rows = (data ?? []) as unknown as CardRow[];
+  const pageRows = rows.slice(0, FEED_PAGE_SIZE);
 
   // If in following scope and on first page, also fetch recent reposts from followed authors
   const repostFeedPosts: FeedPost[] = [];
@@ -445,7 +446,13 @@ export async function getFeedPage({
       .limit(10);
 
     if (repostRows && repostRows.length > 0) {
-      const repostPostIds = [...new Set(repostRows.map((r) => r.post_id))];
+      // Skip posts already appearing directly in this page to avoid duplicates.
+      const directPageIds = new Set(pageRows.map((row) => row.id));
+      const repostPostIds = [
+        ...new Set(
+          repostRows.map((r) => r.post_id).filter((id) => !directPageIds.has(id)),
+        ),
+      ];
       const { data: repostedPostsData } = await supabase
         .from("posts")
         .select(`${CARD_COLUMNS}, ${AUTHOR_EMBED}, ${LIKES_EMBED}`)
@@ -458,9 +465,12 @@ export async function getFeedPage({
           { withFollows: true },
         );
         const hydratedMap = new Map(hydratedReposts.map((p) => [p.id, p]));
+        const seenRepostIds = new Set<string>();
         for (const r of repostRows) {
+          if (seenRepostIds.has(r.post_id)) continue;
           const original = hydratedMap.get(r.post_id);
           if (original) {
+            seenRepostIds.add(r.post_id);
             const reposterName =
               (r.profiles as unknown as { display_name: string } | null)?.display_name ?? null;
             repostFeedPosts.push({
@@ -474,7 +484,6 @@ export async function getFeedPage({
     }
   }
 
-  const pageRows = rows.slice(0, FEED_PAGE_SIZE);
   const directPosts = await hydrateFeedPosts(pageRows, { withFollows: true });
 
   const allPosts = [...directPosts, ...repostFeedPosts].sort((a, b) => {

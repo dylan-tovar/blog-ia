@@ -74,8 +74,14 @@ export function AuthorProfileView({
   const displayedPosts = useMemo(() => {
     if (activeTab === "posts") {
       const ownOnly = posts.filter((p) => p.type === "article" || !p.parent);
-      const combined = [...ownOnly, ...repostedPosts];
-      return combined.sort((a, b) => {
+      const repostedOwnOnly = repostedPosts.filter((p) => p.type === "article" || !p.parent);
+
+      const byId = new Map(ownOnly.map((p) => [p.id, p]));
+      for (const p of repostedOwnOnly) {
+        byId.set(p.id, p); // repostedPosts pisa: prioriza reposterName/repostedAt
+      }
+
+      return [...byId.values()].sort((a, b) => {
         const timeA = new Date(a.repostedAt ?? a.publishedAt ?? 0).getTime();
         const timeB = new Date(b.repostedAt ?? b.publishedAt ?? 0).getTime();
         return timeB - timeA;
@@ -88,8 +94,12 @@ export function AuthorProfileView({
       return likedPosts;
     }
     if (activeTab === "activity") {
-      const combined = [...posts, ...repostedPosts];
-      return combined.sort((a, b) => {
+      const byId = new Map(posts.map((p) => [p.id, p]));
+      for (const p of repostedPosts) {
+        byId.set(p.id, p);
+      }
+
+      return [...byId.values()].sort((a, b) => {
         const timeA = new Date(a.repostedAt ?? a.publishedAt ?? 0).getTime();
         const timeB = new Date(b.repostedAt ?? b.publishedAt ?? 0).getTime();
         return timeB - timeA;
