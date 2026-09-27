@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { Ellipsis, Link2, Share2, SquarePen, Users } from "lucide-react";
 import { UserAvatar } from "@/components/shared/UserAvatar";
@@ -45,7 +45,6 @@ interface AuthorProfileViewProps {
 const TABS = [
   { id: "activity", label: "Actividad" },
   { id: "posts", label: "Posts" },
-  { id: "replies", label: "Respuestas" },
   { id: "likes", label: "Likes" },
   { id: "subscriptions", label: "Suscripciones" },
 ] as const;
@@ -65,12 +64,29 @@ export function AuthorProfileView({
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const isOwnProfile = viewer?.id === profile.id;
+  const tabListRef = useRef<HTMLDivElement>(null);
+  const tabRefs = useRef(new Map<string, HTMLButtonElement>());
+  const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>();
 
-  const activeIndex = useMemo(
-    () => Math.max(0, TABS.findIndex((tab) => tab.id === activeTab)),
-    [activeTab],
-  );
+  useLayoutEffect(() => {
+    function updateIndicator() {
+      const container = tabListRef.current;
+      const activeButton = tabRefs.current.get(activeTab);
+      if (!container || !activeButton) return;
+      const containerRect = container.getBoundingClientRect();
+      const buttonRect = activeButton.getBoundingClientRect();
+      setIndicatorStyle({
+        left: buttonRect.left - containerRect.left,
+        width: buttonRect.width,
+      });
+    }
+
+    updateIndicator();
+    window.addEventListener("resize", updateIndicator);
+    return () => window.removeEventListener("resize", updateIndicator);
+  }, [activeTab]);
+
+  const isOwnProfile = viewer?.id === profile.id;
 
   const displayedPosts = useMemo(() => {
     if (activeTab === "posts") {
@@ -87,9 +103,6 @@ export function AuthorProfileView({
         const timeB = new Date(b.repostedAt ?? b.publishedAt ?? 0).getTime();
         return timeB - timeA;
       });
-    }
-    if (activeTab === "replies") {
-      return posts.filter((p) => p.type === "note" && p.parent !== null);
     }
     if (activeTab === "likes") {
       return likedPosts;
@@ -248,18 +261,27 @@ export function AuthorProfileView({
 
       {/* TABS */}
       <div className="relative mt-2 border-b border-border/60">
-        <div role="tablist" aria-label="Secciones del perfil" className="flex w-full">
+        <div
+          ref={tabListRef}
+          role="tablist"
+          aria-label="Secciones del perfil"
+          className="flex items-center justify-between px-4 sm:justify-start sm:gap-8 sm:px-6"
+        >
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
+                ref={(el) => {
+                  if (el) tabRefs.current.set(tab.id, el);
+                  else tabRefs.current.delete(tab.id);
+                }}
                 type="button"
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "relative flex-1 cursor-pointer py-3.5 px-1 text-center text-xs sm:text-sm whitespace-nowrap transition-colors",
+                  "relative cursor-pointer py-3.5 text-sm whitespace-nowrap transition-colors",
                   isActive
                     ? "font-semibold text-foreground"
                     : "font-medium text-muted-foreground hover:text-foreground",
@@ -272,11 +294,13 @@ export function AuthorProfileView({
         </div>
 
         {/* Sliding active indicator */}
-        <div
-          aria-hidden="true"
-          className="absolute bottom-0 left-0 h-[2px] w-1/5 bg-foreground transition-transform duration-300 ease-out"
-          style={{ transform: `translateX(${activeIndex * 100}%)` }}
-        />
+        {indicatorStyle && (
+          <span
+            aria-hidden="true"
+            className="absolute bottom-0 h-[2px] rounded-full bg-foreground transition-all duration-300 ease-out"
+            style={{ left: indicatorStyle.left, width: indicatorStyle.width }}
+          />
+        )}
       </div>
 
       {/* TAB CONTENT WITH SMOOTH TRANSITION */}
@@ -289,26 +313,22 @@ export function AuthorProfileView({
         )}
 
         {/* TAB CONTENT */}
-        {activeTab === "activity" || activeTab === "posts" || activeTab === "replies" || activeTab === "likes" ? (
+        {activeTab === "activity" || activeTab === "posts" || activeTab === "likes" ? (
           displayedPosts.length === 0 ? (
             <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
               <div className="mb-3 grid size-12 place-items-center rounded-2xl bg-neutral-800/60 text-muted-foreground">
                 <SquarePen className="size-6" />
               </div>
               <h3 className="text-base font-semibold text-foreground">
-                {activeTab === "replies"
+                {activeTab === "likes"
                   ? isOwnProfile
-                    ? "Todavía no respondiste a ninguna publicación."
-                    : "Todavía no hay respuestas."
-                  : activeTab === "likes"
-                    ? isOwnProfile
-                      ? "Todavía no le diste me gusta a ninguna publicación."
-                      : "Todavía no hay me gusta."
-                    : isOwnProfile
-                      ? "Todavía no publicaste nada."
-                      : "Todavía no hay publicaciones."}
+                    ? "Todavía no le diste me gusta a ninguna publicación."
+                    : "Todavía no hay me gusta."
+                  : isOwnProfile
+                    ? "Todavía no publicaste nada."
+                    : "Todavía no hay publicaciones."}
               </h3>
-              {isOwnProfile && activeTab !== "replies" && activeTab !== "likes" && (
+              {isOwnProfile && activeTab !== "likes" && (
                 <p className="mt-1 text-sm text-muted-foreground">
                   Empezá escribiendo una nota.
                 </p>
