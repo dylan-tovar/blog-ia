@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateProfile } from "@/features/profile/actions";
+import { DISPLAY_NAME_MAX_LENGTH } from "@/features/profile/constants";
 
 interface SettingsFormProps {
   initialDisplayName: string;
@@ -39,6 +40,7 @@ export function SettingsForm({
           id="displayName"
           name="displayName"
           type="text"
+          maxLength={DISPLAY_NAME_MAX_LENGTH}
           defaultValue={initialDisplayName}
           required
         />

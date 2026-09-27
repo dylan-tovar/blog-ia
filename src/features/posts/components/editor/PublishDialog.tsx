@@ -20,6 +20,7 @@ import type { ModerationSummary } from "@/features/moderation/scan";
 import { formatRetry } from "@/features/ai/components/ai-ui";
 import { useCountdown } from "@/features/ai/components/use-countdown";
 import { addTag, publishPost, removeTag, savePostCover } from "@/features/posts/actions";
+import { TAG_NAME_MAX_LENGTH } from "@/features/posts/constants";
 import { CoverPicker } from "@/features/posts/components/editor/CoverPicker";
 import { extractImageUrls, filterOwnCoverImages } from "@/features/posts/cover/cover";
 import {
@@ -299,6 +300,7 @@ export function PublishDialog({
                 }
               }}
               placeholder="Agregar tag"
+              maxLength={TAG_NAME_MAX_LENGTH}
               disabled={isPending}
             />
             <datalist id="existing-tags">

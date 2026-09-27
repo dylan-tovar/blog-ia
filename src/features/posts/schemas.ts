@@ -3,6 +3,7 @@ import {
   NOTE_MAX_LENGTH,
   POST_CONTENT_MAX_LENGTH,
   POST_TITLE_MAX_LENGTH,
+  TAG_NAME_MAX_LENGTH,
 } from "@/features/posts/constants";
 
 export const idSchema = z.uuid();
@@ -12,7 +13,7 @@ export const tagNameSchema = z
   .trim()
   .toLowerCase()
   .min(1, { error: "El tag no puede estar vacío." })
-  .max(50, { error: "El tag es demasiado largo." });
+  .max(TAG_NAME_MAX_LENGTH, { error: "El tag es demasiado largo." });
 
 export const feedScopeSchema = z.enum(["global", "following"]);
 
