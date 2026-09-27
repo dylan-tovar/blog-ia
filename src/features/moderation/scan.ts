@@ -1,4 +1,4 @@
-import {
+﻿import {
   CATEGORY_SEVERITY,
   DICTIONARY,
   MODERATION_CATEGORIES,
@@ -121,28 +121,29 @@ type DictionaryEntry = { category: ModerationCategory; severity: ModerationSever
 // la más larga, así que los términos se ordenan por longitud normalizada descendente
 // para que una frase ("sudaca de mierda") se pruebe antes que un término que empieza
 // igual ("sudaca") y no quede tapada por él.
-function buildDictionary(): { regex: RegExp; entries: DictionaryEntry[] } {
+function buildDictionary(): { regexes: RegExp[]; entries: DictionaryEntry[] } {
   const all = MODERATION_CATEGORIES.flatMap((category) =>
     DICTIONARY[category].map((term) => ({ category, severity: CATEGORY_SEVERITY[category], term })),
   );
 
   const entries = [...all].sort((a, b) => normalize(b.term).text.length - normalize(a.term).text.length);
 
-  const alternation = entries.map((entry, index) => `(?<t${index}>${termPattern(entry.term)})`).join("|");
-  // Plural español: "-s" tras vocal ("pendejos"), "-es" tras consonante ("imbeciles",
-  // "cabrones"). Se prueba "es" primero porque la alternación se queda con la que matchea.
-  const regex = new RegExp(`${BOUNDARY_BEFORE}(?:${alternation})(?:es|s)?${BOUNDARY_AFTER}`, "gu");
+  const regexes: RegExp[] = [];
+  const chunkSize = 100;
+  for (let i = 0; i < entries.length; i += chunkSize) {
+    const chunk = entries.slice(i, i + chunkSize);
+    const alternation = chunk.map((entry, index) => `(?<t${i + index}>${termPattern(entry.term)})`).join('|');
+    // Plural espanol: '-s' tras vocal, '-es' tras consonante.
+    regexes.push(new RegExp(`${BOUNDARY_BEFORE}(?:${alternation})(?:es|s)?${BOUNDARY_AFTER}`, 'gu'));
+  }
 
-  return { regex, entries };
+  return { regexes, entries };
 }
 
-const { regex: DICTIONARY_REGEX, entries: DICTIONARY_ENTRIES } = buildDictionary();
+const { regexes: DICTIONARY_REGEXES, entries: DICTIONARY_ENTRIES } = buildDictionary();
 
 const SEVERITY_ORDER: Record<ModerationSeverity, number> = { grave: 0, leve: 1 };
 
-// Una frase y una de sus palabras pueden coincidir sobre el mismo fragmento
-// ("hijo de puta" y "puta"): se informa la más grave y, a igual gravedad, la más
-// larga, y se descartan las que quedan contenidas en ella.
 function dropContained(matches: ModerationMatch[]): ModerationMatch[] {
   const ordered = [...matches].sort(
     (a, b) =>
@@ -166,23 +167,26 @@ export function scanText(text: string): ModerationMatch[] {
   const { text: haystack, map } = normalize(text);
   const matches: ModerationMatch[] = [];
 
-  DICTIONARY_REGEX.lastIndex = 0;
-  for (const match of haystack.matchAll(DICTIONARY_REGEX)) {
-    const groupName = Object.entries(match.groups ?? {}).find(([, value]) => value !== undefined)?.[0];
-    if (!groupName) continue;
+  for (const regex of DICTIONARY_REGEXES) {
+    regex.lastIndex = 0;
+    for (const match of haystack.matchAll(regex)) {
+      const groupName = Object.entries(match.groups ?? {}).find(([, value]) => value !== undefined)?.[0];
+      if (!groupName) continue;
 
-    const { category, severity, term } = DICTIONARY_ENTRIES[Number(groupName.slice(1))];
-    const from = match.index;
-    const to = from + match[0].length;
+      const { category, severity, term } = DICTIONARY_ENTRIES[Number(groupName.slice(1))];
+      const from = match.index;
+      const to = from + match[0].length;
 
-    const start = map[from] ?? 0;
-    const end = to < map.length ? map[to] : text.length;
+      const start = map[from] ?? 0;
+      const end = to < map.length ? map[to] : text.length;
 
-    matches.push({ term, category, severity, start, end, excerpt: text.slice(start, end) });
+      matches.push({ term, category, severity, start, end, excerpt: text.slice(start, end) });
+    }
   }
 
   return dropContained(matches);
 }
+
 
 export type ModerationSummary = {
   matches: ModerationMatch[];
@@ -214,3 +218,4 @@ export function scan(text: string): ModerationSummary {
 export function scanArticle(title: string, content: string): ModerationSummary {
   return summarize([...scanText(title), ...scanText(content)]);
 }
+

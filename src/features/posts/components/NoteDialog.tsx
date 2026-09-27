@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { NOTE_MAX_LENGTH } from "@/features/posts/constants";
 import { useNoteForm } from "@/features/posts/components/use-note-form";
+import { ModerationDetails } from "@/features/moderation/components/ModerationNotice";
 import { useVisualViewportStyle } from "@/hooks/use-visual-viewport-style";
 import { cn } from "@/lib/utils";
 
@@ -24,11 +26,21 @@ interface NoteDialogProps {
 
 // The form lives inside DialogContent, which unmounts on close, so its state resets every time.
 function NoteForm({ viewerName, onPublished }: { viewerName: string | null; onPublished: () => void }) {
-  const { content, setContent, state, formAction, isPending, remaining, showCounter, canSubmit } =
+  const { content, setContent, state, formAction, isPending, remaining, showCounter, canSubmit, moderation } =
     useNoteForm(onPublished);
 
+  const [hasAcknowledgedWarning, setHasAcknowledgedWarning] = useState(false);
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    if (moderation.leve > 0 && !hasAcknowledgedWarning) {
+      event.preventDefault();
+      setHasAcknowledgedWarning(true);
+      return;
+    }
+  }
+
   return (
-    <form action={formAction} className="flex min-h-0 flex-1 flex-col gap-3">
+    <form action={formAction} onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-3">
       <div className="grid min-h-0 flex-1 grid-cols-[auto_1fr] gap-x-3">
         <UserAvatar name={viewerName} />
         <div className="flex min-h-0 flex-col">
@@ -38,7 +50,10 @@ function NoteForm({ viewerName, onPublished }: { viewerName: string | null; onPu
           <Textarea
             name="content"
             value={content}
-            onChange={(event) => setContent(event.target.value)}
+            onChange={(event) => {
+              setContent(event.target.value);
+              setHasAcknowledgedWarning(false);
+            }}
             placeholder="¿Qué estás pensando?"
             aria-label="Texto de la nota"
             maxLength={NOTE_MAX_LENGTH}
@@ -47,6 +62,10 @@ function NoteForm({ viewerName, onPublished }: { viewerName: string | null; onPu
           />
         </div>
       </div>
+      
+      {moderation.matches.length > 0 && (
+        <ModerationDetails summary={moderation} />
+      )}
 
       {state?.error && (
         <p role="alert" className="text-sm text-destructive">
@@ -69,7 +88,7 @@ function NoteForm({ viewerName, onPublished }: { viewerName: string | null; onPu
         <DialogClose render={<Button type="button" variant="secondary" />}>Cancelar</DialogClose>
         <Button type="submit" disabled={!canSubmit} className="min-w-24">
           {isPending && <Loader2 className="animate-spin" aria-hidden />}
-          Publicar
+          {hasAcknowledgedWarning ? "Sí, publicar" : "Publicar"}
         </Button>
       </div>
     </form>
