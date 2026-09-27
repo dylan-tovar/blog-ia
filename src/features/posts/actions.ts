@@ -550,6 +550,95 @@ export async function recordRead(postId: string): Promise<{ ok: boolean }> {
   }
 }
 
+const REPORT_NOT_FOUND = "No encontramos la publicación.";
+const REPORT_OWN_POST = "No podés reportar tu propia publicación.";
+const REPORT_FAILED = "No pudimos revisar el reporte. Intentá de nuevo.";
+
+// Reportar re-corre la misma moderación de IA que usa la publicación de artículos
+// (moderateArticle), pero sobre contenido ya publicado y de cualquier tipo: las
+// notas nunca pasan por IA al crearse, así que esto es la única revisión que
+// pueden llegar a tener. No hay tabla de "reports" (decisión de producto): si la
+// IA confirma la violación, el post se borra directo y se avisa al autor.
+export async function reportPost(postId: string): Promise<{ ok: boolean; removed?: boolean; error?: string }> {
+  if (!idSchema.safeParse(postId).success) {
+    return { ok: false, error: REPORT_NOT_FOUND };
+  }
+
+  const { supabase, user } = await requireUser();
+
+  const { data: post, error: fetchError } = await supabase
+    .from("posts")
+    .select("id, type, title, content, author_id, cover_image_url, status")
+    .eq("id", postId)
+    .eq("status", "published")
+    .maybeSingle();
+
+  if (fetchError || !post) {
+    return { ok: false, error: REPORT_NOT_FOUND };
+  }
+
+  if (post.author_id === user.id) {
+    return { ok: false, error: REPORT_OWN_POST };
+  }
+
+  const outcome = await moderateArticle({
+    title: post.title ?? "",
+    content: post.content,
+    images:
+      post.type === "article"
+        ? buildModerationImages(post.cover_image_url, post.content, env.NEXT_PUBLIC_SUPABASE_URL)
+        : [],
+    generate: generateStructured,
+    rateLimit: () => checkAiRateLimit(user.id, "moderation"),
+  });
+
+  // decideModeration ya sabe distinguir un bloqueo real de seguridad (rejected)
+  // de una falla del proveedor (fail-open, published) y de un rate limit
+  // (pending) — es la misma lógica que usa publishPost, no hay que reinventarla.
+  const decision = decideModeration(outcome);
+
+  if (decision.status === "pending") {
+    return { ok: false, error: REPORT_FAILED };
+  }
+  if (decision.status === "published") {
+    return { ok: true, removed: false };
+  }
+
+  const admin = createAdminClient();
+  const { data: deleted, error: deleteError } = await admin
+    .from("posts")
+    .delete()
+    .eq("id", post.id)
+    .select("id");
+
+  if (deleteError) {
+    return { ok: false, error: REPORT_FAILED };
+  }
+  if (!deleted?.length) {
+    // Ya lo borró otro reporte concurrente sobre el mismo post: no hay nada más
+    // que hacer, y evita mandar una segunda notificación duplicada.
+    return { ok: true, removed: true };
+  }
+
+  const removedWord = post.type === "article" ? "eliminado" : "eliminada";
+
+  // La notificación se inserta DESPUÉS de borrar el post: `notifications.post_id`
+  // tiene on delete cascade, así que insertarla antes la borraría junto con el post.
+  await admin.from("notifications").insert({
+    recipient_id: post.author_id,
+    actor_id: null,
+    type: "post_removed",
+    reason: `Tu ${post.type === "article" ? "artículo" : "nota"} fue ${removedWord}: ${decision.reason}`,
+  });
+
+  revalidatePath("/");
+  revalidatePath("/posts");
+  revalidatePath(`/p/${post.id}`);
+  await revalidateAuthorProfile(post.author_id);
+
+  return { ok: true, removed: true };
+}
+
 export async function deletePost(postId: string): Promise<{ ok: boolean; error?: string }> {
   if (!idSchema.safeParse(postId).success) {
     return { ok: false, error: "ID de publicación inválido." };
