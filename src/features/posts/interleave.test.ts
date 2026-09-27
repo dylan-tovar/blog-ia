@@ -14,6 +14,8 @@ function post(id: string): FeedPost {
     viewerFollows: false,
     likeCount: 0,
     viewerLiked: false,
+    repostCount: 0,
+    viewerReposted: false,
     notesCount: 0,
   };
 }

@@ -46,3 +46,6 @@ next-env.d.ts
 
 .atl
 .claude
+.agents/
+skills-lock.json
+.env

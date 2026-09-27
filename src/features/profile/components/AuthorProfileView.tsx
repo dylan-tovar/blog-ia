@@ -34,6 +34,7 @@ interface AuthorProfileViewProps {
   } | null;
   posts: FeedPost[];
   likedPosts?: FeedPost[];
+  repostedPosts?: FeedPost[];
   followerCount: number;
   following: boolean;
   subscribers?: Subscriber[];
@@ -53,6 +54,7 @@ export function AuthorProfileView({
   viewer,
   posts,
   likedPosts = [],
+  repostedPosts = [],
   followerCount,
   following,
   subscribers = [],
@@ -71,7 +73,19 @@ export function AuthorProfileView({
 
   const displayedPosts = useMemo(() => {
     if (activeTab === "posts") {
-      return posts.filter((p) => p.type === "article" || !p.parent);
+      const ownOnly = posts.filter((p) => p.type === "article" || !p.parent);
+      const repostedOwnOnly = repostedPosts.filter((p) => p.type === "article" || !p.parent);
+
+      const byId = new Map(ownOnly.map((p) => [p.id, p]));
+      for (const p of repostedOwnOnly) {
+        byId.set(p.id, p); // repostedPosts pisa: prioriza reposterName/repostedAt
+      }
+
+      return [...byId.values()].sort((a, b) => {
+        const timeA = new Date(a.repostedAt ?? a.publishedAt ?? 0).getTime();
+        const timeB = new Date(b.repostedAt ?? b.publishedAt ?? 0).getTime();
+        return timeB - timeA;
+      });
     }
     if (activeTab === "replies") {
       return posts.filter((p) => p.type === "note" && p.parent !== null);
@@ -80,10 +94,19 @@ export function AuthorProfileView({
       return likedPosts;
     }
     if (activeTab === "activity") {
-      return posts;
+      const byId = new Map(posts.map((p) => [p.id, p]));
+      for (const p of repostedPosts) {
+        byId.set(p.id, p);
+      }
+
+      return [...byId.values()].sort((a, b) => {
+        const timeA = new Date(a.repostedAt ?? a.publishedAt ?? 0).getTime();
+        const timeB = new Date(b.repostedAt ?? b.publishedAt ?? 0).getTime();
+        return timeB - timeA;
+      });
     }
     return [];
-  }, [activeTab, posts, likedPosts]);
+  }, [activeTab, posts, likedPosts, repostedPosts]);
 
   async function handleCopyLink() {
     const url = typeof window !== "undefined" ? window.location.href : "";

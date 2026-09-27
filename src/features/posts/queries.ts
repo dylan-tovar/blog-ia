@@ -9,6 +9,7 @@ import {
   getFollowedAuthorIds,
 } from "@/features/subscriptions/queries";
 import { getLikedPostIds } from "@/features/likes/queries";
+import { getRepostCounts, getRepostedPostIds } from "@/features/reposts/queries";
 import { env } from "@/lib/env";
 import { getViewer } from "@/lib/viewer";
 import type { PostType } from "@/lib/supabase/database.types";
@@ -38,6 +39,10 @@ type FeedPostBase = {
   viewerFollows: boolean;
   likeCount: number;
   viewerLiked: boolean;
+  repostCount: number;
+  viewerReposted: boolean;
+  reposterName?: string | null;
+  repostedAt?: string | null;
   notesCount: number;
 };
 
@@ -75,6 +80,8 @@ type CardRow = {
 type HydrationContext = {
   followed: Set<string>;
   liked: Set<string>;
+  reposted: Set<string>;
+  repostsCounts: Map<string, number>;
   parents: Map<string, ParentRef>;
   notesCounts: Map<string, number>;
 };
@@ -87,6 +94,8 @@ function toFeedPost(row: CardRow, ctx: HydrationContext): FeedPost {
     viewerFollows: row.author ? ctx.followed.has(row.author.id) : false,
     likeCount: row.likes?.[0]?.count ?? 0,
     viewerLiked: ctx.liked.has(row.id),
+    repostCount: ctx.repostsCounts.get(row.id) ?? 0,
+    viewerReposted: ctx.reposted.has(row.id),
     notesCount: ctx.notesCounts.get(row.id) ?? 0,
   };
 
@@ -174,21 +183,26 @@ async function hydrateFeedPosts(
     ...new Set(rows.flatMap((row) => (row.author ? [row.author.id] : []))),
   ];
 
-  const [followedIds, likedIds, parents, notesCounts] = await Promise.all([
+  const postIds = rows.map((row) => row.id);
+  const [followedIds, likedIds, repostedIds, repostsCounts, parents, notesCounts] = await Promise.all([
     withFollows && viewer ? getFollowedAuthorIds(viewer.id, authorIds) : [],
-    viewer ? getLikedPostIds(viewer.id, rows.map((row) => row.id)) : [],
+    viewer ? getLikedPostIds(viewer.id, postIds) : [],
+    viewer ? getRepostedPostIds(viewer.id, postIds) : [],
+    getRepostCounts(postIds),
     getParentRefs(
       rows.flatMap((row) => [
         ...(row.parent_post_id ? [row.parent_post_id] : []),
         ...(row.reply_to_post_id ? [row.reply_to_post_id] : []),
       ]),
     ),
-    getNotesCounts(rows.map((row) => row.id)),
+    getNotesCounts(postIds),
   ]);
 
   const ctx: HydrationContext = {
     followed: new Set(followedIds),
     liked: new Set(likedIds),
+    reposted: new Set(repostedIds),
+    repostsCounts,
     parents,
     notesCounts,
   };
@@ -317,8 +331,10 @@ export async function getPublishedPost(id: string) {
   }
 
   const viewer = await getViewer();
-  const [likedIds, parents, notesCounts] = await Promise.all([
+  const [likedIds, repostedIds, repostsCounts, parents, notesCounts] = await Promise.all([
     viewer ? getLikedPostIds(viewer.id, [post.id]) : [],
+    viewer ? getRepostedPostIds(viewer.id, [post.id]) : [],
+    getRepostCounts([post.id]),
     getParentRefs([
       ...(post.parent_post_id ? [post.parent_post_id] : []),
       ...(post.reply_to_post_id ? [post.reply_to_post_id] : []),
@@ -331,6 +347,8 @@ export async function getPublishedPost(id: string) {
     ...rest,
     likeCount: likes?.[0]?.count ?? 0,
     viewerLiked: likedIds.length > 0,
+    repostCount: repostsCounts.get(post.id) ?? 0,
+    viewerReposted: repostedIds.length > 0,
     notesCount: notesCounts.get(post.id) ?? 0,
     parent: post.parent_post_id ? (parents.get(post.parent_post_id) ?? null) : null,
     replyTo: post.reply_to_post_id ? (parents.get(post.reply_to_post_id) ?? null) : null,
@@ -417,8 +435,65 @@ export async function getFeedPage({
   const rows = (data ?? []) as unknown as CardRow[];
   const pageRows = rows.slice(0, FEED_PAGE_SIZE);
 
+  // If in following scope and on first page, also fetch recent reposts from followed authors
+  const repostFeedPosts: FeedPost[] = [];
+  if (scope === "following" && authorIds && authorIds.length > 0 && offset === 0) {
+    const { data: repostRows } = await supabase
+      .from("reposts")
+      .select("post_id, created_at, profiles!reposts_user_id_fkey(display_name)")
+      .in("user_id", authorIds)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (repostRows && repostRows.length > 0) {
+      // Skip posts already appearing directly in this page to avoid duplicates.
+      const directPageIds = new Set(pageRows.map((row) => row.id));
+      const repostPostIds = [
+        ...new Set(
+          repostRows.map((r) => r.post_id).filter((id) => !directPageIds.has(id)),
+        ),
+      ];
+      const { data: repostedPostsData } = await supabase
+        .from("posts")
+        .select(`${CARD_COLUMNS}, ${AUTHOR_EMBED}, ${LIKES_EMBED}`)
+        .in("id", repostPostIds)
+        .eq("status", "published");
+
+      if (repostedPostsData) {
+        const hydratedReposts = await hydrateFeedPosts(
+          repostedPostsData as unknown as CardRow[],
+          { withFollows: true },
+        );
+        const hydratedMap = new Map(hydratedReposts.map((p) => [p.id, p]));
+        const seenRepostIds = new Set<string>();
+        for (const r of repostRows) {
+          if (seenRepostIds.has(r.post_id)) continue;
+          const original = hydratedMap.get(r.post_id);
+          if (original) {
+            seenRepostIds.add(r.post_id);
+            const reposterName =
+              (r.profiles as unknown as { display_name: string } | null)?.display_name ?? null;
+            repostFeedPosts.push({
+              ...original,
+              reposterName,
+              repostedAt: r.created_at,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  const directPosts = await hydrateFeedPosts(pageRows, { withFollows: true });
+
+  const allPosts = [...directPosts, ...repostFeedPosts].sort((a, b) => {
+    const timeA = new Date(a.repostedAt ?? a.publishedAt ?? 0).getTime();
+    const timeB = new Date(b.repostedAt ?? b.publishedAt ?? 0).getTime();
+    return timeB - timeA;
+  });
+
   return {
-    posts: await hydrateFeedPosts(pageRows, { withFollows: true }),
+    posts: allPosts,
     hasMore: rows.length > FEED_PAGE_SIZE,
   };
 }
@@ -513,8 +588,64 @@ export async function getLikedPostsByUser(userId: string) {
   return postIds.map((id) => postsMap.get(id)).filter((p): p is FeedPost => Boolean(p));
 }
 
+export async function getRepostedPostsByUser(
+  userId: string,
+  reposterName?: string | null,
+): Promise<FeedPost[]> {
+  if (!idSchema.safeParse(userId).success) {
+    return [];
+  }
+
+  const supabase = await createClient();
+  const { data: repostsData, error: repostsError } = await supabase
+    .from("reposts")
+    .select("post_id, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(AUTHOR_POSTS_LIMIT);
+
+  if (repostsError) {
+    throw new Error(`No pudimos cargar los reposts del usuario: ${repostsError.message}`);
+  }
+
+  const repostMap = new Map((repostsData ?? []).map((row) => [row.post_id, row.created_at]));
+  const postIds = (repostsData ?? []).map((row) => row.post_id);
+  if (postIds.length === 0) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("posts")
+    .select(`${CARD_COLUMNS}, ${AUTHOR_EMBED}, ${LIKES_EMBED}`)
+    .in("id", postIds)
+    .eq("status", "published");
+
+  if (error) {
+    throw new Error(`No pudimos cargar los posts republicados: ${error.message}`);
+  }
+
+  const posts = await hydrateFeedPosts((data ?? []) as unknown as CardRow[], {
+    withFollows: true,
+  });
+  const postsMap = new Map(posts.map((p) => [p.id, p]));
+
+  const result: FeedPost[] = [];
+  for (const id of postIds) {
+    const p = postsMap.get(id);
+    if (p) {
+      result.push({
+        ...p,
+        reposterName: reposterName ?? null,
+        repostedAt: repostMap.get(id) ?? null,
+      });
+    }
+  }
+  return result;
+}
+
 export async function getAllTagNames() {
   const supabase = await createClient();
   const { data: tags } = await supabase.from("tags").select("name").order("name");
   return tags?.map((tag) => tag.name) ?? [];
 }
+
