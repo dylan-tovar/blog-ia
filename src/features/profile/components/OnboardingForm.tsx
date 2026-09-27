@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { completeOnboarding } from "@/features/profile/actions";
+import { DISPLAY_NAME_MAX_LENGTH } from "@/features/profile/constants";
 
 export function OnboardingForm() {
   const [state, action, pending] = useActionState(completeOnboarding, undefined);
@@ -19,6 +20,7 @@ export function OnboardingForm() {
           name="displayName"
           type="text"
           autoComplete="name"
+          maxLength={DISPLAY_NAME_MAX_LENGTH}
           required
         />
       </div>
