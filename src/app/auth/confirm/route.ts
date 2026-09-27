@@ -3,11 +3,12 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 
 // Own verification route so we can decide where to redirect after validating
-// the token, instead of Supabase's default `/auth/v1/verify` endpoint. Serves
-// both signup confirmation (type=signup, next=/onboarding) and password
-// recovery (type=recovery, next=/reset-password) — see PRD-11.1. The
-// Supabase Auth email templates must be edited in the dashboard to point
-// here (see docs/prds/PRD-11.1-confirmacion-y-recuperacion.md).
+// the token, instead of Supabase's default `/auth/v1/verify` endpoint.
+// Signup and password-recovery links moved to a 6-digit code entered at
+// /verify instead (see PRD-1.4): Gmail and corporate link scanners prefetch
+// and consume the one-time link token before the user clicks it, breaking
+// this route for both flows. Kept for any other email link (invite,
+// email_change) that still relies on the click-through pattern.
 const VALID_TYPES: EmailOtpType[] = [
   "signup",
   "invite",

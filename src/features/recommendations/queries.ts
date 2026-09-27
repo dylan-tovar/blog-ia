@@ -13,7 +13,7 @@ export type RecommendedPost = {
   id: string;
   title: string | null;
   excerpt: string;
-  author: { id: string; display_name: string } | null;
+  author: { id: string; display_name: string; avatar_url: string | null } | null;
 };
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;

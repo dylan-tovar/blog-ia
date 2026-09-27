@@ -11,7 +11,7 @@ const uuid = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0
 
 describe("interest constants", () => {
   it("keeps the documented limits", () => {
-    expect(INTERESTS_MIN).toBe(3);
+    expect(INTERESTS_MIN).toBe(0);
     expect(INTERESTS_MAX).toBe(20);
     expect(INTEREST_TAGS_LIMIT).toBe(30);
   });
@@ -22,15 +22,11 @@ describe("interest constants", () => {
 });
 
 describe("requiredInterestCount", () => {
-  it.each([
-    [0, 0],
-    [1, 1],
-    [2, 2],
-    [3, 3],
-    [4, 3],
-    [30, 3],
-  ])("with %i eligible tags requires %i", (eligible, expected) => {
-    expect(requiredInterestCount(eligible)).toBe(expected);
+  it("is optional (returns 0 regardless of eligible tags)", () => {
+    expect(requiredInterestCount(0)).toBe(0);
+    expect(requiredInterestCount(1)).toBe(0);
+    expect(requiredInterestCount(3)).toBe(0);
+    expect(requiredInterestCount(30)).toBe(0);
   });
 });
 

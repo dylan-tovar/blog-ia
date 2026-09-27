@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  changePasswordSchema,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  verifyOtpSchema,
 } from "@/features/auth/schemas";
 import { isEmailIdentifier, resolveAuthRedirect } from "@/features/auth/utils";
 
@@ -208,6 +210,73 @@ describe("resetPasswordSchema", () => {
     expect(result.success).toBe(false);
     expect(result.error?.issues[0].message).toBe("Las contraseñas no coinciden.");
     expect(result.error?.issues[0].path).toEqual(["confirmPassword"]);
+  });
+});
+
+describe("verifyOtpSchema", () => {
+  it("accepts a valid email and 6-digit code", () => {
+    expect(
+      verifyOtpSchema.safeParse({ email: "ana@example.com", token: "123456" }).success,
+    ).toBe(true);
+  });
+
+  it("rejects an invalid email", () => {
+    const result = verifyOtpSchema.safeParse({ email: "not-an-email", token: "123456" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe("Ingresá un email válido.");
+  });
+
+  it("rejects a code that isn't 6 digits", () => {
+    const result = verifyOtpSchema.safeParse({ email: "ana@example.com", token: "12345" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe("Ingresá el código de 6 dígitos.");
+  });
+
+  it("rejects a non-numeric code", () => {
+    const result = verifyOtpSchema.safeParse({ email: "ana@example.com", token: "abcdef" });
+    expect(result.success).toBe(false);
+  });
+
+  it("trims surrounding whitespace", () => {
+    const result = verifyOtpSchema.parse({ email: "ana@example.com", token: " 123456 " });
+    expect(result.token).toBe("123456");
+  });
+});
+
+describe("changePasswordSchema", () => {
+  const valid = {
+    currentPassword: "Old12345!",
+    newPassword: "Abcdef1!",
+    confirmNewPassword: "Abcdef1!",
+  };
+
+  it("accepts valid input", () => {
+    expect(changePasswordSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("rejects an empty current password", () => {
+    const result = changePasswordSchema.safeParse({ ...valid, currentPassword: "" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe("Ingresá tu contraseña actual.");
+  });
+
+  it("enforces the same password rules as registerSchema for the new password", () => {
+    const result = changePasswordSchema.safeParse({
+      ...valid,
+      newPassword: "abc",
+      confirmNewPassword: "abc",
+    });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe(
+      "La contraseña debe tener al menos 8 caracteres.",
+    );
+  });
+
+  it("rejects mismatched new passwords, reporting it on confirmNewPassword", () => {
+    const result = changePasswordSchema.safeParse({ ...valid, confirmNewPassword: "Abcdef1?" });
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0].message).toBe("Las contraseñas no coinciden.");
+    expect(result.error?.issues[0].path).toEqual(["confirmNewPassword"]);
   });
 });
 

@@ -13,26 +13,15 @@ const UNAVAILABLE =
 describe("validateSelection", () => {
   const eligible = ids("a", "b", "c", "d");
 
-  it("accepts a selection that meets the minimum and is eligible", () => {
+  it("accepts a selection of any size that is eligible (selection is optional)", () => {
     expect(validateSelection(ids("a", "b", "c"), eligible)).toBeNull();
-  });
-
-  it("rejects a selection below the minimum", () => {
-    expect(validateSelection(ids("a", "b"), eligible)).toBe("Elegí al menos 3 temas.");
+    expect(validateSelection(ids("a", "b"), eligible)).toBeNull();
+    expect(validateSelection(ids("a"), eligible)).toBeNull();
+    expect(validateSelection([], eligible)).toBeNull();
   });
 
   it("rejects ids that are not among the eligible tags", () => {
     expect(validateSelection(ids("a", "b", "zzz"), eligible)).toBe(UNAVAILABLE);
-  });
-
-  it("relaxes the minimum to the number of eligible tags", () => {
-    expect(validateSelection(ids("a"), ids("a", "b"))).toBe("Elegí al menos 2 temas.");
-    expect(validateSelection(ids("a", "b"), ids("a", "b"))).toBeNull();
-    expect(validateSelection(ids("a"), ids("a"))).toBeNull();
-  });
-
-  it("uses the singular when a single tag is required", () => {
-    expect(validateSelection([], ids("a"))).toBe("Elegí al menos 1 tema.");
   });
 
   it("accepts an empty selection when no tags exist", () => {
@@ -72,6 +61,10 @@ describe("planInterestChanges", () => {
 });
 
 describe("interestCounterLabel", () => {
+  it("shows optional status when required is 0 and count is 0", () => {
+    expect(interestCounterLabel(0, 0, 20)).toBe("0 elegidos (opcional)");
+  });
+
   it("asks for the missing picks while under the minimum", () => {
     expect(interestCounterLabel(0, 3, 20)).toBe("Elegí al menos 3 · 0 elegidos");
     expect(interestCounterLabel(1, 3, 20)).toBe("Elegí al menos 3 · 1 elegido");

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { BookOpen, LogOut } from "lucide-react";
-import { UserAvatar } from "@/components/shared/UserAvatar";
+import { AvatarPicker } from "@/features/profile/components/AvatarPicker";
 import {
   Drawer,
   DrawerContent,
@@ -12,6 +12,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { SettingsForm } from "@/features/profile/components/SettingsForm";
+import { ChangePasswordForm } from "@/features/profile/components/ChangePasswordForm";
 import { signOut } from "@/features/auth/actions";
 import { InterestsSettingsSection } from "@/features/interests/components/InterestsSettingsSection";
 import type { InterestOption } from "@/features/interests/queries";
@@ -40,13 +41,15 @@ export function AccountSettings({
   availableOptions = [],
 }: AccountSettingsProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerSection, setDrawerSection] = useState<"profile" | "email" | "handle">("profile");
+  const [drawerSection, setDrawerSection] = useState<
+    "profile" | "email" | "handle" | "password"
+  >("profile");
 
   const displayName = profile?.display_name || "Usuario";
   const username = profile?.username || "usuario";
   const email = user.email || "No registrado";
 
-  function openEdit(section: "profile" | "email" | "handle") {
+  function openEdit(section: "profile" | "email" | "handle" | "password") {
     setDrawerSection(section);
     setDrawerOpen(true);
   }
@@ -63,10 +66,7 @@ export function AccountSettings({
           {/* Row 1: Profile */}
           <div className="flex items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3.5">
-              <UserAvatar
-                name={displayName}
-                className="size-14 rounded-full ring-1 ring-border/50 text-base font-semibold"
-              />
+              <AvatarPicker displayName={displayName} avatarUrl={profile?.avatar_url} />
               <div className="min-w-0">
                 <p className="text-[15px] font-medium text-foreground">Profile</p>
                 <p className="truncate text-sm text-muted-foreground">{displayName}</p>
@@ -105,6 +105,21 @@ export function AccountSettings({
             <button
               type="button"
               onClick={() => openEdit("handle")}
+              className="shrink-0 rounded-lg bg-neutral-800 px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-neutral-700 cursor-pointer"
+            >
+              Edit
+            </button>
+          </div>
+
+          {/* Row 4: Password */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[15px] font-medium text-foreground">Contraseña</p>
+              <p className="truncate text-sm text-muted-foreground">••••••••</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => openEdit("password")}
               className="shrink-0 rounded-lg bg-neutral-800 px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-neutral-700 cursor-pointer"
             >
               Edit
@@ -169,21 +184,27 @@ export function AccountSettings({
               {drawerSection === "profile" && "Editar perfil"}
               {drawerSection === "handle" && "Editar nombre de usuario"}
               {drawerSection === "email" && "Correo electrónico"}
+              {drawerSection === "password" && "Cambiar contraseña"}
             </DrawerTitle>
             <DrawerDescription>
               {drawerSection === "profile" || drawerSection === "handle"
                 ? "Actualizá tu información pública para la comunidad."
-                : "Información de contacto asociada a tu cuenta."}
+                : drawerSection === "password"
+                  ? "Vas a necesitar tu contraseña actual."
+                  : "Información de contacto asociada a tu cuenta."}
             </DrawerDescription>
           </DrawerHeader>
 
           <div className="px-5 py-4">
-            {drawerSection === "profile" || drawerSection === "handle" ? (
+            {(drawerSection === "profile" || drawerSection === "handle") && (
               <SettingsForm
                 initialDisplayName={displayName}
                 initialUsername={username}
+                onSuccess={() => setDrawerOpen(false)}
               />
-            ) : (
+            )}
+            {drawerSection === "password" && <ChangePasswordForm />}
+            {drawerSection === "email" && (
               <div className="flex flex-col gap-4 text-sm">
                 <p className="text-muted-foreground">
                   Tu correo actual es <strong className="text-foreground">{email}</strong>.

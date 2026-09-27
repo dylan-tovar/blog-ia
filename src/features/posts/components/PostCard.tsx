@@ -107,10 +107,10 @@ export function PostCard({
       <article className="grid grid-cols-[auto_1fr] gap-3 px-4 md:px-0 pt-3 pb-2">
         {post.author?.username ? (
           <Link href={`/${post.author.username}`} aria-label={authorName} className="h-fit">
-            <UserAvatar name={authorName} size="default" />
+            <UserAvatar name={authorName} avatarUrl={post.author?.avatar_url} size="default" />
           </Link>
         ) : (
-          <UserAvatar name={authorName} size="default" />
+          <UserAvatar name={authorName} avatarUrl={post.author?.avatar_url} size="default" />
         )}
 
         <div className="min-w-0">
@@ -180,61 +180,61 @@ export function PostCard({
               viewerId={viewerId}
             />
 
-          {canReply ? (
-            viewerId === null ? (
-              <LoginDrawer
-                trigger={
-                  <button
-                    type="button"
-                    aria-label="Responder"
-                    className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
-                  >
-                    <MessageSquare className="size-[18px]" aria-hidden />
-                    {!isReply && <span className="tabular-nums">{post.notesCount}</span>}
-                  </button>
-                }
+            {canReply ? (
+              viewerId === null ? (
+                <LoginDrawer
+                  trigger={
+                    <button
+                      type="button"
+                      aria-label="Responder"
+                      className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground cursor-pointer"
+                    >
+                      <MessageSquare className="size-[18px]" aria-hidden />
+                      {!isReply && <span className="tabular-nums">{post.notesCount}</span>}
+                    </button>
+                  }
+                />
+              ) : viewerId !== undefined ? (
+                <button
+                  type="button"
+                  onClick={() => setReplying((current) => !current)}
+                  aria-expanded={replying}
+                  aria-label="Responder"
+                  className={cn(
+                    "inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm transition-colors cursor-pointer",
+                    replying ? "text-primary" : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <MessageSquare className="size-[18px]" aria-hidden />
+                  {!isReply && <span className="tabular-nums">{post.notesCount}</span>}
+                </button>
+              ) : null
+            ) : (
+              !isReply && (
+                <Link
+                  href={`/p/${post.id}#notes`}
+                  aria-label={post.notesCount === 1 ? "1 nota" : `${post.notesCount} notas`}
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <MessageSquare className="size-[18px]" aria-hidden />
+                  <span className="tabular-nums">{post.notesCount}</span>
+                </Link>
+              )
+            )}
+          </div>
+
+          {replying && viewerId && (
+            <div className="mt-2">
+              <NoteComposer
+                parentPostId={replyParentPostId}
+                replyToPostId={replyToPostId}
+                placeholder={`Responder a ${authorName}…`}
+                onPublished={() => setReplying(false)}
               />
-            ) : viewerId !== undefined ? (
-              <button
-                type="button"
-                onClick={() => setReplying((current) => !current)}
-                aria-expanded={replying}
-                aria-label="Responder"
-                className={cn(
-                  "inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm transition-colors cursor-pointer",
-                  replying ? "text-primary" : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <MessageSquare className="size-[18px]" aria-hidden />
-                {!isReply && <span className="tabular-nums">{post.notesCount}</span>}
-              </button>
-            ) : null
-          ) : (
-            !isReply && (
-              <Link
-                href={`/p/${post.id}#notes`}
-                aria-label={post.notesCount === 1 ? "1 nota" : `${post.notesCount} notas`}
-                className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <MessageSquare className="size-[18px]" aria-hidden />
-                <span className="tabular-nums">{post.notesCount}</span>
-              </Link>
-            )
+            </div>
           )}
         </div>
-
-        {replying && viewerId && (
-          <div className="mt-2">
-            <NoteComposer
-              parentPostId={replyParentPostId}
-              replyToPostId={replyToPostId}
-              placeholder={`Responder a ${authorName}…`}
-              onPublished={() => setReplying(false)}
-            />
-          </div>
-        )}
-      </div>
-    </article>
-  </div>
+      </article>
+    </div>
   );
 }

@@ -30,7 +30,7 @@ Las pantallas por las que una persona entra a la app: crear cuenta (nombre, usua
 | `LoginForm`, `RegisterForm`, `OnboardingForm`, `InterestsForm`, `OnboardingSteps` y sus páginas `/login`, `/register` y `/onboarding` | Crear el usuario y el perfil en la base, resolver username a email, cerrar sesión: [PRD-1.2](PRD-1.2-auth-security.md) |
 | `LoginDrawer` (login en un cajón desde la cabecera) | La cabecera que lo aloja (`HeaderAccount`): [PRD-0.3](PRD-0.3-app-shell.md) |
 | Schemas `registerSchema`, `loginSchema` y funciones `isEmailIdentifier`, `resolveAuthRedirect` | `usernameSchema` (vive en `features/profile/schemas.ts`, ver [PRD-1.3](PRD-1.3-profile-settings.md)) |
-| Mensajes de error que ve el usuario | Recuperar contraseña (no existe) |
+| Mensajes de error que ve el usuario | Recuperar contraseña ([implementado, PRD-11.1](PRD-11.1-confirmacion-y-recuperacion.md)) |
 
 ## Cómo funciona
 
@@ -123,7 +123,6 @@ Los mensajes de error están escritos en español dentro del propio schema.
 | `LoginDrawer` promete "Guardá tus artículos favoritos para leer después", pero no existe ninguna función de guardado (la ruta `/saved` da 404). Corregir el texto para que no prometa algo inexistente | B |
 | Hacer que el `pattern` de `OnboardingForm`/`SettingsForm` (`[A-Za-z0-9_]+`) sea coherente con la regla real (minúsculas), o agregar una nota que explique la diferencia | B |
 | El botón "Registrarse" de la cabecera se oculta por debajo de 640 px (`hidden sm:inline-flex`); en móvil chico solo se llega al registro desde el cajón. Evaluar si es intencional y dejarlo registrado | B |
-| No existe "Olvidé mi contraseña". Redactar (solo documento) qué haría falta | M |
 | El registro dice "Ya existe una cuenta con este email.": eso confirma que un email está registrado. Documentar el equilibrio entre comodidad y privacidad y proponer una alternativa | M |
 
 ## Preguntas de autoevaluación

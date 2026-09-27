@@ -1,21 +1,10 @@
 import { z } from "zod";
-import {
-  PASSWORD_MAX_LENGTH_MESSAGE,
-  PASSWORD_RULES,
-  isWithinMaxLength,
-} from "@/features/auth/password-rules";
+import { passwordFieldSchema } from "@/features/auth/password-rules";
 
 export const registerSchema = z
   .object({
     email: z.email({ error: "Ingresá un email válido." }),
-    password: z.string().superRefine((password, ctx) => {
-      for (const rule of PASSWORD_RULES) {
-        if (!rule.test(password)) ctx.addIssue({ code: "custom", message: rule.message });
-      }
-      if (!isWithinMaxLength(password)) {
-        ctx.addIssue({ code: "custom", message: PASSWORD_MAX_LENGTH_MESSAGE });
-      }
-    }),
+    password: passwordFieldSchema(),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -38,17 +27,30 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z
   .object({
-    password: z.string().superRefine((password, ctx) => {
-      for (const rule of PASSWORD_RULES) {
-        if (!rule.test(password)) ctx.addIssue({ code: "custom", message: rule.message });
-      }
-      if (!isWithinMaxLength(password)) {
-        ctx.addIssue({ code: "custom", message: PASSWORD_MAX_LENGTH_MESSAGE });
-      }
-    }),
+    password: passwordFieldSchema(),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     error: "Las contraseñas no coinciden.",
     path: ["confirmPassword"],
+  });
+
+export const verifyOtpSchema = z.object({
+  email: z.email({ error: "Ingresá un email válido." }),
+  // Supabase's email OTP is a 6-digit numeric code.
+  token: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, { error: "Ingresá el código de 6 dígitos." }),
+});
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, { error: "Ingresá tu contraseña actual." }),
+    newPassword: passwordFieldSchema(),
+    confirmNewPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmNewPassword, {
+    error: "Las contraseñas no coinciden.",
+    path: ["confirmNewPassword"],
   });

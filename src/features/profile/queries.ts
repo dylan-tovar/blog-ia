@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { idSchema } from "@/features/posts/schemas";
 import { usernameSchema } from "@/features/profile/schemas";
 
-const PROFILE_COLUMNS = "id, display_name, username, created_at";
+const PROFILE_COLUMNS = "id, display_name, username, avatar_url, created_at";
 
 export async function getPublicProfile(id: string) {
   if (!idSchema.safeParse(id).success) {

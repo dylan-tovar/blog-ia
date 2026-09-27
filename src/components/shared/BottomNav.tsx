@@ -17,10 +17,8 @@ const ICONS: Record<(typeof NAV_ITEMS)[number]["href"], LucideIcon> = {
 };
 
 export function BottomNav({
-  initialUnreadCount = 0,
   viewerUsername,
 }: {
-  initialUnreadCount?: number;
   viewerUsername?: string | null;
 }) {
   const pathname = usePathname();
@@ -46,11 +44,7 @@ export function BottomNav({
                 )}
               >
                 {item.href === "/activity" ? (
-                  <NotificationBell
-                    initialCount={initialUnreadCount}
-                    className="size-6"
-                    pollQuery="(max-width: 767.98px)"
-                  />
+                  <NotificationBell className="size-6" />
                 ) : (
                   <Icon className="size-6" aria-hidden />
                 )}

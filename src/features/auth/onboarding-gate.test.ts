@@ -68,6 +68,12 @@ describe("getGateRedirect", () => {
     it("does not confuse lookalike paths with /onboarding", () => {
       expect(getGateRedirect(authed("/onboardingx", state))).toBe(ONBOARDING_PATH);
     });
+
+    it("lets the user through on password-recovery paths", () => {
+      for (const pathname of ["/reset-password", "/forgot-password"]) {
+        expect(getGateRedirect(authed(pathname, state))).toBeNull();
+      }
+    });
   });
 
   describe("once onboarding is done", () => {

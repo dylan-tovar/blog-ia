@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useState } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { saveInterests } from "@/features/interests/actions";
+import { saveInterests, skipInterests } from "@/features/interests/actions";
 import { INTERESTS_MAX, requiredInterestCount } from "@/features/interests/constants";
 import type { InterestOption } from "@/features/interests/queries";
 import { interestCounterLabel } from "@/features/interests/selection";
@@ -16,11 +16,12 @@ interface InterestsFormProps {
 
 export function InterestsForm({ options, initialSelectedIds }: InterestsFormProps) {
   const [state, action, pending] = useActionState(saveInterests, undefined);
+  const [skipState, skipAction, skipPending] = useActionState(skipInterests, undefined);
   const [selectedIds, setSelectedIds] = useState(initialSelectedIds);
 
   const required = requiredInterestCount(options.length);
   const atMax = selectedIds.length >= INTERESTS_MAX;
-  const canSubmit = selectedIds.length >= required;
+  const canSubmit = options.length === 0 || selectedIds.length >= required;
 
   function toggle(id: string) {
     setSelectedIds((current) =>
@@ -87,15 +88,39 @@ export function InterestsForm({ options, initialSelectedIds }: InterestsFormProp
           {state.error}
         </p>
       )}
-      <Button
-        type="submit"
-        disabled={pending || !canSubmit}
-        aria-describedby={options.length > 0 ? "interests-status" : undefined}
-        className="w-full"
-      >
-        {pending && <Loader2 className="animate-spin motion-reduce:animate-none" />}
-        Continuar
-      </Button>
+      {skipState?.error && (
+        <p role="alert" className="text-sm text-destructive">
+          {skipState.error}
+        </p>
+      )}
+      <div className="flex flex-col items-center gap-3">
+        <Button
+          type="submit"
+          disabled={pending || skipPending || !canSubmit}
+          aria-describedby={options.length > 0 ? "interests-status" : undefined}
+          className="w-full cursor-pointer"
+        >
+          {pending && <Loader2 className="animate-spin motion-reduce:animate-none" />}
+          Continuar
+        </Button>
+        <Button
+          type="button"
+          variant="link"
+          size="sm"
+          disabled={pending || skipPending}
+          onClick={() => {
+            startTransition(() => {
+              skipAction();
+            });
+          }}
+          className="cursor-pointer text-muted-foreground hover:text-foreground"
+        >
+          {skipPending && (
+            <Loader2 className="mr-1.5 inline size-3.5 animate-spin motion-reduce:animate-none" />
+          )}
+          Saltar
+        </Button>
+      </div>
     </form>
   );
 }

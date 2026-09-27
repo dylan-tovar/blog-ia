@@ -67,9 +67,14 @@ export function parseImageSize(url: string): { width: number; height: number } |
   return { width, height };
 }
 
-const PUBLIC_PATH_PREFIX = `/storage/v1/object/public/${POST_IMAGES_BUCKET}/`;
-
-export function isAllowedImageUrl(url: string, supabaseUrl: string): boolean {
+// `bucket` defaults to the post-images bucket so existing callers (cover images,
+// markdown content) don't need to change; other features (e.g. avatars) pass their
+// own bucket explicitly.
+export function isAllowedImageUrl(
+  url: string,
+  supabaseUrl: string,
+  bucket: string = POST_IMAGES_BUCKET,
+): boolean {
   let image: URL;
   let allowed: URL;
   try {
@@ -86,7 +91,7 @@ export function isAllowedImageUrl(url: string, supabaseUrl: string): boolean {
   }
   return (
     image.origin === allowed.origin &&
-    image.pathname.startsWith(PUBLIC_PATH_PREFIX) &&
+    image.pathname.startsWith(`/storage/v1/object/public/${bucket}/`) &&
     !image.pathname.includes("..")
   );
 }

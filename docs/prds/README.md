@@ -36,7 +36,7 @@ El slug es corto y describe el contenido, en inglés y en minúsculas, igual que
 | PRD padre | Paquetes de trabajo |
 | :--- | :--- |
 | [PRD-0](PRD-0-design-system.md) Sistema de diseño | [0.1 tema](PRD-0.1-theme-tokens.md) · [0.2 primitivas de UI](PRD-0.2-ui-primitives.md) · [0.3 shell](PRD-0.3-app-shell.md) |
-| [PRD-1](PRD-1-auth.md) Autenticación | [1.1 formularios](PRD-1.1-auth-forms.md) · [1.2 seguridad](PRD-1.2-auth-security.md) · [1.3 perfil y ajustes](PRD-1.3-profile-settings.md) |
+| [PRD-1](PRD-1-auth.md) Autenticación | [1.1 formularios](PRD-1.1-auth-forms.md) · [1.2 seguridad](PRD-1.2-auth-security.md) · [1.3 perfil y ajustes](PRD-1.3-profile-settings.md) · [1.4 OTP de registro y cambio de contraseña](PRD-1.4-auth-otp-y-cambio-password.md) |
 | [PRD-2](PRD-2-posts.md) Posts | [2.1 datos y RLS](PRD-2.1-posts-data-rls.md) · [2.2 editor Tiptap](PRD-2.2-editor-tiptap.md) · [2.3 autoguardado](PRD-2.3-autosave-drafts.md) · [2.4 publicar y tags](PRD-2.4-publish-dialog-tags.md) · [2.5 Mis posts](PRD-2.5-my-posts-page.md) · [2.6 detalle de post](PRD-2.6-post-detail.md) |
 | [PRD-3](PRD-3-feed-follows.md) Feed y seguimiento | [3.1 seguimiento](PRD-3.1-follow-system.md) · [3.2 lista del feed](PRD-3.2-feed-list.md) · [3.3 perfil de autor](PRD-3.3-author-profile.md) |
 | [PRD-4](PRD-4-recommendations.md) Recomendaciones | [4.1 scoring](PRD-4.1-scoring-core.md) · [4.2 consulta y UI](PRD-4.2-recs-query-ui.md) |

@@ -15,13 +15,7 @@ const ICONS: Record<string, LucideIcon> = {
   "/explore": Search,
 };
 
-export function MainNav({
-  className,
-  initialUnreadCount = 0,
-}: {
-  className?: string;
-  initialUnreadCount?: number;
-}) {
+export function MainNav({ className }: { className?: string }) {
   const pathname = usePathname();
 
   return (
@@ -44,11 +38,7 @@ export function MainNav({
             )}
           >
             {item.href === "/activity" ? (
-              <NotificationBell
-                initialCount={initialUnreadCount}
-                className="size-5"
-                pollQuery="(min-width: 768px)"
-              />
+              <NotificationBell className="size-5" />
             ) : (
               Icon && <Icon className="size-5" aria-hidden />
             )}

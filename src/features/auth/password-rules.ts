@@ -1,6 +1,8 @@
 // Single source of truth for signup password rules. Pure on purpose: used by
 // the Zod schema (server) and the strength indicator (client).
 
+import { z } from "zod";
+
 export type PasswordRuleId = "length" | "lowercase" | "uppercase" | "number" | "symbol";
 
 export type PasswordRule = {
@@ -85,4 +87,17 @@ export function getPasswordStrength(password: string): PasswordStrength {
 
 export function isPasswordValid(password: string) {
   return PASSWORD_RULES.every((rule) => rule.test(password)) && isWithinMaxLength(password);
+}
+
+// Shared by every schema that collects a new password (register, reset,
+// change) so a future rule change only has to happen here.
+export function passwordFieldSchema() {
+  return z.string().superRefine((password, ctx) => {
+    for (const rule of PASSWORD_RULES) {
+      if (!rule.test(password)) ctx.addIssue({ code: "custom", message: rule.message });
+    }
+    if (!isWithinMaxLength(password)) {
+      ctx.addIssue({ code: "custom", message: PASSWORD_MAX_LENGTH_MESSAGE });
+    }
+  });
 }

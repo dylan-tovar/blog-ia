@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | :--- | :--- |
-| Estado | **Implementado.** Auditoría 2026-09-23: `forgotPassword`/`resetPassword` en `src/features/auth/actions.ts`, ruta `/auth/confirm`, `/forgot-password` y `/reset-password` en el código. El SMTP custom apuntando a Resend es configuración del dashboard de Supabase, no verificable desde el repo |
+| Estado | **Implementado, parcialmente superado.** Auditoría 2026-09-23. El mecanismo de entrega (SMTP custom → Resend) y la confirmación de signup por link siguen como acá descritos. **La recuperación de contraseña por link fue reemplazada por código OTP en [PRD-1.4](PRD-1.4-auth-otp-y-cambio-password.md)**: en producción, Gmail y escáneres de seguridad prefetchean el link y consumen el token de un solo uso antes de que el usuario haga click (`otp_expired` en el primer intento siempre) — ver el detalle en PRD-1.4. `/forgot-password` y `/reset-password` siguen existiendo, pero ya no dependen de `/auth/confirm` |
 | Depende de | [PRD-11](PRD-11-emails-transaccionales.md) (setup compartido de `src/lib/email/` y env), [PRD-1](PRD-1-auth.md) (`signUp`/`signIn`) |
 | Migraciones | Ninguna propia (usa los flujos nativos de Supabase Auth) |
 | ADRs relacionados | [0028](../adr/0028-emails-transaccionales-resend.md) |
