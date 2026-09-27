@@ -435,7 +435,7 @@ export async function getFeedPage({
   const rows = (data ?? []) as unknown as CardRow[];
 
   // If in following scope and on first page, also fetch recent reposts from followed authors
-  let repostFeedPosts: FeedPost[] = [];
+  const repostFeedPosts: FeedPost[] = [];
   if (scope === "following" && authorIds && authorIds.length > 0 && offset === 0) {
     const { data: repostRows } = await supabase
       .from("reposts")
