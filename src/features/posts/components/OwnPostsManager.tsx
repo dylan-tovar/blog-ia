@@ -246,13 +246,15 @@ export function OwnPostsManager({ initialPosts }: OwnPostsManagerProps) {
                       <MoreHorizontal className="size-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem
-                        className="cursor-pointer gap-2 text-xs font-medium"
-                        render={<Link href={`/editor/${post.id}`} />}
-                      >
-                        <PenLine className="size-3.5" />
-                        <span>Editar artículo</span>
-                      </DropdownMenuItem>
+                      {!isPublished && (
+                        <DropdownMenuItem
+                          className="cursor-pointer gap-2 text-xs font-medium"
+                          render={<Link href={`/editor/${post.id}`} />}
+                        >
+                          <PenLine className="size-3.5" />
+                          <span>Editar artículo</span>
+                        </DropdownMenuItem>
+                      )}
 
                       {isPublished && (
                         <>
@@ -329,13 +331,15 @@ export function OwnPostsManager({ initialPosts }: OwnPostsManagerProps) {
 
                 {/* Action Footer */}
                 <div className="mt-1 flex items-center gap-2 pt-2 border-t border-border/40">
-                  <Link
-                    href={`/editor/${post.id}`}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
-                  >
-                    <PenLine className="size-3.5" />
-                    <span>Editar</span>
-                  </Link>
+                  {!isPublished && (
+                    <Link
+                      href={`/editor/${post.id}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-muted/60 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
+                    >
+                      <PenLine className="size-3.5" />
+                      <span>Editar</span>
+                    </Link>
+                  )}
 
                   {isPublished && (
                     <>

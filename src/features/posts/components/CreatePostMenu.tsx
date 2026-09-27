@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 
 interface CreatePostMenuProps {
   viewerName: string | null;
+  avatarUrl: string | null;
   label?: string;
   className?: string;
   contentClassName?: string;
@@ -25,6 +26,7 @@ interface CreatePostMenuProps {
 
 export function CreatePostMenu({
   viewerName,
+  avatarUrl,
   label,
   className,
   contentClassName,
@@ -80,7 +82,7 @@ export function CreatePostMenu({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <NoteDialog open={noteOpen} onOpenChange={setNoteOpen} viewerName={viewerName} />
+      <NoteDialog open={noteOpen} onOpenChange={setNoteOpen} viewerName={viewerName} avatarUrl={avatarUrl} />
     </>
   );
 }

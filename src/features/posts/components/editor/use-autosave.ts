@@ -9,16 +9,24 @@ export type Draft = { title: string; content: string };
 
 const AUTOSAVE_DELAY_MS = 2000;
 
-export function useAutosave(initialPostId: string, initialDraft: Draft) {
+export function useAutosave(initialPostId: string, initialDraft: Draft, options?: { disabled?: boolean }) {
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const postId = useRef(initialPostId);
   const latest = useRef(initialDraft);
   const saved = useRef(initialDraft);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queue = useRef<Promise<string | null>>(Promise.resolve(null));
+  const disabled = useRef(options?.disabled ?? false);
+  useEffect(() => {
+    disabled.current = options?.disabled ?? false;
+  }, [options?.disabled]);
 
   const persist = useCallback(() => {
     const run = async (): Promise<string | null> => {
+      if (disabled.current) {
+        return postId.current;
+      }
+
       const draft = latest.current;
       const id = postId.current;
 
@@ -70,6 +78,9 @@ export function useAutosave(initialPostId: string, initialDraft: Draft) {
 
   const update = useCallback(
     (patch: Partial<Draft>) => {
+      if (disabled.current) {
+        return;
+      }
       latest.current = { ...latest.current, ...patch };
       if (timer.current) {
         clearTimeout(timer.current);

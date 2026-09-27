@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { MessageSquare, Repeat } from "lucide-react";
 import { UserAvatar } from "@/components/shared/UserAvatar";
-import { Badge } from "@/components/ui/badge";
 import { FollowButton } from "@/features/subscriptions/components/FollowButton";
 import { LikeButton } from "@/features/likes/components/LikeButton";
 import { RepostButton } from "@/features/reposts/components/RepostButton";
@@ -114,7 +113,7 @@ export function PostCard({
         )}
 
         <div className="min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {post.author?.username ? (
               <Link
                 href={`/${post.author.username}`}
@@ -129,15 +128,20 @@ export function PostCard({
               <time
                 dateTime={post.publishedAt}
                 suppressHydrationWarning
-                className="shrink-0 text-[13px] font-light text-muted-foreground"
+                className="shrink-0 text-[12px] font-light text-muted-foreground"
               >
                 {formatRelativeDate(post.publishedAt)}
               </time>
             )}
             {recommended && (
-              <Badge variant="secondary" className="shrink-0">
-                Recomendado
-              </Badge>
+              <>
+                <span aria-hidden className="shrink-0 text-[12px] text-muted-foreground/60">
+                  ·
+                </span>
+                <span className="shrink-0 text-[12px] font-light text-muted-foreground">
+                  Recomendado
+                </span>
+              </>
             )}
             <div className="-my-2 ml-auto flex shrink-0 items-center gap-1">
               <FollowControl

@@ -1,3 +1,4 @@
+import { FadeIn } from "@/components/shared/page-transition";
 import { getViewer } from "@/lib/viewer";
 import {
   getLikedPostsByUser,
@@ -26,16 +27,18 @@ export default async function AuthorPage(props: PageProps<"/[username]">) {
   ]);
 
   return (
-    <AuthorProfileView
-      profile={profile}
-      viewer={viewer}
-      posts={posts}
-      likedPosts={likedPosts}
-      repostedPosts={repostedPosts}
-      followerCount={followerCount}
-      following={following}
-      subscribers={subscribers}
-      subscriptions={subscriptions}
-    />
+    <FadeIn>
+      <AuthorProfileView
+        profile={profile}
+        viewer={viewer}
+        posts={posts}
+        likedPosts={likedPosts}
+        repostedPosts={repostedPosts}
+        followerCount={followerCount}
+        following={following}
+        subscribers={subscribers}
+        subscriptions={subscriptions}
+      />
+    </FadeIn>
   );
 }

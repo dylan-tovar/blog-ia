@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MessageSquare } from "lucide-react";
+import { FadeIn } from "@/components/shared/page-transition";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { formatRelativeDate } from "@/lib/format";
 import { getViewer } from "@/lib/viewer";
@@ -67,7 +68,7 @@ export default async function PublicPostPage(props: PageProps<"/p/[id]">) {
   const canEdit = isOwn;
 
   return (
-    <>
+    <FadeIn>
       {isReply && (rootPost || ancestors.length > 0) && (
         <div className="flex flex-col border-b">
           {rootPost && <PostCard post={rootPost} viewerId={viewer?.id ?? null} />}
@@ -208,6 +209,6 @@ export default async function PublicPostPage(props: PageProps<"/p/[id]">) {
           </div>
         )}
       </section>
-    </>
+    </FadeIn>
   );
 }

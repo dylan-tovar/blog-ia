@@ -1,5 +1,6 @@
 import { Bell } from "lucide-react";
 import { redirect } from "next/navigation";
+import { FadeIn } from "@/components/shared/page-transition";
 import { NotificationList } from "@/features/notifications/components/NotificationList";
 import { markAllNotificationsRead } from "@/features/notifications/actions";
 import { getNotificationsPage } from "@/features/notifications/queries";
@@ -19,30 +20,32 @@ export default async function ActivityPage() {
   await markAllNotificationsRead();
 
   return (
-    <div className="mx-auto w-full max-w-xl">
-      {/* Desktop page header */}
-      <div className="hidden md:flex items-center justify-between border-b px-4 py-5">
-        <h1 className="text-xl font-bold tracking-tight text-foreground">Actividad</h1>
-      </div>
-
-      <h1 className="sr-only md:hidden">Actividad</h1>
-
-      {notifications.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center px-4 py-24 text-center">
-          <div className="mb-4 grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary shadow-xs">
-            <Bell className="size-7" aria-hidden />
-          </div>
-          <h2 className="text-lg font-bold tracking-tight text-foreground">
-            No tenés actividad reciente
-          </h2>
-          <p className="mt-1.5 max-w-sm text-sm text-muted-foreground leading-relaxed">
-            Cuando otros usuarios le den me gusta a tus publicaciones, dejen notas o te sigan, lo
-            verás acá.
-          </p>
+    <FadeIn>
+      <div className="mx-auto w-full max-w-xl">
+        {/* Desktop page header */}
+        <div className="hidden md:flex items-center justify-between border-b px-4 py-5">
+          <h1 className="text-xl font-bold tracking-tight text-foreground">Actividad</h1>
         </div>
-      ) : (
-        <NotificationList initialNotifications={notifications} initialHasMore={hasMore} />
-      )}
-    </div>
+
+        <h1 className="sr-only md:hidden">Actividad</h1>
+
+        {notifications.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center px-4 py-24 text-center">
+            <div className="mb-4 grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary shadow-xs">
+              <Bell className="size-7" aria-hidden />
+            </div>
+            <h2 className="text-lg font-bold tracking-tight text-foreground">
+              No tenés actividad reciente
+            </h2>
+            <p className="mt-1.5 max-w-sm text-sm text-muted-foreground leading-relaxed">
+              Cuando otros usuarios le den me gusta a tus publicaciones, dejen notas o te sigan, lo
+              verás acá.
+            </p>
+          </div>
+        ) : (
+          <NotificationList initialNotifications={notifications} initialHasMore={hasMore} />
+        )}
+      </div>
+    </FadeIn>
   );
 }

@@ -184,7 +184,9 @@ export async function createDraftPost(input: {
   return { ok: true, postId: post.id };
 }
 
-export type SavePostResult = { ok: boolean };
+export type SavePostResult = { ok: boolean; error?: string };
+
+const SAVE_BLOCKED_PUBLISHED = "No se puede editar un artículo publicado.";
 
 export async function savePostContent(
   postId: string,
@@ -201,16 +203,29 @@ export async function savePostContent(
     return { ok: false };
   }
 
-  const { error } = await supabase
+  // `.neq("status", "published")` es la primera línea de defensa: si no matchea
+  // (publicado, o no existe/no es del autor) no actualiza nada. El trigger
+  // posts_block_published_edits (migración 0019) cubre a cualquier otro
+  // escritor que se salte esta Server Action.
+  const { data, error } = await supabase
     .from("posts")
     .update({
       title: parsed.data.title || null,
       content: parsed.data.content,
     })
     .eq("id", postId)
-    .eq("author_id", user.id);
+    .eq("author_id", user.id)
+    .neq("status", "published")
+    .select("id");
 
-  return { ok: !error };
+  if (error) {
+    return { ok: false };
+  }
+  if (!data?.length) {
+    return { ok: false, error: SAVE_BLOCKED_PUBLISHED };
+  }
+
+  return { ok: true };
 }
 
 export type SaveCoverResult = { ok: true } | { ok: false; error: string };

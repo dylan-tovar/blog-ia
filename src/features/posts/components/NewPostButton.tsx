@@ -10,7 +10,13 @@ const FAB_POSITION =
 const FAB_CLASS =
   "grid size-14 cursor-pointer place-items-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-black/40 outline-none transition-transform focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95";
 
-export function NewPostButton({ viewerName }: { viewerName: string | null }) {
+export function NewPostButton({
+  viewerName,
+  avatarUrl,
+}: {
+  viewerName: string | null;
+  avatarUrl: string | null;
+}) {
   const [noteOpen, setNoteOpen] = useState(false);
 
   return (
@@ -24,7 +30,7 @@ export function NewPostButton({ viewerName }: { viewerName: string | null }) {
       >
         <Plus className="size-7" aria-hidden />
       </button>
-      <NoteDialog open={noteOpen} onOpenChange={setNoteOpen} viewerName={viewerName} />
+      <NoteDialog open={noteOpen} onOpenChange={setNoteOpen} viewerName={viewerName} avatarUrl={avatarUrl} />
     </div>
   );
 }

@@ -178,3 +178,31 @@
 .prose .task-list-item input {
   margin-right: 0.5rem;
 }
+
+::view-transition-old(.fade-out) {
+  animation: 160ms ease-out both fade-out-kf;
+}
+
+::view-transition-new(.fade-in) {
+  animation: 180ms ease-in both fade-in-kf;
+}
+
+@keyframes fade-out-kf {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in-kf {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  ::view-transition-old(.fade-out),
+  ::view-transition-new(.fade-in) {
+    animation-duration: 0.01ms !important;
+  }
+}

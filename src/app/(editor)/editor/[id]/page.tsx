@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { FadeIn } from "@/components/shared/page-transition";
 import { isCoverColor } from "@/features/posts/cover/cover-palette";
 import { getAllTagNames, getOwnPost } from "@/features/posts/queries";
 import { DesktopOnly } from "@/features/posts/components/DesktopOnly";
@@ -34,22 +35,24 @@ export default async function EditorPage(props: PageProps<"/editor/[id]">) {
   ]);
 
   return (
-    <DesktopOnly>
-      <PostEditor
-        postId={post.id}
-        userId={viewer.id}
-        status={post.status}
-        initialTitle={post.title ?? ""}
-        initialContent={post.content}
-        initialTags={post.tags}
-        initialCover={{
-          imageUrl: post.cover_image_url,
-          text: post.cover_text,
-          color: isCoverColor(post.cover_color) ? post.cover_color : null,
-        }}
-        allTagNames={allTagNames}
-        rejectionReason={post.rejection_reason}
-      />
-    </DesktopOnly>
+    <FadeIn>
+      <DesktopOnly>
+        <PostEditor
+          postId={post.id}
+          userId={viewer.id}
+          status={post.status}
+          initialTitle={post.title ?? ""}
+          initialContent={post.content}
+          initialTags={post.tags}
+          initialCover={{
+            imageUrl: post.cover_image_url,
+            text: post.cover_text,
+            color: isCoverColor(post.cover_color) ? post.cover_color : null,
+          }}
+          allTagNames={allTagNames}
+          rejectionReason={post.rejection_reason}
+        />
+      </DesktopOnly>
+    </FadeIn>
   );
 }
