@@ -57,6 +57,11 @@ export async function createNote(
 
   const { content, parentPostId, replyToPostId } = parsed.data;
 
+  const moderation = scanArticle("", content);
+  if (moderation.blocked) {
+    return { error: "El contenido no cumple con nuestras normas comunitarias." };
+  }
+
   const { error } = await supabase.from("posts").insert({
     author_id: user.id,
     type: "note",
@@ -122,6 +127,11 @@ export async function updateNote(
   }
   if (trimmed.length > 500) {
     return { ok: false, error: "La nota no puede superar los 500 caracteres." };
+  }
+
+  const moderation = scanArticle("", trimmed);
+  if (moderation.blocked) {
+    return { ok: false, error: "El contenido no cumple con nuestras normas comunitarias." };
   }
 
   const { supabase, user } = await requireUser();

@@ -15,6 +15,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { NOTE_MAX_LENGTH } from "@/features/posts/constants";
 import { updateNote } from "@/features/posts/actions";
+import { useModerationScan } from "@/features/moderation/use-moderation-scan";
+import { ModerationDetails } from "@/features/moderation/components/ModerationNotice";
 import { useVisualViewportStyle } from "@/hooks/use-visual-viewport-style";
 import { cn } from "@/lib/utils";
 
@@ -38,18 +40,25 @@ export function EditNoteDialog({
   const router = useRouter();
   const [content, setContent] = useState(initialContent);
   const [error, setError] = useState<string | null>(null);
+  const [hasAcknowledgedWarning, setHasAcknowledgedWarning] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const viewportStyle = useVisualViewportStyle(open);
+  const moderation = useModerationScan("", content);
 
   const trimmed = content.trim();
   const remaining = NOTE_MAX_LENGTH - content.length;
   const showCounter = remaining <= 50;
-  const canSubmit = trimmed.length > 0 && remaining >= 0 && !isPending;
+  const canSubmit = trimmed.length > 0 && remaining >= 0 && !isPending && !moderation.blocked;
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
+
+    if (moderation.leve > 0 && !hasAcknowledgedWarning) {
+      setHasAcknowledgedWarning(true);
+      return;
+    }
 
     setError(null);
     startTransition(async () => {
@@ -68,9 +77,11 @@ export function EditNoteDialog({
     onOpenChange(next);
     if (next) {
       setContent(initialContent);
+      setHasAcknowledgedWarning(false);
     } else {
       setError(null);
       setContent(initialContent);
+      setHasAcknowledgedWarning(false);
     }
   }
 
@@ -100,7 +111,10 @@ export function EditNoteDialog({
               <Textarea
                 name="content"
                 value={content}
-                onChange={(event) => setContent(event.target.value)}
+                onChange={(event) => {
+                  setContent(event.target.value);
+                  setHasAcknowledgedWarning(false);
+                }}
                 placeholder="¿Qué estás pensando?"
                 aria-label="Texto de la nota"
                 maxLength={NOTE_MAX_LENGTH}
@@ -114,6 +128,12 @@ export function EditNoteDialog({
             <p role="alert" className="text-sm text-destructive">
               {error}
             </p>
+          )}
+
+          {moderation.matches.length > 0 && (
+            <div className="shrink-0 overflow-y-auto">
+              <ModerationDetails summary={moderation} />
+            </div>
           )}
 
           <div className="flex items-center justify-end gap-2">
@@ -133,7 +153,7 @@ export function EditNoteDialog({
             </DialogClose>
             <Button type="submit" disabled={!canSubmit} className="min-w-24">
               {isPending && <Loader2 className="animate-spin" aria-hidden />}
-              Guardar
+              {hasAcknowledgedWarning ? "Sí, guardar" : "Guardar"}
             </Button>
           </div>
         </form>

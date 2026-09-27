@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Loader2, X } from "lucide-react";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { NOTE_MAX_LENGTH } from "@/features/posts/constants";
 import { useNoteForm } from "@/features/posts/components/use-note-form";
+import { ModerationDetails } from "@/features/moderation/components/ModerationNotice";
 import { useVisualViewportStyle } from "@/hooks/use-visual-viewport-style";
 import { cn } from "@/lib/utils";
 
@@ -33,11 +35,21 @@ function NoteForm({
   avatarUrl: string | null;
   onPublished: () => void;
 }) {
-  const { content, setContent, state, formAction, isPending, remaining, showCounter, canSubmit } =
+  const { content, setContent, state, formAction, isPending, remaining, showCounter, canSubmit, moderation } =
     useNoteForm(onPublished);
 
+  const [hasAcknowledgedWarning, setHasAcknowledgedWarning] = useState(false);
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    if (moderation.leve > 0 && !hasAcknowledgedWarning) {
+      event.preventDefault();
+      setHasAcknowledgedWarning(true);
+      return;
+    }
+  }
+
   return (
-    <form action={formAction} className="flex min-h-0 flex-1 flex-col">
+    <form action={formAction} onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-1 border-b border-border px-2 py-2 max-md:pt-[max(0.5rem,env(safe-area-inset-top))]">
         <DialogClose
           render={<Button type="button" variant="ghost" size="icon-lg" aria-label="Cerrar" />}
@@ -49,7 +61,7 @@ function NoteForm({
         </DialogTitle>
         <Button type="submit" size="sm" disabled={!canSubmit} className="min-w-20 min-h-9">
           {isPending && <Loader2 className="animate-spin" aria-hidden />}
-          Publicar
+          {hasAcknowledgedWarning ? "Sí, publicar" : "Publicar"}
         </Button>
       </div>
 
@@ -66,7 +78,10 @@ function NoteForm({
           <Textarea
             name="content"
             value={content}
-            onChange={(event) => setContent(event.target.value)}
+            onChange={(event) => {
+              setContent(event.target.value);
+              setHasAcknowledgedWarning(false);
+            }}
             placeholder="¿Qué estás pensando?"
             aria-label="Texto de la nota"
             maxLength={NOTE_MAX_LENGTH}
@@ -75,6 +90,10 @@ function NoteForm({
           />
         </div>
       </div>
+
+      {moderation.matches.length > 0 && (
+        <ModerationDetails summary={moderation} />
+      )}
 
       {state?.error && (
         <p role="alert" className="px-4 text-sm text-destructive">
