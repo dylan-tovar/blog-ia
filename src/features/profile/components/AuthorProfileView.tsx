@@ -31,6 +31,7 @@ interface AuthorProfileViewProps {
   viewer: {
     id: string;
     displayName: string | null;
+    avatarUrl: string | null;
   } | null;
   posts: FeedPost[];
   likedPosts?: FeedPost[];
@@ -186,6 +187,7 @@ export function AuthorProfileView({
             <>
               <CreatePostMenu
                 viewerName={viewer?.displayName ?? null}
+                avatarUrl={viewer?.avatarUrl ?? null}
                 className="flex min-h-9 flex-1 cursor-pointer items-center justify-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-blue-500"
               >
                 <SquarePen className="size-4" aria-hidden />
@@ -282,7 +284,7 @@ export function AuthorProfileView({
         {/* COMPOSER BAR (Own profile on Activity/Posts tabs) */}
         {isOwnProfile && (activeTab === "activity" || activeTab === "posts") && (
           <section aria-label="Nueva nota" className="px-4 md:px-0 pt-4 pb-3">
-            <NoteTriggerBar viewerName={viewer?.displayName ?? null} />
+            <NoteTriggerBar viewerName={viewer?.displayName ?? null} avatarUrl={viewer?.avatarUrl ?? null} />
           </section>
         )}
 

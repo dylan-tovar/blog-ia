@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { UserAvatar } from "@/components/shared/UserAvatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,10 +22,19 @@ interface NoteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   viewerName: string | null;
+  avatarUrl: string | null;
 }
 
 // The form lives inside DialogContent, which unmounts on close, so its state resets every time.
-function NoteForm({ viewerName, onPublished }: { viewerName: string | null; onPublished: () => void }) {
+function NoteForm({
+  viewerName,
+  avatarUrl,
+  onPublished,
+}: {
+  viewerName: string | null;
+  avatarUrl: string | null;
+  onPublished: () => void;
+}) {
   const { content, setContent, state, formAction, isPending, remaining, showCounter, canSubmit, moderation } =
     useNoteForm(onPublished);
 
@@ -40,9 +49,28 @@ function NoteForm({ viewerName, onPublished }: { viewerName: string | null; onPu
   }
 
   return (
-    <form action={formAction} onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="grid min-h-0 flex-1 grid-cols-[auto_1fr] gap-x-3">
-        <UserAvatar name={viewerName} />
+    <form action={formAction} onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+      <div className="flex items-center gap-1 border-b border-border px-2 py-2 max-md:pt-[max(0.5rem,env(safe-area-inset-top))]">
+        <DialogClose
+          render={<Button type="button" variant="ghost" size="icon-lg" aria-label="Cerrar" />}
+        >
+          <X />
+        </DialogClose>
+        <DialogTitle className="flex-1 text-center text-base font-semibold text-foreground">
+          Nueva nota
+        </DialogTitle>
+        <Button type="submit" size="sm" disabled={!canSubmit} className="min-w-20 min-h-9">
+          {isPending && <Loader2 className="animate-spin" aria-hidden />}
+          {hasAcknowledgedWarning ? "Sí, publicar" : "Publicar"}
+        </Button>
+      </div>
+
+      <DialogDescription className="sr-only">
+        Publicá una nota corta de hasta {NOTE_MAX_LENGTH} caracteres.
+      </DialogDescription>
+
+      <div className="grid min-h-0 flex-1 grid-cols-[auto_1fr] gap-x-3 px-4 pt-5">
+        <UserAvatar name={viewerName} avatarUrl={avatarUrl} />
         <div className="flex min-h-0 flex-col">
           <p className="min-h-8 truncate text-base leading-8 font-medium text-foreground">
             {viewerName ?? "Tu nota"}
@@ -62,21 +90,21 @@ function NoteForm({ viewerName, onPublished }: { viewerName: string | null; onPu
           />
         </div>
       </div>
-      
+
       {moderation.matches.length > 0 && (
         <ModerationDetails summary={moderation} />
       )}
 
       {state?.error && (
-        <p role="alert" className="text-sm text-destructive">
+        <p role="alert" className="px-4 text-sm text-destructive">
           {state.error}
         </p>
       )}
 
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-end px-4 pt-1 pb-3 max-md:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <span
           className={cn(
-            "mr-auto text-xs tabular-nums text-muted-foreground",
+            "text-xs tabular-nums text-muted-foreground",
             !showCounter && "invisible",
             showCounter && "text-amber-400",
             remaining === 0 && "text-destructive",
@@ -85,17 +113,12 @@ function NoteForm({ viewerName, onPublished }: { viewerName: string | null; onPu
         >
           {remaining}
         </span>
-        <DialogClose render={<Button type="button" variant="secondary" />}>Cancelar</DialogClose>
-        <Button type="submit" disabled={!canSubmit} className="min-w-24">
-          {isPending && <Loader2 className="animate-spin" aria-hidden />}
-          {hasAcknowledgedWarning ? "Sí, publicar" : "Publicar"}
-        </Button>
       </div>
     </form>
   );
 }
 
-export function NoteDialog({ open, onOpenChange, viewerName }: NoteDialogProps) {
+export function NoteDialog({ open, onOpenChange, viewerName, avatarUrl }: NoteDialogProps) {
   const viewportStyle = useVisualViewportStyle(open);
 
   return (
@@ -104,16 +127,11 @@ export function NoteDialog({ open, onOpenChange, viewerName }: NoteDialogProps) 
         showCloseButton={false}
         style={viewportStyle}
         className={cn(
-          "flex flex-col gap-3 p-4 sm:max-w-none md:max-w-lg md:rounded-2xl",
+          "flex flex-col gap-0 p-0 sm:max-w-none md:max-w-lg md:rounded-2xl",
           "max-md:inset-x-0 max-md:top-[var(--vvt,0px)] max-md:h-[var(--vvh,100dvh)] max-md:max-w-none max-md:translate-x-0 max-md:translate-y-0 max-md:rounded-none max-md:ring-0",
-          "max-md:pt-[max(1rem,env(safe-area-inset-top))] max-md:pb-[max(1rem,env(safe-area-inset-bottom))]",
         )}
       >
-        <DialogTitle className="sr-only">Nueva nota</DialogTitle>
-        <DialogDescription className="sr-only">
-          Publicá una nota corta de hasta {NOTE_MAX_LENGTH} caracteres.
-        </DialogDescription>
-        <NoteForm viewerName={viewerName} onPublished={() => onOpenChange(false)} />
+        <NoteForm viewerName={viewerName} avatarUrl={avatarUrl} onPublished={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>
   );

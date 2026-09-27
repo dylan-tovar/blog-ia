@@ -142,7 +142,7 @@ Los privilegios de columna sobre `posts` (`0007`) se suman a estas políticas; v
 | Columna | Tipo | Nulo | Default | Notas |
 | :--- | :--- | :--- | :--- | :--- |
 | `id` | `uuid` | No | | PK; FK a `auth.users(id)` con `on delete cascade` |
-| `display_name` | `text` | No | | Nombre visible |
+| `display_name` | `text` | No | | Nombre visible. `check (char_length (display_name) <= 200) not valid` (`0020_field_length_checks.sql`): puede haber perfiles previos que superen el límite, pero toda fila nueva o modificada lo respeta |
 | `username` | `text` | No | | Identificador para iniciar sesión (`0004_username.sql`). Único y con `check (username ~ '^[a-z0-9_]{3,20}$')`: minúsculas, dígitos y `_`, de 3 a 20 caracteres. Los perfiles anteriores a `0004` reciben `user_<8 hex del id>` |
 | `avatar_url` | `text` | Sí | | Sin uso en la UI todavía |
 | `created_at` | `timestamptz` | No | `now()` | |
@@ -208,6 +208,8 @@ Restricciones del modelo de tipos (`0005`), validadas en la base y no solo en la
 | `posts_article_no_parent_check` | Un artículo no tiene `parent_post_id` |
 | `posts_article_no_reply_to_check` (`0013`) | Un artículo no tiene `reply_to_post_id` |
 | `posts_reply_to_not_self_check` (`0013`) | `reply_to_post_id` no puede ser el propio `id` |
+| `posts_title_check` (`0020`) | `title` tiene como máximo 200 caracteres (o es `null`). `NOT VALID`, mismo motivo que `posts_note_length_check` |
+| `posts_article_content_check` (`0020`) | Un artículo tiene como máximo 100.000 caracteres de `content`. `NOT VALID`, mismo motivo que `posts_note_length_check` |
 
 La migración `0005` convierte los posts existentes (datos de prueba) en notas sin título y `published`, y borra los borradores fantasma vacíos. Solo corre esa conversión la primera vez, cuando la columna `type` todavía no existe. Los tags y el ciclo `draft`/`pending_review` aplican solo a artículos.
 
@@ -216,7 +218,7 @@ La migración `0005` convierte los posts existentes (datos de prueba) en notas s
 | Columna | Tipo | Nulo | Default | Notas |
 | :--- | :--- | :--- | :--- | :--- |
 | `id` | `uuid` | No | `gen_random_uuid()` | PK |
-| `name` | `text` | No | | `unique`. La app lo normaliza a minúsculas (`tagNameSchema`); la base no lo fuerza |
+| `name` | `text` | No | | `unique`. La app lo normaliza a minúsculas (`tagNameSchema`); la base no lo fuerza. `check (char_length (name) <= 50) not valid` (`0020_field_length_checks.sql`) |
 
 | Política | Operación | Regla |
 | :--- | :--- | :--- |

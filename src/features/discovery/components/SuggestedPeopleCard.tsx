@@ -39,7 +39,7 @@ export function SuggestedPeopleCard({
       >
         <div className="flex items-center justify-between px-4 md:px-0">
           <h2 id="suggested-people-heading" className="text-[15px] font-bold tracking-tight text-foreground">
-            Gente para seguir
+            Recomendados
           </h2>
           <Link
             href="/explore"
@@ -114,7 +114,7 @@ export function SuggestedPeopleCard({
     >
       <div className={cn("flex items-center justify-between", isFeed && "px-4 md:px-0")}>
         <h2 id="suggested-people-heading" className="text-[15px] font-bold tracking-tight text-foreground">
-          Gente para seguir
+          Recomendados
         </h2>
         {!isFeed && (
           <Link

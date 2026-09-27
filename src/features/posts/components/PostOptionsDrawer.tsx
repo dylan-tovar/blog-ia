@@ -4,11 +4,8 @@ import { useEffect, useRef, useState, useTransition, type ComponentType } from "
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
-  Ban,
-  Bookmark,
   Check,
   Ellipsis,
-  EyeOff,
   Link2,
   Loader2,
   Pencil,
@@ -33,7 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EditNoteDialog } from "@/features/posts/components/EditNoteDialog";
 import { LoginDrawer } from "@/features/auth/components/LoginDrawer";
-import { deleteNote } from "@/features/posts/actions";
+import { deleteNote, reportPost } from "@/features/posts/actions";
 import { followAuthor, unfollowAuthor } from "@/features/subscriptions/actions";
 import { cn } from "@/lib/utils";
 
@@ -130,6 +127,8 @@ export function PostOptionsDrawer({
   const [loginOpen, setLoginOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isDeleting, startDeleting] = useTransition();
+  const [confirmingReport, setConfirmingReport] = useState(false);
+  const [isReporting, startReporting] = useTransition();
   const [following, setFollowing] = useState(initialFollowing);
   const [isFollowingPending, startFollowTransition] = useTransition();
   const [copied, setCopied] = useState(false);
@@ -158,6 +157,7 @@ export function PostOptionsDrawer({
 
   function resetTransientState() {
     setConfirmingDelete(false);
+    setConfirmingReport(false);
     setCopied(false);
     if (copyTimerRef.current) {
       clearTimeout(copyTimerRef.current);
@@ -238,6 +238,34 @@ export function PostOptionsDrawer({
     });
   }
 
+  function handleReport() {
+    if (!confirmingReport) {
+      setConfirmingReport(true);
+      return;
+    }
+
+    startReporting(async () => {
+      const result = await reportPost(post.id);
+      if (result.ok) {
+        if (result.removed) {
+          close();
+          router.refresh();
+          onDeleted?.(post.id);
+        } else {
+          close();
+        }
+      } else {
+        setConfirmingReport(false);
+      }
+    });
+  }
+
+  const reportLabel = isReporting
+    ? "Revisando con IA..."
+    : confirmingReport
+      ? "Tocá de nuevo para reportar"
+      : "Reportar";
+
   return (
     <>
       {/* Mobile Drawer */}
@@ -272,23 +300,12 @@ export function PostOptionsDrawer({
                       }}
                     />
                   )}
-                  {canEdit && post.type === "article" && (
-                    <Option
-                      icon={Pencil}
-                      label="Editar artículo"
-                      onClick={() => {
-                        close();
-                        router.push(`/editor/${post.id}`);
-                      }}
-                    />
-                  )}
                   <Option
                     icon={copied ? Check : Link2}
                     iconClassName={copied ? "text-emerald-500" : undefined}
                     label={copied ? "¡Enlace copiado!" : "Copiar enlace"}
                     onClick={handleCopyLink}
                   />
-                  <Option icon={Bookmark} label="Guardar" onClick={close} />
                 </div>
 
                 <div className="my-1 border-t border-border/80" />
@@ -324,20 +341,19 @@ export function PostOptionsDrawer({
                       disabled={isFollowingPending}
                     />
                   )}
-                  <Option icon={Bookmark} label="Guardar" onClick={close} />
                 </div>
 
                 <div className="my-1 border-t border-border/80" />
 
                 <div className="flex flex-col">
-                  <Option icon={EyeOff} label="Ocultar publicación" onClick={close} />
-                </div>
-
-                <div className="my-1 border-t border-border/80" />
-
-                <div className="flex flex-col">
-                  <Option icon={Ban} label="Bloquear" onClick={close} destructive />
-                  <Option icon={AlertCircle} label="Reportar" onClick={close} destructive />
+                  <Option
+                    icon={isReporting ? Loader2 : AlertCircle}
+                    iconClassName={isReporting ? "animate-spin" : undefined}
+                    label={reportLabel}
+                    onClick={handleReport}
+                    disabled={isReporting}
+                    destructive
+                  />
                 </div>
               </>
             )}
@@ -370,18 +386,6 @@ export function PostOptionsDrawer({
                   <span>Editar nota</span>
                 </DropdownMenuItem>
               )}
-              {canEdit && post.type === "article" && (
-                <DropdownMenuItem
-                  className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal"
-                  onClick={() => {
-                    close();
-                    router.push(`/editor/${post.id}`);
-                  }}
-                >
-                  <Pencil className="size-4 text-muted-foreground" />
-                  <span>Editar artículo</span>
-                </DropdownMenuItem>
-              )}
               <DropdownMenuItem
                 closeOnClick={false}
                 className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal"
@@ -393,13 +397,6 @@ export function PostOptionsDrawer({
                   <Link2 className="size-4 text-muted-foreground" />
                 )}
                 <span>{copied ? "¡Enlace copiado!" : "Copiar enlace"}</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal"
-                onClick={close}
-              >
-                <Bookmark className="size-4 text-muted-foreground" />
-                <span>Guardar</span>
               </DropdownMenuItem>
 
               {canDelete && (
@@ -452,41 +449,22 @@ export function PostOptionsDrawer({
                   <span>{following ? "Dejar de seguir" : "Seguir"}</span>
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem
-                className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal"
-                onClick={close}
-              >
-                <Bookmark className="size-4 text-muted-foreground" />
-                <span>Guardar</span>
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator />
-
-              <DropdownMenuItem
-                className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal"
-                onClick={close}
-              >
-                <EyeOff className="size-4 text-muted-foreground" />
-                <span>Ocultar publicación</span>
-              </DropdownMenuItem>
 
               <DropdownMenuSeparator />
 
               <DropdownMenuItem
                 variant="destructive"
+                closeOnClick={confirmingReport}
                 className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal text-destructive focus:text-destructive"
-                onClick={close}
+                onClick={handleReport}
+                disabled={isReporting}
               >
-                <Ban className="size-4 text-destructive" />
-                <span>Bloquear</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                variant="destructive"
-                className="cursor-pointer gap-2.5 py-2 px-2.5 font-normal text-destructive focus:text-destructive"
-                onClick={close}
-              >
-                <AlertCircle className="size-4 text-destructive" />
-                <span>Reportar</span>
+                {isReporting ? (
+                  <Loader2 className="size-4 animate-spin text-destructive" />
+                ) : (
+                  <AlertCircle className="size-4 text-destructive" />
+                )}
+                <span>{reportLabel}</span>
               </DropdownMenuItem>
             </>
           )}

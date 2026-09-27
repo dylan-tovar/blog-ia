@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DISPLAY_NAME_MAX_LENGTH } from "@/features/profile/constants";
 
 // Segmentos de ruta reales bajo src/app/ (route groups aparte) — un username
 // que coincida nunca sería alcanzable en /[username], porque la ruta
@@ -40,7 +41,10 @@ export const updateProfileSchema = z.object({
   displayName: z
     .string()
     .trim()
-    .min(1, { error: "Ingresá un nombre para mostrar." }),
+    .min(1, { error: "Ingresá un nombre para mostrar." })
+    .max(DISPLAY_NAME_MAX_LENGTH, {
+      error: "El nombre para mostrar es demasiado largo.",
+    }),
   username: usernameSchema,
 });
 
@@ -48,6 +52,9 @@ export const onboardingSchema = z.object({
   displayName: z
     .string()
     .trim()
-    .min(1, { error: "Ingresá un nombre para mostrar." }),
+    .min(1, { error: "Ingresá un nombre para mostrar." })
+    .max(DISPLAY_NAME_MAX_LENGTH, {
+      error: "El nombre para mostrar es demasiado largo.",
+    }),
   username: usernameSchema,
 });

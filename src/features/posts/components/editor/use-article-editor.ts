@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useEditor, type Editor } from "@tiptap/react";
 import { Markdown } from "@tiptap/markdown";
+import Highlight from "@tiptap/extension-highlight";
 import Image from "@tiptap/extension-image";
 import Italic from "@tiptap/extension-italic";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
@@ -28,13 +29,18 @@ function imageFiles(list: FileList | null | undefined): File[] {
 // Tables and task lists have no toolbar button: they are registered so markdown that
 // already contains them survives an open/edit/save round-trip. Images do (see EditorToolbar),
 // and can also be dropped or pasted into the article.
-export function useArticleEditor(initialContent: string, onChange: (markdown: string) => void) {
+export function useArticleEditor(
+  initialContent: string,
+  onChange: (markdown: string) => void,
+  editable = true,
+) {
   const editorRef = useRef<Editor | null>(null);
   const images = useImageUpload(editorRef);
   const { insertFiles } = images;
 
   const editor = useEditor({
     immediatelyRender: false,
+    editable,
     extensions: [
       StarterKit.configure({
         heading: { levels: [2, 3] },
@@ -44,6 +50,7 @@ export function useArticleEditor(initialContent: string, onChange: (markdown: st
       }),
       ShiftItalic,
       SafeLink,
+      Highlight,
       Markdown,
       TaskList,
       TaskItem.configure({ nested: true }),
@@ -86,6 +93,10 @@ export function useArticleEditor(initialContent: string, onChange: (markdown: st
   useEffect(() => {
     editorRef.current = editor;
   }, [editor]);
+
+  useEffect(() => {
+    editor?.setEditable(editable);
+  }, [editor, editable]);
 
   return { editor, images };
 }

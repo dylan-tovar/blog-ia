@@ -19,7 +19,7 @@ Todos los inputs de la app tienen un límite en Next.js (Zod y/o `maxLength` en 
 | Campo | Mín | Máx Next.js | Máx base de datos | Notas |
 | :--- | :--- | :--- | :--- | :--- |
 | `username` | 3 | **20** — regex `^[a-z0-9_]{3,20}$`, `src/features/profile/schemas.ts:31` | **20** — `check (username ~ '^[a-z0-9_]{3,20}$')`, `supabase/migrations/0004_username.sql:14-15` | Coinciden. Se normaliza `.trim().toLowerCase()` antes de validar; lista de reservados en `schemas.ts:7-25` |
-| `displayName` | 1 | ⚠️ sin máximo (`.trim().min(1)`) | ⚠️ sin `CHECK` (`display_name text not null`, `0001_profiles.sql:6`) | **Gap en ambos niveles** — no hay tope de longitud |
+| `displayName` | 1 | **50** — `DISPLAY_NAME_MAX_LENGTH`, `src/features/profile/constants.ts:1` | **200** — `check (char_length (display_name) <= 200) not valid`, `0020_field_length_checks.sql` | ⚠️ **Asimetría intencional, no es un gap**: es el nombre de una persona, no una frase larga (a diferencia de `title`), así que Next.js lo limita más estricto (50) que la DB (200). El `CHECK` de 200 se dejó como techo genérico al bajar el límite de producto, para no correr otra migración; no hace falta bajarlo |
 | `avatar_url` | — | sin `.max()` explícito (se valida pertenencia de carpeta, no longitud) | **500** — `check (char_length (avatar_url) <= 500)`, `0016_profile_avatar.sql:62-71` | El límite real de tamaño de archivo lo impone el bucket: 2MB, solo `image/webp\|jpeg\|png` (`0016_profile_avatar.sql:9-16`) |
 | bio de perfil | — | — | — | **No existe este campo hoy** — sin columna, schema ni componente |
 
@@ -28,11 +28,11 @@ Todos los inputs de la app tienen un límite en Next.js (Zod y/o `maxLength` en 
 | Campo | Mín | Máx Next.js | Máx base de datos | Notas |
 | :--- | :--- | :--- | :--- | :--- |
 | `content` de nota | 1 | **500** — `NOTE_MAX_LENGTH`, `src/features/posts/constants.ts:1` | **500** — `check (type <> 'note' or char_length (content) between 1 and 500)`, `0005_post_types_and_likes.sql:53-57` | Coinciden. El `CHECK` es `NOT VALID` (notas legacy convertidas pueden superar 500; toda nota nueva sí lo respeta) |
-| `title` de artículo | — (opcional) | **200** — `POST_TITLE_MAX_LENGTH`, `constants.ts:2` | ⚠️ sin `CHECK` (`title text`, `0002_posts.sql:7`) | **Gap** — falta constraint en DB |
-| `content`/body de artículo | — | **100.000** caracteres — `POST_CONTENT_MAX_LENGTH`, `constants.ts:3` | ⚠️ sin `CHECK` (el único `CHECK` de longitud de `content` aplica solo a notas) | **Gap** — falta constraint en DB |
+| `title` de artículo | — (opcional) | **200** — `POST_TITLE_MAX_LENGTH`, `constants.ts:2` | **200** — `check (title is null or char_length (title) <= 200) not valid`, `0020_field_length_checks.sql` | `NOT VALID`: puede haber artículos existentes que superen el límite |
+| `content`/body de artículo | — | **100.000** caracteres — `POST_CONTENT_MAX_LENGTH`, `constants.ts:3` | **100.000** — `check (type <> 'article' or char_length (content) <= 100000) not valid`, `0020_field_length_checks.sql` | `NOT VALID`, mismo motivo que `title`. Sin `maxLength` en UI: el body se edita con TipTap (`EditorContent`), no hay un input nativo donde poner el atributo — el límite se aplica en Zod al guardar |
 | `cover_text` (portada) | 1 | **200** — `COVER_TEXT_MAX_LENGTH`, `src/features/posts/cover/cover-schema.ts:10` | **200** — `check (cover_text is null or char_length (cover_text) between 1 and 200)`, `0009_post_cover.sql:23-26` | Coinciden por diseño (comentario explícito en el schema: "keep in sync") |
 | `cover_image_url` | — | **500** — `COVER_URL_MAX_LENGTH`, `cover-schema.ts:11` | **500** — `check (char_length (cover_image_url) <= 500)`, `0009_post_cover.sql:12-21` | Coinciden |
-| tag de post (`tagName`) | 1 | **50** — `src/features/posts/schemas.ts:10-15` | ⚠️ sin `CHECK` (`tags.name text not null unique`, `0002_posts.sql:19`) | **Gap** — falta constraint en DB. Se normaliza `.trim().toLowerCase()` |
+| tag de post (`tagName`) | 1 | **50** — `TAG_NAME_MAX_LENGTH`, `src/features/posts/constants.ts:4` | **50** — `check (char_length (name) <= 50) not valid`, `0020_field_length_checks.sql` | `NOT VALID`: puede haber tags existentes que superen el límite. Se normaliza `.trim().toLowerCase()`. Su propio tier — no se acerca a `title`/`displayName` porque es otro tipo de dato (slug corto, no texto libre) |
 | intereses seleccionados (onboarding) | 0 | **20** ítems (cantidad, no longitud) — `INTERESTS_MAX`, `src/features/interests/constants.ts:2` | ⚠️ sin tope de cantidad (`user_interests` solo tiene PK compuesta) | **Gap** — es límite de cantidad de filas, no de texto |
 
 ## IA (chat del editor, no persistido)
@@ -60,10 +60,6 @@ Estos campos son de datos transitorios (van al modelo, no se guardan en tablas p
 
 ## Gaps conocidos (Next.js valida, falta el `CHECK` en SQL)
 
-- `title` de artículo (200 en Next.js, sin límite en DB)
-- `content` de artículo (100.000 en Next.js, sin límite en DB)
-- `displayName` (sin límite en ninguno de los dos niveles)
-- `tags.name` / tag de post (50 en Next.js, sin límite en DB)
-- Cantidad de intereses por usuario (20 en Next.js, sin tope en DB)
+- Cantidad de intereses por usuario (20 en Next.js, sin tope en DB) — es un límite de **cantidad de filas** (`COUNT` sobre `user_interests`), no de longitud de texto, así que no se cierra con un `CHECK` simple como los de arriba; requeriría un trigger. Queda fuera de la estandarización de longitud de campos.
 
-Si se agrega un `CHECK` para cerrar alguno de estos gaps, mantenerlo en sync con la constante de Next.js correspondiente (como ya se hace para `cover_text` y `username`), y anotarlo en [`docs/db/schema.md`](../db/schema.md).
+`title`, `content` de artículo, `tags.name` y `displayName` ya tenían este gap y se cerraron en `0020_field_length_checks.sql` (ver tablas arriba). Si se agrega un `CHECK` nuevo para otro campo, mantenerlo en sync con la constante de Next.js correspondiente (como ya se hace para `cover_text` y `username`), y anotarlo en [`docs/db/schema.md`](../db/schema.md).

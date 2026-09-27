@@ -11,7 +11,7 @@ export type Json =
 
 export type PostStatus = "draft" | "pending_review" | "published" | "rejected";
 export type PostType = "note" | "article";
-export type NotificationType = "follow" | "like" | "note";
+export type NotificationType = "follow" | "like" | "note" | "post_removed";
 
 export type Database = {
   public: {
@@ -360,30 +360,33 @@ export type Database = {
         Row: {
           id: string;
           recipient_id: string;
-          actor_id: string;
+          actor_id: string | null;
           type: NotificationType;
           post_id: string | null;
           note_id: string | null;
+          reason: string | null;
           read_at: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           recipient_id: string;
-          actor_id: string;
+          actor_id?: string | null;
           type: NotificationType;
           post_id?: string | null;
           note_id?: string | null;
+          reason?: string | null;
           read_at?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           recipient_id?: string;
-          actor_id?: string;
+          actor_id?: string | null;
           type?: NotificationType;
           post_id?: string | null;
           note_id?: string | null;
+          reason?: string | null;
           read_at?: string | null;
           created_at?: string;
         };

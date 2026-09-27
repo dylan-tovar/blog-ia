@@ -16,6 +16,7 @@ import { TONE_LABELS } from "@/features/ai/components/ai-ui";
 import { POST_TITLE_MAX_LENGTH } from "@/features/posts/constants";
 import type { ApplyOutcome } from "@/features/posts/components/editor/apply-action";
 import { createEditorBridge } from "@/features/posts/components/editor/editor-bridge";
+import { EditorOutline } from "@/features/posts/components/editor/EditorOutline";
 import { EditorToolbar } from "@/features/posts/components/editor/EditorToolbar";
 import { EditorTopBar } from "@/features/posts/components/editor/EditorTopBar";
 import { useModerationScan } from "@/features/moderation/use-moderation-scan";
@@ -75,7 +76,7 @@ export function PostEditor({
   const [status, setStatus] = useState(initialStatus);
   const [tags, setTags] = useState<Tag[]>(initialTags);
   const [rejectionReason, setRejectionReason] = useState(initialRejection);
-  const [previewing, setPreviewing] = useState(false);
+  const [previewing, setPreviewing] = useState(initialStatus === "published");
   const [publishOpen, setPublishOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(readDrawerOpen);
   const [aiShortcut] = useState(() => shortcutLabel(window.navigator.platform));
@@ -83,15 +84,22 @@ export function PostEditor({
 
   const ai = useAiRequest();
 
-  const { saveState, update, persist, getContent } = useAutosave(postId, {
-    title: initialTitle,
-    content: initialContent,
-  });
+  const isPublished = status === "published";
 
-  const { editor, images } = useArticleEditor(initialContent, (markdown) => {
-    setContent(markdown);
-    update({ content: markdown });
-  });
+  const { saveState, update, persist, getContent } = useAutosave(
+    postId,
+    { title: initialTitle, content: initialContent },
+    { disabled: isPublished },
+  );
+
+  const { editor, images } = useArticleEditor(
+    initialContent,
+    (markdown) => {
+      setContent(markdown);
+      update({ content: markdown });
+    },
+    !isPublished,
+  );
 
   const bridge = useMemo(() => createEditorBridge(editor, title), [editor, title]);
 
@@ -165,6 +173,7 @@ export function PostEditor({
         status={status}
         saveState={saveState}
         previewing={previewing}
+        locked={isPublished}
         canPublish={canPublish}
         contentLength={content.length}
         moderation={moderation}
@@ -189,6 +198,12 @@ export function PostEditor({
             {status === "rejected" && rejectionReason && (
               <p role="alert" className="mb-6 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
                 Rechazado: {rejectionReason}
+              </p>
+            )}
+
+            {isPublished && (
+              <p role="status" className="mb-6 rounded-md bg-muted p-3 text-sm text-muted-foreground">
+                Este artículo ya está publicado y no puede editarse.
               </p>
             )}
 
@@ -242,6 +257,8 @@ export function PostEditor({
             </div>
           </main>
         </div>
+
+        {!previewing && !aiOpen && <EditorOutline editor={editor} />}
 
         <AiChatDrawer
           ref={drawerRef}

@@ -1,3 +1,4 @@
+import { FadeIn } from "@/components/shared/page-transition";
 import { getCurrentProfile } from "@/features/profile/actions";
 import { AccountSettings } from "@/features/profile/components/AccountSettings";
 import { getAllInterestOptions, getUserInterests } from "@/features/interests/queries";
@@ -18,12 +19,14 @@ export default async function SettingsPage() {
   ]);
 
   return (
-    <AccountSettings
-      user={user}
-      profile={profile}
-      postCount={count ?? 0}
-      initialInterests={userInterests}
-      availableOptions={availableOptions}
-    />
+    <FadeIn>
+      <AccountSettings
+        user={user}
+        profile={profile}
+        postCount={count ?? 0}
+        initialInterests={userInterests}
+        availableOptions={availableOptions}
+      />
+    </FadeIn>
   );
 }

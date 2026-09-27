@@ -11,6 +11,7 @@ function makeNotification(overrides: Partial<Notification>): Notification {
     actor: { id: "22222222-2222-2222-2222-222222222222", displayName: "Ana", username: "ana" },
     postId: null,
     noteExcerpt: null,
+    reason: null,
     ...overrides,
   };
 }
@@ -57,5 +58,26 @@ describe("describeNotification", () => {
       }),
     );
     expect(result.href).toBe("/activity");
+  });
+
+  it("shows the AI reason for a post removed by report", () => {
+    const result = describeNotification(
+      makeNotification({
+        type: "post_removed",
+        actor: null,
+        reason: "Tu nota fue eliminada: contiene lenguaje de odio.",
+      }),
+    );
+    expect(result).toEqual({
+      actionText: "Tu nota fue eliminada: contiene lenguaje de odio.",
+      href: "/activity",
+    });
+  });
+
+  it("falls back to a generic message when a post_removed notification has no reason", () => {
+    const result = describeNotification(
+      makeNotification({ type: "post_removed", actor: null, reason: null }),
+    );
+    expect(result.actionText).toBe("Tu publicación fue eliminada por moderación.");
   });
 });

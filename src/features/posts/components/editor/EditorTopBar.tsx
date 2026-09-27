@@ -24,6 +24,7 @@ interface EditorTopBarProps {
   status: string;
   saveState: SaveState;
   previewing: boolean;
+  locked?: boolean;
   canPublish: boolean;
   contentLength: number;
   moderation: ModerationSummary;
@@ -38,6 +39,7 @@ export function EditorTopBar({
   status,
   saveState,
   previewing,
+  locked = false,
   canPublish,
   contentLength,
   moderation,
@@ -103,9 +105,11 @@ export function EditorTopBar({
             <Sparkles aria-hidden />
             IA
           </Button>
-          <Button type="button" variant="secondary" aria-pressed={previewing} onClick={onTogglePreview}>
-            {previewing ? "Editar" : "Vista previa"}
-          </Button>
+          {!locked && (
+            <Button type="button" variant="secondary" aria-pressed={previewing} onClick={onTogglePreview}>
+              {previewing ? "Editar" : "Vista previa"}
+            </Button>
+          )}
           <Button type="button" onClick={onContinue}>
             {canPublish ? "Continuar" : "Tags"}
           </Button>

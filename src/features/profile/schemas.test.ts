@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DISPLAY_NAME_MAX_LENGTH } from "@/features/profile/constants";
 import {
   onboardingSchema,
   updateProfileSchema,
@@ -93,6 +94,21 @@ describe("updateProfileSchema", () => {
     });
     expect(Object.keys(result).sort()).toEqual(["displayName", "username"]);
   });
+
+  it("accepts the display name length boundary and rejects one char over", () => {
+    expect(
+      updateProfileSchema.safeParse({
+        ...valid,
+        displayName: "a".repeat(DISPLAY_NAME_MAX_LENGTH),
+      }).success,
+    ).toBe(true);
+    expect(
+      updateProfileSchema.safeParse({
+        ...valid,
+        displayName: "a".repeat(DISPLAY_NAME_MAX_LENGTH + 1),
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe("onboardingSchema", () => {
@@ -126,5 +142,20 @@ describe("onboardingSchema", () => {
       avatar_url: "https://evil.example",
     });
     expect(Object.keys(result).sort()).toEqual(["displayName", "username"]);
+  });
+
+  it("accepts the display name length boundary and rejects one char over", () => {
+    expect(
+      onboardingSchema.safeParse({
+        ...valid,
+        displayName: "a".repeat(DISPLAY_NAME_MAX_LENGTH),
+      }).success,
+    ).toBe(true);
+    expect(
+      onboardingSchema.safeParse({
+        ...valid,
+        displayName: "a".repeat(DISPLAY_NAME_MAX_LENGTH + 1),
+      }).success,
+    ).toBe(false);
   });
 });

@@ -21,6 +21,8 @@ export type Notification = {
   postId: string | null;
   // Solo 'note': primeras líneas de la nota dejada.
   noteExcerpt: string | null;
+  // Solo 'post_removed': el motivo que dio la IA al rechazar el reporte.
+  reason: string | null;
 };
 
 type NotificationRow = {
@@ -28,6 +30,7 @@ type NotificationRow = {
   type: NotificationType;
   post_id: string | null;
   note_id: string | null;
+  reason: string | null;
   read_at: string | null;
   created_at: string;
   actor: { id: string; display_name: string; username: string | null } | null;
@@ -67,6 +70,7 @@ function toNotification(row: NotificationRow, noteExcerpts: Map<string, string>)
       : null,
     postId: row.post_id,
     noteExcerpt: row.note_id ? (noteExcerpts.get(row.note_id) ?? null) : null,
+    reason: row.reason,
   };
 }
 
@@ -77,7 +81,7 @@ export async function getNotificationsPage(userId: string, offset = 0) {
   // profundidad + índice usable).
   const { data, error } = await supabase
     .from("notifications")
-    .select(`id, type, post_id, note_id, read_at, created_at, ${ACTOR_EMBED}`)
+    .select(`id, type, post_id, note_id, reason, read_at, created_at, ${ACTOR_EMBED}`)
     .eq("recipient_id", userId)
     .order("created_at", { ascending: false })
     .order("id")

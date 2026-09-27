@@ -22,5 +22,10 @@ export function describeNotification(notification: Notification): {
         actionText: "dejó una nota en tu post",
         href: notification.postId ? `/p/${notification.postId}` : "/activity",
       };
+    case "post_removed":
+      return {
+        actionText: notification.reason ?? "Tu publicación fue eliminada por moderación.",
+        href: "/activity",
+      };
   }
 }

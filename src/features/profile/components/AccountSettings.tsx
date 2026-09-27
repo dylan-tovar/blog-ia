@@ -42,14 +42,14 @@ export function AccountSettings({
 }: AccountSettingsProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerSection, setDrawerSection] = useState<
-    "profile" | "email" | "handle" | "password"
+    "profile" | "handle" | "password"
   >("profile");
 
   const displayName = profile?.display_name || "Usuario";
   const username = profile?.username || "usuario";
   const email = user.email || "No registrado";
 
-  function openEdit(section: "profile" | "email" | "handle" | "password") {
+  function openEdit(section: "profile" | "handle" | "password") {
     setDrawerSection(section);
     setDrawerOpen(true);
   }
@@ -82,18 +82,9 @@ export function AccountSettings({
           </div>
 
           {/* Row 2: Email */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-[15px] font-medium text-foreground">Email</p>
-              <p className="truncate text-sm text-muted-foreground">{email}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => openEdit("email")}
-              className="shrink-0 rounded-lg bg-neutral-800 px-4 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-neutral-700 cursor-pointer"
-            >
-              Edit
-            </button>
+          <div className="min-w-0">
+            <p className="text-[15px] font-medium text-foreground">Email</p>
+            <p className="truncate text-sm text-muted-foreground">{email}</p>
           </div>
 
           {/* Row 3: Handle */}
@@ -183,15 +174,12 @@ export function AccountSettings({
             <DrawerTitle>
               {drawerSection === "profile" && "Editar perfil"}
               {drawerSection === "handle" && "Editar nombre de usuario"}
-              {drawerSection === "email" && "Correo electrónico"}
               {drawerSection === "password" && "Cambiar contraseña"}
             </DrawerTitle>
             <DrawerDescription>
               {drawerSection === "profile" || drawerSection === "handle"
                 ? "Actualizá tu información pública para la comunidad."
-                : drawerSection === "password"
-                  ? "Vas a necesitar tu contraseña actual."
-                  : "Información de contacto asociada a tu cuenta."}
+                : "Vas a necesitar tu contraseña actual."}
             </DrawerDescription>
           </DrawerHeader>
 
@@ -204,16 +192,6 @@ export function AccountSettings({
               />
             )}
             {drawerSection === "password" && <ChangePasswordForm />}
-            {drawerSection === "email" && (
-              <div className="flex flex-col gap-4 text-sm">
-                <p className="text-muted-foreground">
-                  Tu correo actual es <strong className="text-foreground">{email}</strong>.
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  El correo se gestiona a través de la autenticación segura.
-                </p>
-              </div>
-            )}
           </div>
         </DrawerContent>
       </Drawer>

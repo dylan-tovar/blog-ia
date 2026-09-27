@@ -140,6 +140,7 @@ export function DesktopSidebar({ viewer }: DesktopSidebarProps) {
           {viewer ? (
             <CreatePostMenu
               viewerName={viewer.displayName}
+              avatarUrl={viewer.avatarUrl ?? null}
               label="Crear publicación"
               side="bottom"
               align="start"
