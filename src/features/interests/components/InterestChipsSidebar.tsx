@@ -16,9 +16,10 @@ const MARK_DURATION_MS = 500;
 const EXIT_DURATION_MS = 300;
 
 export function InterestChipsSidebar({ options, initialSelectedIds }: InterestChipsSidebarProps) {
-  const [selectedIds, setSelectedIds] = useState(initialSelectedIds);
+  // A ref, not state: nothing here re-renders on selection (statusById/dismissedIds
+  // drive the UI), and handleSelect can fire again before a re-render would flush
+  // anyway, so state would risk a stale read.
   const selectedIdsRef = useRef(initialSelectedIds);
-  selectedIdsRef.current = selectedIds;
 
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(() => new Set());
   const [statusById, setStatusById] = useState<Record<string, "marking" | "exiting">>({});
@@ -54,7 +55,6 @@ export function InterestChipsSidebar({ options, initialSelectedIds }: InterestCh
       : [...previousSelected, id];
 
     selectedIdsRef.current = nextSelected;
-    setSelectedIds(nextSelected);
     setError(null);
 
     // 1. Mark as selected
@@ -87,7 +87,6 @@ export function InterestChipsSidebar({ options, initialSelectedIds }: InterestCh
       if (result?.error) {
         setError(result.error);
         selectedIdsRef.current = previousSelected;
-        setSelectedIds(previousSelected);
         setDismissedIds((prev) => {
           const next = new Set(prev);
           next.delete(id);
