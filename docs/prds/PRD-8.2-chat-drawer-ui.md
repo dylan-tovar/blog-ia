@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-8 — Chat de IA del editor](PRD-8-ai-chat.md) |
 | Dificultad / Esfuerzo | M (media) / M (2 a 3 días) |
-| Dueño sugerido / Mentor | D2 / — |
+| Dueño sugerido / Mentor | D5 / D2 |
 | Depende de | [PRD-8.1](PRD-8.1-chat-server.md) (el servidor), [PRD-2.2](PRD-2.2-editor-tiptap.md) (el editor donde vive), [PRD-0.2](PRD-0.2-ui-primitives.md) (`Message`, `Bubble`, `Marker`) |
 | Alimenta a | [PRD-8.4](PRD-8.4-action-cards-analysis.md) (las tarjetas viven dentro de los mensajes) |
 | Código | `src/features/ai/components/chat/{AiChatDrawer,ChatMessages,ChatMessage,ChatComposer,QuickActions,ai-drawer,use-ai-drawer-shortcut,use-auto-scroll,use-chat,chat-client}.ts(x)`, `src/features/ai/components/{use-ai-request,ai-client,ai-ui,AiErrorMessage,use-countdown}.ts(x)`, y el cableado en `src/features/posts/components/PostEditor.tsx` |

@@ -5,7 +5,7 @@
 | Padre | [PRD-10 — Imágenes de artículos y portada en el feed](PRD-10-post-images-cover.md) |
 | Estado | **Implementado** |
 | Dificultad / Esfuerzo | A (avanzada) / L (más de 3 días) |
-| Dueño sugerido / Mentor | D1 (implementado) / — |
+| Dueño sugerido / Mentor | D3 (implementado) / — (revisor obligatorio D1 o D2; D1 siempre por tocar `supabase/migrations/`) |
 | Depende de | [PRD-2.2](PRD-2.2-editor-tiptap.md) (el editor Tiptap), [PRD-2.6](PRD-2.6-post-detail.md) (la página que muestra el artículo), [PRD-2.1](PRD-2.1-posts-data-rls.md) (RLS y privilegios como referencia) |
 | Alimenta a | [PRD-10.2](PRD-10.2-post-cover.md) (usa el bucket, el compresor y la allow-list) |
 | Migraciones | `0008_post_images.sql` |

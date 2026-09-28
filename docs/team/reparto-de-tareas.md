@@ -1,27 +1,27 @@
 # Reparto de tareas del equipo (13 personas)
 
-El proyecto está construido y documentado. Este documento lo **reparte en 44 paquetes de trabajo** para que cada integrante sea dueño de una parte concreta: que la entienda, la pueda explicar, la verifique a mano y la mejore. El reparto es **desigual a propósito**: la carga sigue el nivel de cada persona y el riesgo de cada pieza, no un número igual de tareas.
+El proyecto está construido y documentado. Este documento lo **reparte en 44 paquetes de trabajo** para que cada integrante sea dueño de una parte concreta: que la entienda, la pueda explicar, la verifique a mano y la mejore. El reparto es **desigual a propósito**: la carga sigue la dificultad y el riesgo de cada paquete, no un número igual de tareas.
 
 ## 1. Cómo usar este documento
 
-1. Buscá tu rol (D1 a D13) en la [sección 2](#2-equipo-y-niveles) y tu sección personal en la [6](#6-una-sección-por-persona).
+1. Buscá tu rol (D1 a D13) en la [sección 2](#2-equipo-y-roles) y tu sección personal en la [6](#6-una-sección-por-persona).
 2. Abrí tus paquetes (`PRD-N.M`): cada uno dice qué entender antes, cómo funciona el código, cómo probarlo a mano y qué queda pendiente.
 3. Seguí la lista de lectura de tu sección **en ese orden**.
 4. Cuando termines, aplicá la [definición de terminado](#8-acuerdos-de-trabajo) y preparate para la [presentación](#9-cómo-presentar-tu-paquete).
 
 > Un paquete `PRD-N.M` es una parte del PRD padre `PRD-N`. Por ejemplo, [PRD-1](../prds/PRD-1-auth.md) (autenticación) se parte en `1.1`, `1.2`, `1.3` y `1.4`. El índice completo está en [`docs/prds/README.md`](../prds/README.md).
 
-## 2. Equipo y niveles
+## 2. Equipo y roles
 
-Los roles D6 a D13 son marcadores: **completá la columna "Nombre"** con las personas reales. Los niveles son los declarados por el equipo y se revisan al final de la primera semana ([riesgo R2](#10-riesgos-y-mitigaciones)).
+Los roles D6 a D13 son marcadores: **completá la columna "Nombre"** con las personas reales. El acompañamiento que necesita cada uno se ajusta según cómo vaya la primera semana ([riesgo R2](#10-riesgos-y-mitigaciones)).
 
 | Rol | Nombre | Qué se espera | Carga (puntos / % del total) |
 | :--- | :--- | :--- | :--- |
-| **D1** | _[Dylan]_ | Los paquetes más difíciles y de más riesgo: seguridad de auth, base de datos, el editor, scoring y toda la fundación de IA excepto Gemini/chat (que ahora administra D2). Revisa lo crítico de D2 y mentorea. Además diseñó la arquitectura del proyecto, repartió los roles de todo el equipo y dejó armados el entorno de desarrollo y los workflows de CI (trabajo que no entra en los puntos de la sección 4) | 24 / 25,26 % |
-| **D2** | _[Alberto]_ | Maneja la clave de la API de **Gemini** y todo lo que depende de ella (fundación de IA, límite de peticiones, chat de servidor y cajón, aplicar ediciones), además del route runner, los tipos de post y las imágenes del editor. Segundo revisor de lo crítico de D1 | 24 / 25,26 % |
-| **D3** | _[Freddy]_ | Mismo nivel que D1 y D2: paquetes avanzados y de dificultad media, sin acompañamiento formal. Ya implementó en producción reposts, la moderación de notas y el realtime de notificaciones; D1 o D2 revisan esos cambios | 9 / 9,47 % |
+| **D1** | _[Dylan]_ | Los paquetes más difíciles y de más riesgo: seguridad de auth, base de datos, el editor, scoring y una parte de la fundación de IA (D2 administra la clave de la API de IA y el chat). Revisa lo crítico de D2 y mentorea. Además diseñó la arquitectura del proyecto, repartió los roles de todo el equipo, configuró los workflows, las distintas herramientas y la protección de `main` en GitHub (ver [sección 8](#8-acuerdos-de-trabajo)), y dejó todo preparado para que el resto pudiera ponerse a programar sin problemas, sabiendo qué tarea le tocaba y cómo encararla — todo esto no entra en los puntos de la sección 4 | 24 / 25,26 % |
+| **D2** | _[Alberto]_ | Maneja la clave de la API de **IA** y todo lo que depende de ella (fundación de IA, límite de peticiones, chat de servidor, aplicar ediciones), además del route runner y los tipos de post | 18 / 18,95 % |
+| **D3** | _[Freddy]_ | Paquetes de dificultad avanzada y media, sin acompañamiento formal: ya implementó en producción reposts, las imágenes del editor, la moderación de notas y el realtime de notificaciones; D1 o D2 revisan esos cambios | 13 / 13,68 % |
 | **D4** | _[Jhonaiker]_ | Paquetes de dificultad media con acompañamiento de D1 y D2; a su vez acompaña a seis paquetes básicos | 7 / 7,37 % |
-| **D5** | _[Deiby]_ | Paquetes chicos, visibles y acotados, con mentor (D1 o D2) | 3 / 3,16 % |
+| **D5** | _[Deiby]_ | Paquetes chicos, visibles y acotados, con mentor (D1 o D2); incluye su primer paso a un paquete medio (8.2, interfaz del cajón de chat, mentor D2) | 5 / 5,26 % |
 | **D6** a **D13** | _[completar]_ | Paquetes chicos, visibles y acotados, siempre con un mentor (D1, D2, D3 o D4) o con apoyo entre pares (D7) | 2 a 5 puntos cada uno (2 % a 6 %) |
 
 ## 3. Principios del reparto desigual
@@ -29,13 +29,13 @@ Los roles D6 a D13 son marcadores: **completá la columna "Nombre"** con las per
 | Principio | Qué significa en la práctica | Por qué |
 | :--- | :--- | :--- |
 | **El riesgo decide la dificultad** | Lo que, si se rompe, expone datos o deja saltar la moderación (RLS, autenticación, límite de peticiones, publicación, protocolo del chat) es de D1 o D2 | Un error ahí no se ve en la pantalla y es caro. Un error en un botón sí se ve y es barato |
-| **D1 y D2 cargan prácticamente lo mismo** | D1 tiene 24 puntos en 7 paquetes y D2 24 puntos en 8: son, en la práctica, dos co-líderes del trabajo avanzado del proyecto (D1 con paquetes en promedio más pesados; D2 con uno más pero algo más parejos). Lo que sigue marcando la diferencia real es que D1, y solo D1, diseñó la arquitectura, repartió los roles, armó el entorno y dejó la CI — trabajo de fundación que no está en los puntos | Es lo que se pidió: dos perfiles avanzados que se reparten el trabajo difícil sin que todo recaiga en uno solo, con D1 manteniendo el rol de fundador del proyecto |
-| **D3 sí toma paquetes avanzados** | A diferencia del resto de los roles chicos, D3 (Freddy) está al nivel de D1 y D2: sus tres paquetes son de dificultad avanzada o media-alta, sin mentor formal, solo con revisor obligatorio (D1 o D2) | Ya los implementó en producción; el nivel se comprueba con trabajo real entregado, no con una declaración a validar en la semana 1 |
+| **D1 carga más; D2, algo menos pero comparable** | D1 tiene 24 puntos en 7 paquetes y D2 18 en 6, ambos con paquetes avanzados. D1 compensa la diferencia con la mentoría, la revisión de lo crítico y el trabajo de fundación (arquitectura, roles, entorno, CI) que no está en los puntos | Es lo que se pidió: un perfil avanzado que comparta el trabajo difícil sin que todo recaiga en una sola persona, con D1 manteniendo el rol de fundador del proyecto |
+| **D3 tiene paquetes avanzados sin mentor formal** | A diferencia del resto de los roles chicos, D3 (Freddy) tiene paquetes de dificultad avanzada o media-alta (13 puntos), sin mentor formal, solo con revisor obligatorio (D1 o D2) | Ya los implementó en producción, con trabajo real entregado — no hay nada que validar en la semana 1 como con los paquetes recién asignados |
 | **D4 no toma paquetes avanzados** | Solo dificultad media, con mentor (D1 o D2) en los cuatro | Se declaró intermedio: conviene comprobarlo con trabajo real antes de darle piezas de seguridad |
 | **Los básicos empiezan por lo visible** | Interfaz, formularios y páginas simples | Se aprende más rápido viendo el resultado en el navegador, y un fallo no compromete al resto |
 | **Poco no es nada** | Todos tienen al menos 2 paquetes, tareas pendientes reales y una presentación | Cada paquete básico igual enseña un concepto real del proyecto (Server Actions, Zod, RLS a nivel conceptual, rutas, estado) |
 | **Nadie trabaja solo** | Cada paquete no avanzado tiene un mentor (D1, D2, D3 o D4) o, en cuatro paquetes básicos, apoyo entre pares de D7 | El mentor responde dudas, revisa y se asegura de que el dueño entienda lo que presenta. El apoyo entre pares no es una mentoría formal: si la duda supera a D7, se escala a D2 o D1 |
-| **La mentoría se concentra en quien más sabe** | D1, D2 y D4 acompañan 23 de los 44 paquetes con mentor formal; D3 acompaña 1 | D4 es un nivel declarado y aún sin contrastar: se le da una carga de mentoría acotada hasta comprobarlo. D3 ya demostró su nivel con trabajo real, así que no necesita esa limitación, pero tampoco se le fuerza a mentorear más de lo que le pidió el reparto |
+| **La mentoría se concentra en quien ya resolvió ese paquete** | D1, D2 y D4 acompañan 24 de los 44 paquetes con mentor formal; D3 acompaña 1 | D4 recién arranca en un paquete de dificultad media, por eso se le da una carga de mentoría acotada hasta ver cómo le va. D3 ya entregó sus cuatro paquetes en producción, así que no tiene esa limitación, pero tampoco se le pide mentorear más de lo que le tocó en el reparto |
 
 ## 4. Balance de carga
 
@@ -44,10 +44,10 @@ Los puntos son una estimación del esfuerzo de **entender, verificar, presentar 
 | Rol | Paquetes | Nº | Puntos | % de 95 | Dificultad (A / M / B) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | D1 | 1.1, 1.2, 1.4, 2.1, 2.2, 4.1, 5.3 | 7 | 24 | 25,26 % | 5 / 1 / 1 |
-| D2 | 5.1, 5.2, 5.4, 7.1, 8.1, 8.2, 8.3, 10.1 | 8 | 24 | 25,26 % | 7 / 1 / 0 |
-| D3 | 7.4, 5.5, 9.4 | 3 | 9 | 9,47 % | 2 / 1 / 0 |
+| D2 | 5.1, 5.2, 5.4, 7.1, 8.1, 8.3 | 6 | 18 | 18,95 % | 6 / 0 / 0 |
+| D3 | 7.4, 5.5, 9.4, 10.1 | 4 | 13 | 13,68 % | 3 / 1 / 0 |
 | D4 | 2.3, 2.4, 3.1, 6.1 | 4 | 7 | 7,37 % | 0 / 4 / 0 |
-| D5 | 0.1, 4.2, X.2 | 3 | 3 | 3,16 % | 0 / 0 / 3 |
+| D5 | 0.1, 4.2, X.2, 8.2 | 4 | 5 | 5,26 % | 0 / 1 / 3 |
 | D6 | 0.2, 6.2, 11.1 | 3 | 5 | 5,26 % | 0 / 1 / 2 |
 | D7 | 0.3, 7.2 | 2 | 4 | 4,21 % | 0 / 2 / 0 |
 | D8 | 7.3, 11.2 | 2 | 2 | 2,11 % | 0 / 0 / 2 |
@@ -58,15 +58,15 @@ Los puntos son una estimación del esfuerzo de **entender, verificar, presentar 
 | D13 | 3.3, X.1 | 2 | 3 | 3,16 % | 0 / 1 / 1 |
 | **Total** | | **44** | **95** | **100 %** | **14 / 15 / 15** |
 
-Comprobación de la aritmética: 24 + 24 + 9 + 7 + 3 + 5 + 4 + 2 + 5 + 4 + 2 + 3 + 3 = 95; 7 + 8 + 3 + 4 + 3 + 3 + 2 + 2 + 3 + 3 + 2 + 2 + 2 = 44 paquetes; la suma de porcentajes es 100 %.
+Comprobación de la aritmética: 24 + 18 + 13 + 7 + 5 + 5 + 4 + 2 + 5 + 4 + 2 + 3 + 3 = 95; 7 + 6 + 4 + 4 + 4 + 3 + 2 + 2 + 3 + 3 + 2 + 2 + 2 = 44 paquetes; la suma de porcentajes es 100 %.
 
-> **PRD-10 (imágenes y portada).** Ambos paquetes ya están implementados por D1 en producción ([PRD-10](../prds/PRD-10-post-images-cover.md)): no hay construcción pendiente, pero sí quedan por estudiar, presentar y revisar como el resto del catálogo. 10.1 (avanzado) quedó en el lote de D2, que ya lleva otros paquetes de Storage/RLS-adyacentes como 7.1; 10.2 (medio) es de D10, mentor D4 por su cercanía con 2.4 el diálogo de publicar. D1 sigue siendo revisor obligatorio de 10.1 por tocar `supabase/migrations/`.
+> **PRD-10 (imágenes y portada).** Ambos paquetes ya están implementados en producción ([PRD-10](../prds/PRD-10-post-images-cover.md)): no hay construcción pendiente, pero sí quedan por estudiar, presentar y revisar como el resto del catálogo. 10.1 (avanzado) es de D3 — se explica junto con el resto de sus paquetes ya implementados, más abajo; 10.2 (medio) es de D10, mentor D4 por su cercanía con 2.4 el diálogo de publicar. D1 sigue siendo revisor obligatorio de 10.1 por tocar `supabase/migrations/`.
 
-> **PRD-1.4 (OTP y cambio de contraseña).** Igual que con PRD-10, no tiene construcción pendiente: ya está en producción. Es un paquete propio de D1 (no de D3): se estudia, se presenta y se revisa igual que cualquier otro paquete de D1, con D2 como revisor obligatorio por la revisión cruzada habitual entre D1 y D2 (no hace falta el criterio especial de "D1 o D2" que sí aplica a los paquetes de D3, porque acá D1 ya es el dueño y no puede ser su propio revisor).
+> **PRD-1.4 (OTP y cambio de contraseña).** Igual que con PRD-10, no tiene construcción pendiente: ya está en producción. Es un paquete propio de D1: se estudia, se presenta y se revisa igual que cualquier otro paquete de D1 (sin revisor asignado, ver [sección 8](#8-acuerdos-de-trabajo)).
 
-> **Paquetes de D3 (Freddy), ya implementados en producción.** Los tres paquetes de D3 (7.4 reposts, 5.5 moderación de notas, 9.4 realtime de notificaciones) tampoco tienen construcción pendiente: como con PRD-10 y PRD-1.4, lo que queda es estudiarlos, presentarlos y que los revise el par correspondiente. D1 o D2 son revisores obligatorios de 7.4 y 5.5 por ser RLS-adyacente o de moderación, y D2 (o D1 si escala) de 9.4; D1, además, por la regla general de cualquier cambio en `supabase/migrations/` (7.4 y 9.4 la tocan).
+> **Paquetes de D3 (Freddy), ya implementados en producción.** Los cuatro paquetes de D3 (7.4 reposts, 10.1 imágenes en el editor, 5.5 moderación de notas, 9.4 realtime de notificaciones) tampoco tienen construcción pendiente: lo que queda es estudiarlos, presentarlos y que los revise el par correspondiente. D1 o D2 son revisores obligatorios de 7.4, 10.1 y 5.5 por ser RLS-adyacentes, de Storage o de moderación, y D2 (o D1 si escala) de 9.4; D1, además, por la regla general de cualquier cambio en `supabase/migrations/` (7.4, 10.1 y 9.4 la tocan).
 
-> **Mentoría (no cuenta en los puntos).** Según el catálogo, D2 acompaña 11 paquetes (0.1, 0.2, 0.3, 2.3, 2.5, 2.6, 4.2, 8.4, X.1, 11.1 y 11.3, de D5, D6, D7, D4, D10, D11, D9 y D13), D1 acompaña 6 (2.4, 3.1, 6.1, 5.4, 7.1 y X.2, de D4, D2 y D5), D4 acompaña 6 (1.3, 3.2, 3.3, 6.2, 7.2 y 10.2, de D9, D12, D13, D6, D7 y D10) y D3 acompaña 1 (11.2, de D8). Son 24 paquetes con mentor formal. Además, D7 da **apoyo entre pares** (no es mentoría formal) en 4 paquetes básicos: 7.3, 9.1, 9.2 y 9.3, de D8, D10, D11 y D12. Los paquetes propios de D1, D2 o D3 sin mentor (1.1, 1.2, 1.4, 2.1, 2.2, 4.1, 5.1, 5.2, 5.3, 5.5, 7.4, 8.1, 8.2, 8.3, 9.4 y 10.1) completan los 44: 24 + 4 + 16 = 44. Es carga real de tiempo: por eso la casi-paridad entre D1 y D2 no debe ampliarse y D4 necesita el chequeo del [riesgo R2](#10-riesgos-y-mitigaciones). D1 y D2 siguen siendo la vía de escalada de todos.
+La mentoría de cada paquete está en la columna **Mentor** del catálogo (sección 5); no se repite acá para no duplicar el dato y tener que mantenerlo en dos lugares.
 
 ## 5. Catálogo de paquetes
 
@@ -104,14 +104,14 @@ La columna **Ola** indica en qué momento conviene estudiar y presentar cada paq
 | 7.3 | [Me gusta](../prds/PRD-7.3-likes.md) | B | S | D8 | D7 (pares) | 2 |
 | 7.4 | [Reposts](../prds/PRD-7.4-reposts.md) | A | L | D3 (implementado) | — | 2 |
 | 8.1 | [Chat de IA: servidor](../prds/PRD-8.1-chat-server.md) | A | L | D2 | — | 4 |
-| 8.2 | [Chat de IA: interfaz del cajón](../prds/PRD-8.2-chat-drawer-ui.md) | M | M | D2 | — | 4 |
+| 8.2 | [Chat de IA: interfaz del cajón](../prds/PRD-8.2-chat-drawer-ui.md) | M | M | D5 | D2 | 4 |
 | 8.3 | [Contexto del editor y aplicar ediciones](../prds/PRD-8.3-editor-context-apply.md) | A | L | D2 | — | 4 |
 | 8.4 | [Tarjetas de acción y análisis](../prds/PRD-8.4-action-cards-analysis.md) | M | M | D9 | D2 | 4 |
 | 9.1 | [Página Explorar](../prds/PRD-9.1-explore-page.md) | B | S | D10 | D7 (pares) | 3 |
 | 9.2 | [Actividad y navegación](../prds/PRD-9.2-activity-nav.md) | B | S | D11 | D7 (pares) | 2 |
 | 9.3 | [Menú de opciones del post](../prds/PRD-9.3-post-options-drawer.md) | B | S | D12 | D7 (pares) | 3 |
 | 9.4 | [Realtime del badge de notificaciones](../prds/PRD-9.4-notifications-realtime.md) | M | S | D3 (implementado) | — | 3 |
-| 10.1 | [Imágenes en el editor](../prds/PRD-10.1-post-images.md) | A | L | D2 | — | 2 |
+| 10.1 | [Imágenes en el editor](../prds/PRD-10.1-post-images.md) | A | L | D3 (implementado) | — | 2 |
 | 10.2 | [Portada del feed](../prds/PRD-10.2-post-cover.md) | M | M | D10 | D4 | 3 |
 | 11.1 | [Confirmación de email y recuperación](../prds/PRD-11.1-confirmacion-y-recuperacion.md) | M | M | D6 | D2 | 2 |
 | 11.2 | [Email de bienvenida](../prds/PRD-11.2-bienvenida.md) | B | S | D8 | D3 | 2 |
@@ -135,27 +135,27 @@ Todos empiezan igual: [`docs/README.md`](../README.md) (mapa y [glosario](../REA
 | **Revisa obligatoriamente** | Todo cambio que toque migraciones, RLS, `proxy.ts`, el cliente admin (secret key) o la publicación — incluidos los paquetes propios de D2 (revisión cruzada) y los ya implementados de D3 que tocan `supabase/migrations/` (7.4, 9.4) |
 | **Entrega** | Los siete paquetes explicados, más el mapa de seguridad del proyecto (qué protege cada capa) |
 
-> **Además de sus paquetes.** D1 diseñó la arquitectura del proyecto, repartió los roles y los paquetes de las otras doce personas, configuró el entorno de desarrollo compartido y dejó armados los workflows de CI. Es trabajo real de fundación, distinto del trabajo de "entender, verificar, presentar y cerrar" que miden los puntos de la [sección 4](#4-balance-de-carga): no se le suma un número a su carga porque no es un paquete con dueño y presentación como el resto del catálogo, pero es la razón de fondo por la que, incluso empatado en puntos con D2, D1 sigue siendo quien más carga real lleva del equipo.
+> **Además de sus paquetes.** D1 diseñó la arquitectura del proyecto, repartió los roles y los paquetes de las otras doce personas, configuró los workflows, las distintas herramientas y la protección de `main` en GitHub (nadie puede pushear directo ni mergear sin su aprobación como code owner, ver [sección 8](#8-acuerdos-de-trabajo)), y dejó todo preparado para que el resto pudiera ponerse a programar sin problemas, sabiendo qué tarea le tocaba y cómo encararla. Es trabajo real de fundación, distinto del trabajo de "entender, verificar, presentar y cerrar" que miden los puntos de la [sección 4](#4-balance-de-carga): no se le suma un número a su carga porque no es un paquete con dueño y presentación como el resto del catálogo, pero es la razón de fondo por la que, además de tener ya el puntaje más alto del equipo, D1 sigue siendo quien más carga real lleva.
 
-### D2 — Alberto (24 puntos)
-
-| | |
-| :--- | :--- |
-| **Paquetes** | [5.1](../prds/PRD-5.1-ai-foundation.md) fundación de IA · [5.2](../prds/PRD-5.2-rate-limit.md) límite de peticiones · [5.4](../prds/PRD-5.4-ai-route-runner.md) route runner y caché · [7.1](../prds/PRD-7.1-post-types-db.md) tipos de post en la base · [8.1](../prds/PRD-8.1-chat-server.md) chat, servidor · [8.2](../prds/PRD-8.2-chat-drawer-ui.md) interfaz del cajón · [8.3](../prds/PRD-8.3-editor-context-apply.md) contexto y aplicar ediciones · [10.1](../prds/PRD-10.1-post-images.md) imágenes en el editor |
-| **Leer, en orden** | [PRD-5](../prds/PRD-5-ai-author.md), [ADR 0011](../adr/0011-ia-con-gemini.md), [ADR 0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) → [PRD-7](../prds/PRD-7-notes-likes.md), [ADR 0009](../adr/0009-tipos-de-post-y-likes.md), [ADR 0015](../adr/0015-notas-editables.md) → [PRD-8](../prds/PRD-8-ai-chat.md), [ADR 0013](../adr/0013-chat-ia-protocolo-ndjson-y-function-calling.md), [ADR 0014](../adr/0014-aplicacion-de-ediciones-en-el-cliente-con-fingerprints.md) → [PRD-10](../prds/PRD-10-post-images-cover.md), [ADR 0022](../adr/0022-imagenes-en-supabase-storage.md) |
-| **Mentorea** | D5 (0.1, 4.2), D6 (0.2, 11.1), D7 (0.3), D9 (8.4, 11.3), D10 (2.5), D11 (2.6), D13 (X.1) y D4 (2.3): 11 paquetes |
-| **Revisa obligatoriamente** | Todo cambio en la clave de la API de **Gemini** y los paquetes que dependen de ella, los paquetes propios de D1 (revisión cruzada, incluido 1.4), dos de los tres paquetes de D3 (7.4 y 5.5, junto con D1) y 9.4 (solo D2, o D1 si escala) |
-| **Entrega** | Los ocho paquetes explicados, incluida una demo del motor de aplicar ediciones y otra de la subida de imágenes |
-
-### D3 — Freddy (9 puntos)
+### D2 — Alberto (18 puntos)
 
 | | |
 | :--- | :--- |
-| **Paquetes** | [7.4](../prds/PRD-7.4-reposts.md) reposts · [5.5](../prds/PRD-5.5-notes-moderation.md) moderación de notas por diccionario · [9.4](../prds/PRD-9.4-notifications-realtime.md) realtime del badge de notificaciones |
-| **Leer, en orden** | [PRD-7](../prds/PRD-7-notes-likes.md), [ADR 0009](../adr/0009-tipos-de-post-y-likes.md) → [PRD-5](../prds/PRD-5-ai-author.md) → [PRD-9](../prds/PRD-9-explore-activity.md), [ADR 0027](../adr/0027-notificaciones-por-triggers-sql.md), [ADR 0036](../adr/0036-notificaciones-realtime.md) |
-| **Mentorea / Es mentorado por** | No es mentorado: sus tres paquetes ya están implementados por él en producción. Mentorea a D8 en [11.2](../prds/PRD-11.2-bienvenida.md) |
-| **Revisa obligatoriamente / Reviewer asignado** | No tiene revisión obligatoria propia asignada en el catálogo; en cambio, sus tres paquetes tienen a D1 o D2 como revisor obligatorio (RLS-adyacente y `supabase/migrations/` en 7.4, moderación en 5.5, Realtime/RLS en 9.4) |
-| **Entrega** | Los tres paquetes explicados y presentados. A diferencia de D4, el [riesgo R2](#10-riesgos-y-mitigaciones) no le aplica: su nivel ya se comprobó con trabajo real entregado, no con una declaración a validar en la semana 1 |
+| **Paquetes** | [5.1](../prds/PRD-5.1-ai-foundation.md) fundación de IA · [5.2](../prds/PRD-5.2-rate-limit.md) límite de peticiones · [5.4](../prds/PRD-5.4-ai-route-runner.md) route runner y caché · [7.1](../prds/PRD-7.1-post-types-db.md) tipos de post en la base · [8.1](../prds/PRD-8.1-chat-server.md) chat, servidor · [8.3](../prds/PRD-8.3-editor-context-apply.md) contexto y aplicar ediciones |
+| **Leer, en orden** | [PRD-5](../prds/PRD-5-ai-author.md), [ADR 0011](../adr/0011-ia-con-gemini.md), [ADR 0017](../adr/0017-politica-de-thinking-y-reintentos-gemini.md) → [PRD-7](../prds/PRD-7-notes-likes.md), [ADR 0009](../adr/0009-tipos-de-post-y-likes.md), [ADR 0015](../adr/0015-notas-editables.md) → [PRD-8](../prds/PRD-8-ai-chat.md), [ADR 0013](../adr/0013-chat-ia-protocolo-ndjson-y-function-calling.md), [ADR 0014](../adr/0014-aplicacion-de-ediciones-en-el-cliente-con-fingerprints.md) |
+| **Mentorea** | D5 (0.1, 4.2, 8.2), D6 (0.2, 11.1), D7 (0.3), D9 (8.4, 11.3), D10 (2.5), D11 (2.6), D13 (X.1) y D4 (2.3): 12 paquetes |
+| **Revisa obligatoriamente** | Todo cambio en la clave de la API de **IA** y los paquetes que dependen de ella, tres de los cuatro paquetes de D3 (7.4, 10.1 y 5.5, junto con D1) y 9.4 (solo D2, o D1 si escala). No revisa los paquetes de D1: D1 no tiene revisor asignado |
+| **Entrega** | Los seis paquetes explicados, incluida una demo del motor de aplicar ediciones |
+
+### D3 — Freddy (13 puntos)
+
+| | |
+| :--- | :--- |
+| **Paquetes** | [7.4](../prds/PRD-7.4-reposts.md) reposts · [10.1](../prds/PRD-10.1-post-images.md) imágenes en el editor · [5.5](../prds/PRD-5.5-notes-moderation.md) moderación de notas por diccionario · [9.4](../prds/PRD-9.4-notifications-realtime.md) realtime del badge de notificaciones |
+| **Leer, en orden** | [PRD-7](../prds/PRD-7-notes-likes.md), [ADR 0009](../adr/0009-tipos-de-post-y-likes.md) → [PRD-5](../prds/PRD-5-ai-author.md) → [PRD-9](../prds/PRD-9-explore-activity.md), [ADR 0027](../adr/0027-notificaciones-por-triggers-sql.md), [ADR 0036](../adr/0036-notificaciones-realtime.md) → [PRD-10](../prds/PRD-10-post-images-cover.md), [ADR 0022](../adr/0022-imagenes-en-supabase-storage.md) |
+| **Mentorea / Es mentorado por** | No es mentorado: sus cuatro paquetes ya están implementados por él en producción. Mentorea a D8 en [11.2](../prds/PRD-11.2-bienvenida.md) |
+| **Revisa obligatoriamente / Reviewer asignado** | No tiene revisión obligatoria propia asignada en el catálogo; en cambio, sus cuatro paquetes tienen a D1 o D2 como revisor obligatorio (RLS-adyacente y `supabase/migrations/` en 7.4, Storage y `supabase/migrations/` en 10.1, moderación en 5.5, Realtime/RLS en 9.4) |
+| **Entrega** | Los cuatro paquetes explicados y presentados. El [riesgo R2](#10-riesgos-y-mitigaciones) no le aplica: sus cuatro paquetes ya están en producción, no hay nada que validar en la primera semana |
 
 ### D4 — Jhonaiker (7 puntos)
 
@@ -165,7 +165,7 @@ Todos empiezan igual: [`docs/README.md`](../README.md) (mapa y [glosario](../REA
 | **Leer, en orden** | [PRD-2](../prds/PRD-2-posts.md), [ADR 0010](../adr/0010-editor-markdown.md) → [PRD-3](../prds/PRD-3-feed-follows.md), [ADR 0021](../adr/0021-feed-en-raiz-y-global.md) → [PRD-6](../prds/PRD-6-ai-reader.md), [ADR 0011](../adr/0011-ia-con-gemini.md), [ADR 0020](../adr/0020-tags-como-metadato-interno.md) |
 | **Es mentorado por** | D2 (2.3) y D1 (2.4, 3.1, 6.1) |
 | **Mentorea (primera línea)** | D6 (6.2), D7 (7.2), D9 (1.3), D10 (10.2), D12 (3.2) y D13 (3.3): 6 paquetes. Cuando una duda lo supere, la escala a D2 o D1 ([riesgo R2](#10-riesgos-y-mitigaciones)) |
-| **Entrega** | Los cuatro paquetes explicados y, en la primera semana, una explicación de uno de ellos a D2 para calibrar el nivel |
+| **Entrega** | Los cuatro paquetes explicados y, en la primera semana, una explicación de uno de ellos a D2 para confirmar cómo le está yendo con el acompañamiento |
 
 ### D5 a D13
 
@@ -173,7 +173,7 @@ Cada uno lee, en este orden: el PRD padre de su paquete, su sub-PRD (`PRD-N.M`),
 
 | Rol | Nombre | Paquetes | Mentor | Lectura específica | Concepto principal que aprende |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **D5** | _[Deiby]_ | [0.1](../prds/PRD-0.1-theme-tokens.md) tema · [4.2](../prds/PRD-4.2-recs-query-ui.md) recomendaciones, UI · [X.2](../prds/PRD-X.2-dev-tooling.md) herramientas | D2 (0.1, 4.2), D1 (X.2) | [PRD-0](../prds/PRD-0-design-system.md), [ADR 0008](../adr/0008-tema-oscuro-y-shell-de-aplicacion.md), [PRD-4](../prds/PRD-4-recommendations.md), [ADR 0016](../adr/0016-migraciones-sql-manuales.md) | Variables de CSS, consultas y scripts de desarrollo |
+| **D5** | _[Deiby]_ | [0.1](../prds/PRD-0.1-theme-tokens.md) tema · [4.2](../prds/PRD-4.2-recs-query-ui.md) recomendaciones, UI · [X.2](../prds/PRD-X.2-dev-tooling.md) herramientas · [8.2](../prds/PRD-8.2-chat-drawer-ui.md) interfaz del cajón de chat | D2 (0.1, 4.2, 8.2), D1 (X.2) | [PRD-0](../prds/PRD-0-design-system.md), [ADR 0008](../adr/0008-tema-oscuro-y-shell-de-aplicacion.md), [PRD-4](../prds/PRD-4-recommendations.md), [ADR 0016](../adr/0016-migraciones-sql-manuales.md), [PRD-8](../prds/PRD-8-ai-chat.md), [ADR 0013](../adr/0013-chat-ia-protocolo-ndjson-y-function-calling.md) | Variables de CSS, consultas, scripts de desarrollo y su primer componente de estado de cliente (el cajón de chat) |
 | **D6** | _[completar]_ | [0.2](../prds/PRD-0.2-ui-primitives.md) primitivas de UI · [6.2](../prds/PRD-6.2-summary-ui.md) resumen, UI · [11.1](../prds/PRD-11.1-confirmacion-y-recuperacion.md) confirmación y recuperación | D2 (0.2, 11.1), D4 (6.2) | [PRD-0](../prds/PRD-0-design-system.md), [ADR 0005](../adr/0005-shadcn-ui-como-primitivas.md), [PRD-6](../prds/PRD-6-ai-reader.md), [PRD-11](../prds/PRD-11-emails-transaccionales.md) | Componentes reutilizables, estados de carga y los flujos nativos de Supabase Auth |
 | **D7** | _[completar]_ | [0.3](../prds/PRD-0.3-app-shell.md) shell · [7.2](../prds/PRD-7.2-notes-ui.md) notas, UI | D2 (0.3), D4 (7.2). **Da apoyo entre pares** a D8 (7.3), D10 (9.1), D11 (9.2) y D12 (9.3) | [PRD-0](../prds/PRD-0-design-system.md), [ADR 0008](../adr/0008-tema-oscuro-y-shell-de-aplicacion.md), [PRD-7](../prds/PRD-7-notes-likes.md), [ADR 0015](../adr/0015-notas-editables.md) | Layouts de Next.js, Server vs. Client Components |
 | **D8** | _[completar]_ | [7.3](../prds/PRD-7.3-likes.md) me gusta · [11.2](../prds/PRD-11.2-bienvenida.md) email de bienvenida | D7 apoyo entre pares (7.3), D3 (11.2) | [PRD-7](../prds/PRD-7-notes-likes.md), [ADR 0009](../adr/0009-tipos-de-post-y-likes.md), [PRD-1](../prds/PRD-1-auth.md) (para el `LoginDrawer` que usa 7.3), [PRD-11](../prds/PRD-11-emails-transaccionales.md) | Server Actions, Zod y un envío de email transaccional simple |
@@ -269,9 +269,9 @@ flowchart LR
 
 | Tipo de paquete | Revisor obligatorio |
 | :--- | :--- |
-| Paquetes propios de D1 (1.1, 1.2, 1.4, 2.1, 2.2, 4.1, 5.3) | D2 |
-| Paquetes propios de D2 (5.1, 5.2, 5.4, 7.1, 8.1, 8.2, 8.3, 10.1) | D1 |
-| Avanzado de D3, ya implementado (7.4, 5.5) | D1 o D2 (a definir por paquete; D1 siempre en 7.4 por tocar `supabase/migrations/`) |
+| Paquetes propios de D1 (1.1, 1.2, 1.4, 2.1, 2.2, 4.1, 5.3) | Sin revisor asignado: D1 es quien aprueba los PRs de todo el repo ([sección 8](#8-acuerdos-de-trabajo)) |
+| Paquetes propios de D2 (5.1, 5.2, 5.4, 7.1, 8.1, 8.3) | D1 |
+| Avanzado de D3, ya implementado (7.4, 10.1, 5.5) | D1 o D2 (a definir por paquete; D1 siempre en 7.4 y 10.1 por tocar `supabase/migrations/`) |
 | Medio de D3, ya implementado (9.4) | D2 (o D1 si escala) |
 | Medio de D4 (2.3, 2.4, 3.1, 6.1) | Su mentor (D2 para 2.3, D1 para el resto) |
 | Básico o medio de D5 a D13 | Su mentor; en los cuatro paquetes con apoyo entre pares de D7 (7.3, 9.1, 9.2, 9.3), **D2**. **Además D1**, si el cambio toca migraciones, RLS, Server Actions, `proxy.ts` o el cliente admin (incluye 11.3, por la función `SECURITY DEFINER` sobre `auth.users`) |
@@ -291,6 +291,7 @@ flowchart LR
 | Ramas | `<tipo>/<id>-<slug>`, por ejemplo `feat/2.5-my-posts-page`, `fix/X.2-verify-writes-email`, `docs/1.1-auth-forms` |
 | Commits | [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/): `feat(auth): ...`, `fix(e2e): ...`, `docs(prds): ...` |
 | Atribución | Sin líneas de coautoría automáticas ni marcas de herramientas en los mensajes de commit |
+| Protección de `main` | D1 dejó configurada la rama `main` con reglas de GitHub que no se pueden saltear editando código: nadie puede pushear directo, toda entrega es por PR, hace falta al menos una aprobación y pasar los 5 checks de CI (`lint`, `typecheck`, `test`, `build`, `gitleaks`). Además el `CODEOWNERS` marca a D1 como dueño de todo el repo, así que esa aprobación tiene que ser suya |
 | Entorno compartido | **Decisión abierta para D1:** un solo proyecto de Supabase de desarrollo para todos, o uno por persona. Compartido es más simple pero los e2e crean usuarios reales; individual exige aplicar las migraciones a mano en cada uno ([ADR 0016](../adr/0016-migraciones-sql-manuales.md)) |
 | Secretos | Nunca se sube `.env.local`. La `SUPABASE_SECRET_KEY` salta RLS: no se comparte por chat ni se pega en issues |
 
@@ -320,8 +321,8 @@ Cada persona presenta cada uno de sus paquetes en **5 minutos**. Se evalúa que 
 
 | # | Riesgo | Señal de alerta | Mitigación |
 | :--- | :--- | :--- | :--- |
-| **R1** | **D1 es un punto único de falla.** Tiene el 25 % de la carga puntuada (empatado con D2), es mentor de tres personas, revisor obligatorio de lo crítico y, además, el único que diseñó la arquitectura, repartió los roles y armó el entorno y la CI | Revisiones que se acumulan; respuestas que tardan más de un día | D2 es segundo revisor de todo lo crítico. La documentación (PRDs y ADRs) existe justamente para que las decisiones no vivan solo en la cabeza de D1. Los básicos no dependen de D1 para su trabajo diario: escalan por mentor |
-| **R2** | **D4 está sobreestimado.** Su nivel es declarado y el reparto lo pone como mentor de 6 paquetes (1.3, 3.2, 3.3, 6.2, 7.2 y 10.2, de D9, D12, D13, D6, D7 y D10) | En la primera semana, explicaciones vagas o respuestas incorrectas a los básicos | Calibración en la semana 1: D4 explica uno de sus paquetes a D2. Si hay lagunas, la mentoría directa de sus paquetes se reparte entre D1 y D2 (por ejemplo, D2 toma 3.2 y 3.3, y D1 toma 6.2 y 7.2) y se revisa la carga de ambos. D1 y D2 siguen siendo la vía de escalada de todos, incluido el apoyo entre pares de D7, que tampoco está contrastado. Nunca se le da un paquete avanzado a D4 sin ese resultado. (D3/Freddy no tiene este riesgo: sus paquetes ya están en producción, no son un nivel a comprobar) |
+| **R1** | **D1 es un punto único de falla.** Tiene el 25 % de la carga puntuada, es mentor de tres personas, revisor obligatorio de lo crítico, el único code owner del repositorio (nadie mergea sin su aprobación) y, además, el único que diseñó la arquitectura, repartió los roles y dejó configurados los workflows, las herramientas y la protección de `main` en GitHub. Sus propios paquetes, además, no tienen revisor asignado | Revisiones que se acumulan; respuestas que tardan más de un día | La documentación (PRDs y ADRs) existe justamente para que las decisiones no vivan solo en la cabeza de D1. Los 5 checks de CI (`lint`, `typecheck`, `test`, `build`, `gitleaks`) igual corren sobre los paquetes de D1 aunque no tenga revisor humano. Los básicos no dependen de D1 para su trabajo diario: escalan por mentor |
+| **R2** | **D4 mentorea 6 paquetes sin haber pasado todavía por esa carga.** El reparto lo pone como mentor de 1.3, 3.2, 3.3, 6.2, 7.2 y 10.2 (de D9, D12, D13, D6, D7 y D10) desde su primer paquete de dificultad media | En la primera semana, explicaciones vagas o respuestas incorrectas a los básicos | Calibración en la semana 1: D4 explica uno de sus paquetes a D2. Si hay lagunas, la mentoría directa de sus paquetes se reparte entre D1 y D2 (por ejemplo, D2 toma 3.2 y 3.3, y D1 toma 6.2 y 7.2) y se revisa la carga de ambos. D1 y D2 siguen siendo la vía de escalada de todos, incluido el apoyo entre pares de D7. Nunca se le da un paquete avanzado a D4 sin pasar por esta calibración. (Este riesgo no aplica a D3/Freddy: sus paquetes ya están en producción) |
 | **R3** | **Los básicos se bloquean** (entorno, jerga, no saber qué preguntar) | Nadie abrió su paquete a los dos días; preguntas genéricas | Ola 0 con el entorno resuelto el primer día, glosario en [`docs/README.md`](../README.md#glosario), cadencia semanal con el mentor y "Cómo verificarla a mano" con pasos que se pueden seguir sin entender todo |
 | **R4** | **El reparto desigual se vive como injusto** | Comentarios sobre "quién hizo más" | Este documento es público: puntos, criterios y mentoría a la vista. La mentoría de D1 y D2 y la revisión cruzada están contadas como carga real ([sección 4](#4-balance-de-carga)) |
 | **R5** | **Los e2e están rotos y no hay CI de tests**, así que un cambio puede romper algo sin que nadie lo note | `pnpm test:e2e` falla desde el primer día | Se cierra con [PRD-X.1](../prds/PRD-X.1-testing-e2e.md) en la Ola 4. Hasta entonces, `pnpm test` (unitarios) es la red confiable ([ADR 0018](../adr/0018-sin-ci-gates-manuales.md)) |
