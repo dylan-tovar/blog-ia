@@ -3,6 +3,7 @@ import { SearchModal } from "@/features/discovery/components/SearchModal";
 import { SuggestedPeopleWidget } from "@/features/discovery/components/SuggestedPeopleWidget";
 import { InterestChipsSidebar } from "@/features/interests/components/InterestChipsSidebar";
 import { getInterestOptions, getUserInterestIds } from "@/features/interests/queries";
+import { AuthPromptCard } from "@/features/auth/components/AuthPromptCard";
 import { getViewer } from "@/lib/viewer";
 
 async function InterestChipsSection({ viewerId }: { viewerId: string }) {
@@ -35,7 +36,7 @@ export async function RightRail() {
     <div className="flex flex-col gap-6">
       <SearchModal variant="bar" />
 
-      {viewer && (
+      {viewer ? (
         <>
           <Suspense fallback={null}>
             <SuggestedPeopleWidget viewerId={viewer.id} />
@@ -44,6 +45,8 @@ export async function RightRail() {
             <InterestChipsSection viewerId={viewer.id} />
           </Suspense>
         </>
+      ) : (
+        <AuthPromptCard />
       )}
     </div>
   );

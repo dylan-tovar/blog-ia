@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTransition } from "react";
 import {
+  Bell,
   ChevronDown,
   FileText,
   House,
@@ -38,6 +39,12 @@ interface DesktopSidebarProps {
     avatarUrl?: string | null;
   } | null;
 }
+
+const GUEST_NAV_ITEMS = [
+  { label: "Actividad", icon: Bell },
+  { label: "Mis posts", icon: FileText },
+  { label: "Perfil", icon: User },
+] as const;
 
 export function DesktopSidebar({ viewer }: DesktopSidebarProps) {
   const pathname = usePathname();
@@ -114,25 +121,30 @@ export function DesktopSidebar({ viewer }: DesktopSidebarProps) {
             );
           })}
 
-          {!viewer && (
-            <LoginDrawer
-              trigger={
-                <button
-                  type="button"
-                  aria-label="Perfil"
-                  className="group flex min-h-12 w-full cursor-pointer items-center justify-center gap-4 rounded-lg px-3 py-2.5 text-base font-medium text-muted-foreground transition-all hover:bg-accent/60 hover:text-foreground lg:justify-start lg:px-4"
-                >
-                  <div className="relative grid size-7 place-items-center">
-                    <User
-                      className="size-6 transition-transform group-hover:scale-110"
-                      aria-hidden
-                    />
-                  </div>
-                  <span className="hidden lg:inline">Perfil</span>
-                </button>
-              }
-            />
-          )}
+          {!viewer &&
+            GUEST_NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <LoginDrawer
+                  key={item.label}
+                  trigger={
+                    <button
+                      type="button"
+                      aria-label={item.label}
+                      className="group flex min-h-12 w-full cursor-pointer items-center justify-center gap-4 rounded-lg px-3 py-2.5 text-base font-medium text-muted-foreground transition-all hover:bg-accent/60 hover:text-foreground lg:justify-start lg:px-4"
+                    >
+                      <div className="relative grid size-7 place-items-center">
+                        <Icon
+                          className="size-6 transition-transform group-hover:scale-110"
+                          aria-hidden
+                        />
+                      </div>
+                      <span className="hidden lg:inline">{item.label}</span>
+                    </button>
+                  }
+                />
+              );
+            })}
         </nav>
 
         {/* Prominent "Crear" Button */}
