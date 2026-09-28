@@ -5,11 +5,11 @@ El proyecto trabaja con Strict TDD: primero el test que falla, luego el código 
 | Nivel | Herramienta | Qué cubre | Comando | Necesita |
 | :--- | :--- | :--- | :--- | :--- |
 | Unitario | Vitest | Lógica pura: esquemas, IA, posts, recomendaciones | `pnpm test` | Nada (sin red ni base) |
-| End-to-end | Playwright | Flujos en navegador contra Supabase real | `pnpm test:e2e` | `.env.local`, proyecto de Supabase de desarrollo, migraciones `0001` a `0007` |
+| End-to-end | Playwright | Flujos en navegador contra Supabase real | `pnpm test:e2e` | `.env.local`, proyecto de Supabase de **desarrollo**, migraciones `0001` a `0020` |
 | Verificación de escrituras | Script Node | Que el navegador no pueda saltarse la moderación | `pnpm verify:writes` | Proyecto real con `0007` y el seed |
 | Verificación de Gemini | Script Node | Que el modelo responde y devuelve JSON válido | `pnpm ai:smoke` | `GEMINI_API_KEY` |
 
-> **Estado de los e2e (importante).** Al escribir este documento los e2e **no se pueden dar por buenos**: hay desfases conocidos entre los tests y la interfaz (ver [Problemas conocidos](#problemas-conocidos)). Los tests unitarios sí son la red de seguridad confiable.
+> **Estado de los e2e (actualizado 2026-09-28).** Los seis desfases de la tabla de abajo (creación de post, nav de 4 destinos, flujo de publicar, `/author` → `/[username]`, dominio de `uniqueEmail`, OTP de registro con Turnstile) están **corregidos en `e2e/helpers.ts` y los specs**. Lo que falta es correrlos: el `.env.local` de este equipo apunta al proyecto de Supabase de **producción**, y correr la suite ahí crearía usuarios y posts reales. Hasta que exista un proyecto de desarrollo separado, la suite queda "verificada por lectura y por `tsc --noEmit`, no por ejecución". Los tests unitarios sí son la red de seguridad confiable y corren limpios: 56 archivos, 1211 tests, en verde (`pnpm test`, 2026-09-28).
 
 ## Tests unitarios (Vitest)
 
@@ -77,15 +77,20 @@ Convenciones observadas:
 
 ## Problemas conocidos
 
-Verificados leyendo `e2e/` contra `src/`; los e2e no se ejecutaron al escribir esta guía.
+Verificados leyendo `e2e/` contra `src/` el 2026-09-28. Todas las filas de la tabla original quedaron **corregidas en código**; ninguna se confirmó todavía con una corrida real de `pnpm test:e2e` porque el `.env.local` disponible apunta a producción (ver el aviso de arriba).
 
-| Problema | Efecto | Salida prevista |
+| # | Problema (histórico) | Corrección aplicada |
 | :--- | :--- | :--- |
-| `uniqueEmail()` genera `@example.com`. Según se comprobó antes contra un proyecto real, el registro público de Supabase rechaza esos dominios | `register(page)` falla y con él casi todos los e2e | Crear las cuentas de prueba con el Admin API (como `scripts/seed-dev.mjs`) y loguearse por la interfaz |
-| `createDraft` y `shell.spec.ts` pulsan un botón "Nuevo post" que **ya no existe** (la creación pasó al botón "+" / menú "Crear") | Todo test que use `createDraft`, incluido `beforeEach` de `editor-ai-drawer.spec.ts`, falla | Crear el borrador navegando a `/editor/new` y escribiendo, o pasar por el menú "Crear" |
-| `shell.spec.ts` espera tres destinos (Inicio, Mis posts, Perfil) | La barra inferior tiene hoy cuatro (Inicio, Explorar, Actividad, Perfil) | Actualizar la aserción |
-| `scripts/verify-post-writes.mjs` inicia sesión como `mateo_ia.seed@blog-ia.test`, pero `scripts/seed-dev.mjs` crea a ese usuario como `mateo.seed@blog-ia.test` | Tras un seed nuevo, `pnpm verify:writes` falla con "No pude iniciar sesión como mateo_ia" (no se ejecutó al escribir esto: se detectó comparando los dos scripts) | Unificar el email en uno de los dos scripts |
-| El helper `register` asume que el proyecto de Supabase no exige confirmación de email (con confirmación, `signUp` no devuelve sesión y no se llega a `/onboarding`) | Confirmado en el proyecto real: `mailer_autoconfirm` es `false`, así que hay que desactivar "Confirm email" en Supabase para que los e2e lleguen a `/onboarding` | Ajustar el proyecto de Supabase |
+| 1 | `createDraft` pulsaba un botón "Nuevo post" que ya no existe | `createDraft` ahora entra por el link "Nuevo artículo" de `/posts`, escribe un título y espera que `use-autosave.ts` cambie la URL a `/editor/<uuid>` |
+| 2 | `shell.spec.ts` esperaba el mismo botón "Nuevo post" para crear y para el check de "sin sesión" | Ahora usa el disparador real `aria-label="Crear publicación"` (`CreatePostMenu`, desktop) → link "Artículo" |
+| 3 | `shell.spec.ts` esperaba tres destinos en la barra inferior (Inicio, Mis posts, Perfil) | Actualizado a los cuatro reales: Inicio, Explorar, Actividad, Perfil (iconos con `aria-label`, sin texto visible — el test ahora verifica por nombre accesible, no por `toHaveText`) |
+| 4 | `shell.spec.ts` y `feed.spec.ts` esperaban un link "Tu perfil" | Reemplazado por el botón "Menú de cuenta" (`AccountDrawer`) → link "Ajustes" dentro del drawer; el título de `/settings` es "Settings" (gap conocido de mezcla de idiomas, no se tocó) |
+| 5 | `posts.spec.ts` y `feed.spec.ts` pulsaban "Publicar" directo y usaban el texto viejo del error de post vacío | Ahora pulsan "Continuar" (abre `PublishDialog`), agregan tags **dentro** del diálogo (se movieron ahí) y usan "Publicar" del diálogo; el texto de error es "El artículo no puede estar vacío para publicarlo." | 
+| 6 | `uniqueEmail()` generaba `@example.com`, sin MX, rechazado por Supabase | Cambiado a un dominio con MX real (`@gmail.com`); no se necesita el Admin API para esto |
+| 7 *(nuevo, no estaba en la auditoría original)* | `/author/[id]` y `/post/[id]` pasaron a `/[username]` y `/p/[id]` ([ADR 0035](../adr/0035-renombrado-de-rutas-post-y-author.md)); los links internos apuntan directo a la ruta nueva, no al redirect | Las aserciones de URL de `feed.spec.ts` y `activity.spec.ts` ahora comparan contra `/${username}` y `/p/${id}` |
+| 8 *(nuevo)* | El registro exige un código OTP de 6 dígitos ([PRD-1.4](../prds/PRD-1.4-auth-otp-y-cambio-password.md)); un test no puede leer un email real | `signUpAccount` ahora completa `/register` de verdad, y en `/verify` obtiene el código con `supabase.auth.admin.generateLink({ type: "signup", ... })` (Admin API) en vez de un buzón — **sin verificar todavía contra un proyecto real** |
+| 9 *(nuevo)* | `RegisterForm`, `LoginForm`, `VerifyOtpForm`, `ForgotPasswordForm` y `ChangePasswordForm` tienen Cloudflare Turnstile; con la site key de **producción** ningún submit automatizado pasa el captcha | Requiere una testing site key de Cloudflare (ej. `1x00000000000000000000AA`) en el `.env.local` usado para e2e — ajuste de entorno, no de código |
+| — | `scripts/verify-post-writes.mjs` inicia sesión como `mateo_ia.seed@blog-ia.test`, pero `scripts/seed-dev.mjs` crea a ese usuario como `mateo.seed@blog-ia.test` | Sin tocar: es la tarea T1 de [PRD-X.2](../prds/PRD-X.2-dev-tooling.md), fuera de este paquete |
 
 ## Scripts de verificación
 

@@ -15,7 +15,7 @@ export function NotificationBell({ className }: { className?: string }) {
       {unreadCount > 0 && (
         <span
           className="absolute -top-1 -right-1 grid size-4 place-items-center rounded-full bg-primary text-[10px] leading-none font-semibold text-primary-foreground"
-          aria-label={`${unreadCount} notificaciones sin leer`}
+          aria-label={`${unreadCount} notificación${unreadCount === 1 ? "" : "es"} sin leer`}
         >
           {unreadCount > 9 ? "9+" : unreadCount}
         </span>

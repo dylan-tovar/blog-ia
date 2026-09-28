@@ -18,6 +18,7 @@ test.describe("posts", () => {
   test("tags are added, listed and not duplicated", async ({ page }) => {
     await register(page);
     await createDraft(page);
+    await page.getByRole("button", { name: "Continuar" }).click();
 
     const input = page.getByPlaceholder("Agregar tag");
     for (const name of ["TypeScript", "typescript"]) {
@@ -33,6 +34,7 @@ test.describe("posts", () => {
 
     await register(page);
     await createDraft(page);
+    await page.getByRole("button", { name: "Continuar" }).click();
     await page.getByPlaceholder("Agregar tag").fill(tag);
     await page.getByRole("button", { name: "Agregar" }).click();
     await expect(page.getByText(tag, { exact: true })).toBeVisible();
@@ -40,6 +42,7 @@ test.describe("posts", () => {
     const other = await browser.newPage();
     await register(other, "Otro Usuario");
     await createDraft(other);
+    await other.getByRole("button", { name: "Continuar" }).click();
     await other.getByPlaceholder("Agregar tag").fill(tag);
     await other.getByRole("button", { name: "Agregar" }).click();
     await expect(other.getByText(tag, { exact: true })).toBeVisible();
@@ -49,9 +52,10 @@ test.describe("posts", () => {
   test("publishing an empty post shows an error", async ({ page }) => {
     await register(page);
     await createDraft(page);
+    await page.getByRole("button", { name: "Continuar" }).click();
     await page.getByRole("button", { name: "Publicar" }).click();
     await expect(
-      page.getByText("El post no puede estar vacío para publicarlo."),
+      page.getByText("El artículo no puede estar vacío para publicarlo."),
     ).toBeVisible();
   });
 
@@ -60,22 +64,23 @@ test.describe("posts", () => {
     const id = await createDraft(page);
     await page.getByLabel("Contenido").fill("Contenido listo");
     await expect(page.getByText("Guardado")).toBeVisible({ timeout: 10_000 });
+    await page.getByRole("button", { name: "Continuar" }).click();
     await page.getByRole("button", { name: "Publicar" }).click();
     await expect(page.getByText("Publicado")).toBeVisible();
 
-    const response = await page.goto(`/post/${id}`);
+    const response = await page.goto(`/p/${id}`);
     expect(response?.status()).toBe(200);
   });
 
   test("a non-published post is 404 on the public page", async ({ page }) => {
     await register(page);
     const id = await createDraft(page);
-    const response = await page.goto(`/post/${id}`);
+    const response = await page.goto(`/p/${id}`);
     expect(response?.status()).toBe(404);
   });
 
   test("a non-UUID post id is 404 on the public page", async ({ page }) => {
-    const response = await page.goto("/post/not-a-uuid");
+    const response = await page.goto("/p/not-a-uuid");
     expect(response?.status()).toBe(404);
   });
 

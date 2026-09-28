@@ -8,6 +8,7 @@ async function publishPost(page: Page, title: string, tag: string) {
   await page.getByLabel("Título").fill(title);
   await page.getByLabel("Contenido").fill(`Contenido de ${title}`);
   await expect(page.getByText("Guardado")).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("button", { name: "Continuar" }).click();
   await page.getByPlaceholder("Agregar tag").fill(tag);
   await page.getByRole("button", { name: "Agregar" }).click();
   await expect(page.getByText(tag, { exact: true })).toBeVisible();
@@ -18,10 +19,10 @@ async function publishPost(page: Page, title: string, tag: string) {
 
 // Follows the author from their profile page. The reader must not follow anyone yet, so
 // the home is still the global feed and lists the author's fresh post.
-async function followAuthorFromHome(page: Page, authorName: string) {
+async function followAuthorFromHome(page: Page, authorName: string, authorUsername: string) {
   await page.goto("/");
   await page.getByRole("link", { name: authorName }).first().click();
-  await expect(page).toHaveURL(/\/author\/[0-9a-f-]{36}$/);
+  await expect(page).toHaveURL(new RegExp(`/${authorUsername}$`));
   await page.getByRole("button", { name: "Seguir" }).click();
   await expect(page.getByRole("button", { name: "Dejar de seguir" })).toBeVisible();
 }
@@ -36,7 +37,7 @@ test.describe("feed", () => {
   test("signed-in users land on the feed too", async ({ page }) => {
     await register(page);
     await expect(page).toHaveURL(HOME_URL);
-    await expect(page.getByRole("link", { name: "Tu perfil" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Menú de cuenta" })).toBeVisible();
   });
 
   test("is public and tolerates any tag filter", async ({ page }) => {
@@ -73,13 +74,14 @@ test.describe("feed", () => {
     await expect(reader.getByText(tag)).toHaveCount(0);
     await expect(reader.locator("a[href*='tag=']")).toHaveCount(0);
 
-    await reader.goto(`/post/${id}`);
+    await reader.goto(`/p/${id}`);
     await expect(reader.getByRole("heading", { name: `Post sin tags visibles ${suffix}` })).toBeVisible();
     await expect(reader.getByText(tag)).toHaveCount(0);
     await expect(reader.locator("a[href*='tag=']")).toHaveCount(0);
 
-    // Still stored: the author sees it in the editor, and the URL filter finds the post.
+    // Still stored: the author sees it in the publish dialog, and the URL filter finds the post.
     await page.goto(`/editor/${id}`);
+    await page.getByRole("button", { name: "Tags" }).click();
     await expect(page.getByText(tag, { exact: true })).toBeVisible();
     await reader.goto(`/?tag=${tag}`);
     await expect(reader.getByText(`Post sin tags visibles ${suffix}`)).toBeVisible();
@@ -105,7 +107,7 @@ test.describe("following feed", () => {
   }) => {
     const suffix = Date.now();
     const followedName = `Seguido ${suffix}`;
-    await register(page, followedName);
+    const { username: followedUsername } = await register(page, followedName);
     await publishPost(page, `Post seguido ${suffix}`, `e2e-a-${suffix}`);
 
     const stranger = await browser.newPage();
@@ -114,7 +116,7 @@ test.describe("following feed", () => {
 
     const reader = await browser.newPage();
     await register(reader, `Lector ${suffix}`);
-    await followAuthorFromHome(reader, followedName);
+    await followAuthorFromHome(reader, followedName, followedUsername);
 
     // One followed post is fewer than the interleave interval, so no recommendation
     // shows up: the stranger's article must be absent.
@@ -150,7 +152,7 @@ test.describe("following feed", () => {
     const suffix = Date.now();
     const followedName = `Seguido tag ${suffix}`;
     const tag = `e2e-tag-${suffix}`;
-    await register(page, followedName);
+    const { username: followedUsername } = await register(page, followedName);
     await publishPost(page, `Post seguido tag ${suffix}`, `e2e-a-${suffix}`);
 
     const stranger = await browser.newPage();
@@ -159,7 +161,7 @@ test.describe("following feed", () => {
 
     const reader = await browser.newPage();
     await register(reader, `Lector tag ${suffix}`);
-    await followAuthorFromHome(reader, followedName);
+    await followAuthorFromHome(reader, followedName, followedUsername);
 
     await reader.goto(`/?tag=${tag}`);
     await expect(reader.getByText(`Post ajeno tag ${suffix}`)).toBeVisible();
@@ -178,14 +180,14 @@ test.describe("author page and follow", () => {
 
   test("a reader follows and unfollows an author", async ({ page, browser }) => {
     const suffix = Date.now();
-    await register(page, "Autor E2E");
+    const { username } = await register(page, "Autor E2E");
     await publishPost(page, `Post autor ${suffix}`, `e2e-${suffix}`);
 
     const reader = await browser.newPage();
     await register(reader, "Lector E2E");
     await reader.goto("/");
     await reader.getByRole("link", { name: "Autor E2E" }).first().click();
-    await expect(reader).toHaveURL(/\/author\/[0-9a-f-]{36}$/);
+    await expect(reader).toHaveURL(new RegExp(`/${username}$`));
 
     await reader.getByRole("button", { name: "Seguir" }).click();
     await expect(reader.getByRole("button", { name: "Dejar de seguir" })).toBeVisible();

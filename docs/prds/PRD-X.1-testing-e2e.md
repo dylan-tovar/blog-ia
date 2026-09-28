@@ -66,11 +66,18 @@ Lo que **sí** sigue vigente: `getByLabel("Título")` (`PostEditor.tsx`), `getBy
 
 ## Criterios de aceptación
 
-- [ ] `createDraft` devuelve el id del borrador con el flujo real (entrar a `/editor/new`, escribir, esperar "Guardado" y la URL `/editor/<uuid>`).
-- [ ] `pnpm test:e2e` corre sin fallos por selectores obsoletos (los problemas 1 a 5 de la tabla resueltos).
-- [ ] `register` funciona con un dominio aceptado por Supabase (problema 6), sin dejar la `SUPABASE_SECRET_KEY` en el código ni en el repositorio.
-- [ ] `editor-ai-drawer.spec.ts` llega más allá de su `beforeEach`.
-- [ ] La tabla "Problemas conocidos" de [`guides/testing.md`](../guides/testing.md#problemas-conocidos) refleja lo que quedó abierto.
+- [x] `createDraft` devuelve el id del borrador con el flujo real (entrar a `/editor/new`, escribir, esperar "Guardado" y la URL `/editor/<uuid>`).
+- [ ] `pnpm test:e2e` corre sin fallos por selectores obsoletos (los problemas 1 a 5 de la tabla resueltos en código el 2026-09-28; **no verificado con una corrida real** — el `.env.local` disponible apunta a producción, ver más abajo).
+- [x] `register` funciona con un dominio aceptado por Supabase (problema 6: `uniqueEmail()` ahora usa `@gmail.com`), sin dejar la `SUPABASE_SECRET_KEY` en el código ni en el repositorio (se lee de `process.env`).
+- [ ] `editor-ai-drawer.spec.ts` llega más allá de su `beforeEach` (depende de la misma corrida pendiente).
+- [x] La tabla "Problemas conocidos" de [`guides/testing.md`](../guides/testing.md#problemas-conocidos) refleja lo que quedó abierto.
+
+### Hallazgos nuevos (no estaban en el diagnóstico original)
+
+- El registro exige OTP de 6 dígitos ([PRD-1.4](PRD-1.4-auth-otp-y-cambio-password.md)), no solo un toggle de confirmación de email. `signUpAccount` ahora resuelve el código con `supabase.auth.admin.generateLink` en vez de leer un correo real.
+- `RegisterForm`, `LoginForm`, `VerifyOtpForm`, `ForgotPasswordForm` y `ChangePasswordForm` tienen Cloudflare Turnstile. Con la site key de producción, **ningún submit automatizado pasa el captcha** — hace falta una testing site key de Cloudflare en el `.env.local` de e2e. Esto es un ajuste de entorno del equipo, no de código.
+- [ADR 0035](../adr/0035-renombrado-de-rutas-post-y-author.md) renombró `/author/[id]` → `/[username]` y `/post/[id]` → `/p/[id]`. Los links internos apuntan directo a la ruta nueva; las aserciones de URL de `feed.spec.ts` y `activity.spec.ts` estaban desfasadas también en esto y se corrigieron.
+- **Bloqueante para cerrar esta PRD de verdad:** el equipo no tiene hoy un proyecto de Supabase de *desarrollo* separado del de producción. Sin eso, `pnpm test:e2e` no puede correrse (correr contra producción crearía usuarios y posts reales) y este paquete no puede pasar de "corregido en código" a "verificado".
 
 ## Cómo verificarla a mano
 
