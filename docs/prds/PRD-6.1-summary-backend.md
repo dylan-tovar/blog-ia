@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-6 — IA para el lector](PRD-6-ai-reader.md) |
 | Dificultad / Esfuerzo | M (media) / S (hasta 1 día) |
-| Dueño sugerido / Mentor | D3 / D1 |
+| Dueño sugerido / Mentor | D4 / D1 |
 | Depende de | [PRD-5.1](PRD-5.1-ai-foundation.md) (Gemini), [PRD-5.2](PRD-5.2-rate-limit.md) (límite), [PRD-5.4](PRD-5.4-ai-route-runner.md) (caché) |
 | Alimenta a | [PRD-6.2](PRD-6.2-summary-ui.md) (el botón que la llama) |
 | Código | `src/features/ai/summary-actions.ts` (`getPostSummary`), `buildSummaryPrompt` en `prompts.ts`, `cleanSummary` en `output.ts`, `assertMinWords` en `words.ts` |

@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-8 — Chat de IA del editor](PRD-8-ai-chat.md) |
 | Dificultad / Esfuerzo | M (media) / M (2 a 3 días) |
-| Dueño sugerido / Mentor | D8 / D2 |
+| Dueño sugerido / Mentor | D9 / D2 |
 | Depende de | [PRD-8.2](PRD-8.2-chat-drawer-ui.md) (los mensajes que las contienen), [PRD-8.3](PRD-8.3-editor-context-apply.md) (`describeLocation`, `actionPreview`, `findOverlap`), [PRD-0.2](PRD-0.2-ui-primitives.md) (`Badge`, `Button`) |
 | Alimenta a | Nadie: es la capa visual final del chat |
 | Código | `src/features/ai/components/chat/ActionCard.tsx`, `AnalysisCard.tsx`, `StepsList.tsx`, y los reductores de estado de propuestas y plan en `chat-state.ts` |

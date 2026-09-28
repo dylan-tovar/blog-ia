@@ -5,8 +5,8 @@
 | Padre | [PRD-9 — Explorar, Actividad y opciones de post](PRD-9-explore-activity.md) |
 | Dificultad | B (básica) |
 | Esfuerzo | S (1 punto, menos de un día) |
-| Dueño sugerido | D11 |
-| Mentor | D6 (apoyo entre pares; escala a D2 o D1) |
+| Dueño sugerido | D12 |
+| Mentor | D7 (apoyo entre pares; escala a D2 o D1) |
 | Depende de | [PRD-7.2](PRD-7.2-notes-ui.md) (`EditNoteDialog` y `deleteNote`), [PRD-0.2](PRD-0.2-ui-primitives.md) (`Drawer`) |
 | Código | `src/features/posts/components/PostOptionsDrawer.tsx`; se usa desde `PostCard.tsx` y `src/app/(public)/post/[id]/page.tsx` |
 | ADRs | [0008](../adr/0008-tema-oscuro-y-shell-de-aplicacion.md), [0009](../adr/0009-tipos-de-post-y-likes.md), [0015](../adr/0015-notas-editables.md) |

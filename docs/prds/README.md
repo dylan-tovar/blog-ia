@@ -23,7 +23,7 @@ El producto completo, su filosofía KISS y la lista de qué se cortó y qué se 
 
 ## Nombres de archivo y paquetes de trabajo
 
-Cada PRD **padre** se parte en **paquetes de trabajo** (sub-PRDs) pequeños, para que una persona pueda ser dueña de uno, entenderlo entero y presentarlo. El reparto entre las 12 personas del equipo está en [`../team/reparto-de-tareas.md`](../team/reparto-de-tareas.md).
+Cada PRD **padre** se parte en **paquetes de trabajo** (sub-PRDs) pequeños, para que una persona pueda ser dueña de uno, entenderlo entero y presentarlo. El reparto entre las 13 personas del equipo está en [`../team/reparto-de-tareas.md`](../team/reparto-de-tareas.md).
 
 | Tipo | Patrón | Ejemplo | Qué es |
 | :--- | :--- | :--- | :--- |
@@ -40,11 +40,11 @@ El slug es corto y describe el contenido, en inglés y en minúsculas, igual que
 | [PRD-2](PRD-2-posts.md) Posts | [2.1 datos y RLS](PRD-2.1-posts-data-rls.md) · [2.2 editor Tiptap](PRD-2.2-editor-tiptap.md) · [2.3 autoguardado](PRD-2.3-autosave-drafts.md) · [2.4 publicar y tags](PRD-2.4-publish-dialog-tags.md) · [2.5 Mis posts](PRD-2.5-my-posts-page.md) · [2.6 detalle de post](PRD-2.6-post-detail.md) |
 | [PRD-3](PRD-3-feed-follows.md) Feed y seguimiento | [3.1 seguimiento](PRD-3.1-follow-system.md) · [3.2 lista del feed](PRD-3.2-feed-list.md) · [3.3 perfil de autor](PRD-3.3-author-profile.md) |
 | [PRD-4](PRD-4-recommendations.md) Recomendaciones | [4.1 scoring](PRD-4.1-scoring-core.md) · [4.2 consulta y UI](PRD-4.2-recs-query-ui.md) |
-| [PRD-5](PRD-5-ai-author.md) IA para el autor | [5.1 fundación](PRD-5.1-ai-foundation.md) · [5.2 límite de peticiones](PRD-5.2-rate-limit.md) · [5.3 moderación](PRD-5.3-publish-moderation.md) · [5.4 route runner y caché](PRD-5.4-ai-route-runner.md) |
+| [PRD-5](PRD-5-ai-author.md) IA para el autor | [5.1 fundación](PRD-5.1-ai-foundation.md) · [5.2 límite de peticiones](PRD-5.2-rate-limit.md) · [5.3 moderación](PRD-5.3-publish-moderation.md) · [5.4 route runner y caché](PRD-5.4-ai-route-runner.md) · [5.5 moderación de notas por diccionario](PRD-5.5-notes-moderation.md) (ya implementado) |
 | [PRD-6](PRD-6-ai-reader.md) IA para el lector | [6.1 servidor](PRD-6.1-summary-backend.md) · [6.2 interfaz](PRD-6.2-summary-ui.md) |
-| [PRD-7](PRD-7-notes-likes.md) Notas y me gusta | [7.1 tipos en la base](PRD-7.1-post-types-db.md) · [7.2 notas, UI](PRD-7.2-notes-ui.md) · [7.3 me gusta](PRD-7.3-likes.md) |
+| [PRD-7](PRD-7-notes-likes.md) Notas y me gusta | [7.1 tipos en la base](PRD-7.1-post-types-db.md) · [7.2 notas, UI](PRD-7.2-notes-ui.md) · [7.3 me gusta](PRD-7.3-likes.md) · [7.4 reposts](PRD-7.4-reposts.md) (ya implementado) |
 | [PRD-8](PRD-8-ai-chat.md) Chat de IA | [8.1 servidor](PRD-8.1-chat-server.md) · [8.2 cajón](PRD-8.2-chat-drawer-ui.md) · [8.3 contexto y aplicar](PRD-8.3-editor-context-apply.md) · [8.4 tarjetas y análisis](PRD-8.4-action-cards-analysis.md) |
-| [PRD-9](PRD-9-explore-activity.md) Explorar y Actividad | [9.1 Explorar](PRD-9.1-explore-page.md) · [9.2 Actividad y navegación](PRD-9.2-activity-nav.md) · [9.3 opciones del post](PRD-9.3-post-options-drawer.md) |
+| [PRD-9](PRD-9-explore-activity.md) Explorar y Actividad | [9.1 Explorar](PRD-9.1-explore-page.md) · [9.2 Actividad y navegación](PRD-9.2-activity-nav.md) · [9.3 opciones del post](PRD-9.3-post-options-drawer.md) · [9.4 notificaciones realtime](PRD-9.4-notifications-realtime.md) (ya implementado) |
 | [PRD-10](PRD-10-post-images-cover.md) Imágenes y portada | [10.1 imágenes](PRD-10.1-post-images.md) · [10.2 portada](PRD-10.2-post-cover.md) (ya implementados por D1) |
 | [PRD-11](PRD-11-emails-transaccionales.md) Emails transaccionales | [11.1 confirmación y recuperación](PRD-11.1-confirmacion-y-recuperacion.md) · [11.2 bienvenida](PRD-11.2-bienvenida.md) · [11.3 nuevo artículo de seguidos](PRD-11.3-nuevo-articulo-seguidos.md) |
 | [PRD-global](../PRD-global-vision.md) (transversales) | [X.1 tests](PRD-X.1-testing-e2e.md) · [X.2 herramientas](PRD-X.2-dev-tooling.md) |

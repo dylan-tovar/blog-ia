@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-4 — Recomendaciones](PRD-4-recommendations.md) |
 | Dificultad / Esfuerzo | M (media) / M (2-3 días) |
-| Dueño sugerido / Mentor | D2 / — |
+| Dueño sugerido / Mentor | D1 / — |
 | Depende de | Nada de código: es una función pura. Conceptualmente, los datos de [PRD-3](PRD-3-feed-follows.md) (`reading_history`) y [PRD-2.4](PRD-2.4-publish-dialog-tags.md) (tags) |
 | Lo usa | [PRD-4.2](PRD-4.2-recs-query-ui.md) (la consulta y la interfaz) |
 | Código | `src/features/recommendations/scoreByTags.ts` (incluye `withInterestTags`), `scoreByTags.test.ts`, `constants.ts` |

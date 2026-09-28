@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-7 — Notas y me gusta](PRD-7-notes-likes.md) |
 | Dificultad / Esfuerzo | B (básica) / S (hasta 1 día) |
-| Dueño sugerido / Mentor | D7 / D6 (apoyo entre pares; escala a D2 o D1) |
+| Dueño sugerido / Mentor | D8 / D7 (apoyo entre pares; escala a D2 o D1) |
 | Depende de | [PRD-7.1](PRD-7.1-post-types-db.md) (tabla `likes` y sus políticas), [PRD-1.1](PRD-1.1-auth-forms.md) (`LoginDrawer` para visitantes) |
 | Alimenta a | [PRD-3.2](PRD-3.2-feed-list.md) y [PRD-2.6](PRD-2.6-post-detail.md) (muestran el botón), [PRD-3.3](PRD-3.3-author-profile.md) (pestaña Likes) |
 | Código | `src/features/likes/actions.ts` (`setLike`), `queries.ts` (`getLikedPostIds`), `schemas.ts`, `components/LikeButton.tsx`; el conteo sale de `LIKES_EMBED` en `src/features/posts/queries.ts` |

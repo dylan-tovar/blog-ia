@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-8 — Chat de IA del editor](PRD-8-ai-chat.md) |
 | Dificultad / Esfuerzo | A (avanzada) / L (más de 3 días) |
-| Dueño sugerido / Mentor | D1 / — |
+| Dueño sugerido / Mentor | D2 / — |
 | Depende de | [PRD-5.1](PRD-5.1-ai-foundation.md) (Gemini), [PRD-5.2](PRD-5.2-rate-limit.md) (límite), [PRD-5.4](PRD-5.4-ai-route-runner.md) (`runAiStreamRoute`) |
 | Alimenta a | [PRD-8.2](PRD-8.2-chat-drawer-ui.md) (el cliente que lo consume), [PRD-8.4](PRD-8.4-action-cards-analysis.md) (renderiza lo que el servidor envía) |
 | Código | `src/app/api/ai/chat/route.ts`, `src/features/ai/handlers.server.ts` (`handleChat`), `chat-stream.ts`, `function-calls.ts`, `stream-protocol.ts`, `stream-response.ts`, `chat-history.ts`, `prompts.ts` (`buildChatContents`, `selectVisibleBlocks`), `schemas.ts` (`chatRequestSchema`, `editActionSchema`, `articleAnalysisSchema`, `chatPlanSchema`) |

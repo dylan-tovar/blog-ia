@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-5 — IA para el autor](PRD-5-ai-author.md) |
 | Dificultad / Esfuerzo | A (avanzada) / L (más de 3 días) |
-| Dueño sugerido / Mentor | D1 / — |
+| Dueño sugerido / Mentor | D2 / — |
 | Depende de | Nada dentro de la IA. Usa el cliente admin de [PRD-1.2](PRD-1.2-auth-security.md) solo en otros paquetes, no aquí |
 | Alimenta a | [PRD-5.2](PRD-5.2-rate-limit.md), [PRD-5.3](PRD-5.3-publish-moderation.md), [PRD-5.4](PRD-5.4-ai-route-runner.md), [PRD-6.1](PRD-6.1-summary-backend.md), [PRD-8.1](PRD-8.1-chat-server.md) |
 | Código | `src/features/ai/gemini.ts`, `errors.ts`, `thinking.ts`, `first-chunk-deadline.ts`, `constants.ts`, `types.ts`, `schemas.ts`, `output.ts`, `words.ts`, `src/lib/env.server.ts` |

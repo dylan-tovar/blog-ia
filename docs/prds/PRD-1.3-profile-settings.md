@@ -5,8 +5,8 @@
 | Padre | [PRD-1 — Autenticación](PRD-1-auth.md) |
 | Dificultad | B (básica) |
 | Esfuerzo | S (1 punto, menos de un día) |
-| Dueño sugerido | D8 |
-| Mentor | D3 |
+| Dueño sugerido | D9 |
+| Mentor | D4 |
 | Depende de | [PRD-1.2](PRD-1.2-auth-security.md) (sesión y RLS de `profiles`), [PRD-0.2](PRD-0.2-ui-primitives.md) (`Drawer`, `Input`) |
 | Código | `src/features/profile/{actions,queries,schemas}.ts`, `src/features/profile/components/{AccountSettings,SettingsForm}.tsx`, `src/app/(dashboard)/settings/page.tsx`, `src/app/(dashboard)/profile/page.tsx` |
 | ADRs | [0007](../adr/0007-login-por-username-con-secret-key.md), [0024](../adr/0024-perfil-en-onboarding.md) |

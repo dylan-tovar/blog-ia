@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-2 — Posts](PRD-2-posts.md) |
 | Dificultad / Esfuerzo | A (avanzada) / L (más de 3 días) |
-| Dueño sugerido / Mentor | D2 / — |
+| Dueño sugerido / Mentor | D1 / — |
 | Depende de | [PRD-0.2](PRD-0.2-ui-primitives.md) (botones, menús, diálogos) |
 | Lo usan | [PRD-2.3](PRD-2.3-autosave-drafts.md) (guardar), [PRD-2.4](PRD-2.4-publish-dialog-tags.md) (publicar), [PRD-8.2](PRD-8.2-chat-drawer-ui.md) y [PRD-8.3](PRD-8.3-editor-context-apply.md) (chat de IA) |
 | Código | `src/features/posts/components/editor/use-article-editor.ts`, `EditorToolbar.tsx`, `safe-link.ts`; `src/features/posts/link-safety.ts`; `src/features/posts/components/PostEditor.tsx` (ensamblaje), `MarkdownContent.tsx`, `markdown-styles.ts`; `src/app/(editor)/editor/[id]/page.tsx`, `src/features/posts/components/DesktopOnly.tsx` |

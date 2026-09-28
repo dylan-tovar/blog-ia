@@ -5,7 +5,7 @@
 | Padre | [PRD-0 — Sistema de diseño](PRD-0-design-system.md) |
 | Dificultad | B (básica) |
 | Esfuerzo | M (2 puntos, 2 a 3 días leyendo y probando) |
-| Dueño sugerido | D5 |
+| Dueño sugerido | D6 |
 | Mentor | D2 |
 | Depende de | [PRD-0.1](PRD-0.1-theme-tokens.md) (los colores que usan) |
 | Código | `src/components/ui/*.tsx` (13 archivos), `components.json`, `src/lib/utils.ts` |

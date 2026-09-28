@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-6 — IA para el lector](PRD-6-ai-reader.md) |
 | Dificultad / Esfuerzo | B (básica) / S (hasta 1 día) |
-| Dueño sugerido / Mentor | D5 / D3 |
+| Dueño sugerido / Mentor | D6 / D4 |
 | Depende de | [PRD-6.1](PRD-6.1-summary-backend.md) (la acción que llama), [PRD-2.6](PRD-2.6-post-detail.md) (la página donde vive) |
 | Alimenta a | Nadie: es una hoja del árbol |
 | Código | `src/features/ai/components/SummaryButton.tsx`, uso en `src/app/(public)/post/[id]/page.tsx`, `AiErrorMessage.tsx`, `use-countdown.ts`, `ai-ui.ts` (`describeAiError`) |

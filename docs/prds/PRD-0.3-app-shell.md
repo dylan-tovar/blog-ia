@@ -5,7 +5,7 @@
 | Padre | [PRD-0 — Sistema de diseño](PRD-0-design-system.md) |
 | Dificultad | M (media) |
 | Esfuerzo | M (2 puntos, 2 a 3 días) |
-| Dueño sugerido | D6 |
+| Dueño sugerido | D7 |
 | Mentor | D2 |
 | Depende de | [PRD-0.1](PRD-0.1-theme-tokens.md), [PRD-0.2](PRD-0.2-ui-primitives.md) |
 | Código | `src/components/shared/` (`AppShell`, `MainNav`, `BottomNav`, `HeaderTitle`, `HeaderAccount`, `AccountDrawer`, `UserAvatar`, `navigation.ts`), `src/lib/viewer.ts`, `src/app/(public)/layout.tsx`, `src/app/(dashboard)/layout.tsx` |

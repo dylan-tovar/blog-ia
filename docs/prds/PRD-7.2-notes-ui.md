@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-7 — Notas y me gusta](PRD-7-notes-likes.md) |
 | Dificultad / Esfuerzo | M (media) / M (2 a 3 días) |
-| Dueño sugerido / Mentor | D6 / D3 |
+| Dueño sugerido / Mentor | D7 / D4 |
 | Depende de | [PRD-7.1](PRD-7.1-post-types-db.md) (reglas de la base), [PRD-0.2](PRD-0.2-ui-primitives.md) (`Dialog`, `Textarea`, `Button`), [PRD-0.3](PRD-0.3-app-shell.md) (el botón "+" vive en el shell) |
 | Alimenta a | [PRD-9.3](PRD-9.3-post-options-drawer.md) (el menú "más opciones" abre la edición y borra la nota) |
 | Código | `src/features/posts/components/{NoteDialog,NoteComposer,NoteTriggerBar,EditNoteDialog,CreatePostMenu,NewPostButton,use-note-form}.ts(x)`, `createNote` / `updateNote` / `deleteNote` en `src/features/posts/actions.ts`, `createNoteSchema` en `src/features/posts/schemas.ts`, `src/hooks/use-is-desktop.ts`, `use-visual-viewport-style.ts` |

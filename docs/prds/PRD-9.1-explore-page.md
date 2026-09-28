@@ -5,8 +5,8 @@
 | Padre | [PRD-9 — Explorar, Actividad y opciones de post](PRD-9-explore-activity.md) |
 | Dificultad | B (básica) |
 | Esfuerzo | S (1 punto, menos de un día) |
-| Dueño sugerido | D9 |
-| Mentor | D6 (apoyo entre pares; escala a D2 o D1) |
+| Dueño sugerido | D10 |
+| Mentor | D7 (apoyo entre pares; escala a D2 o D1) |
 | Depende de | [PRD-3.2](PRD-3.2-feed-list.md) (`FeedList` y `getFeedPage`), [PRD-2.1](PRD-2.1-posts-data-rls.md) (tablas `tags` y `post_tags`) |
 | Código | `src/app/(public)/explore/page.tsx`, `getAllTagNames` y `getFeedPage` en `src/features/posts/queries.ts`, `tagNameSchema` en `src/features/posts/schemas.ts` |
 | ADRs | [0004](../adr/0004-recomendaciones-scoring-determinista.md), [0020](../adr/0020-tags-como-metadato-interno.md), [0021](../adr/0021-feed-en-raiz-y-global.md) |

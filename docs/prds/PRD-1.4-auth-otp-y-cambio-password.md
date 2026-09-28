@@ -4,6 +4,8 @@
 | :--- | :--- |
 | Estado | **Implementado.** `verifySignupOtp`/`resendSignupOtp`/`verifyRecoveryOtp`/`resendPasswordResetOtp`/`changePassword` en `src/features/auth/actions.ts`, `/verify` (registro y recuperación) y el bloque "Contraseña" de `/settings` |
 | Padre | [PRD-1 — Autenticación](PRD-1-auth.md) |
+| Dificultad / Esfuerzo | A (avanzada) / L (más de tres días) |
+| Dueño sugerido / Mentor | D1 (implementado) / — (revisor obligatorio D2, por la revisión cruzada habitual entre D1 y D2) |
 | Depende de | [PRD-11.1](PRD-11.1-confirmacion-y-recuperacion.md) (recuperación por link, **superada por este PRD** — ver abajo), [PRD-1.2](PRD-1.2-auth-security.md) (`signUp`/`requireUser`) |
 | Migraciones | Ninguna propia (usa los flujos nativos de Supabase Auth) |
 | Código | `src/features/auth/actions.ts`, `src/features/auth/schemas.ts`, `src/features/auth/components/VerifyOtpForm.tsx`, `src/app/(auth)/verify/page.tsx`, `src/features/auth/components/ForgotPasswordForm.tsx`, `src/features/profile/components/ChangePasswordForm.tsx`, `src/features/profile/components/AccountSettings.tsx` |

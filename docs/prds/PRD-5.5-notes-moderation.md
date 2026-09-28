@@ -1,5 +1,11 @@
 # PRD 5.5: Moderación de Notas por Diccionario
 
+| Campo | Valor |
+| :--- | :--- |
+| Padre | [PRD-5 — IA para el autor](PRD-5-ai-author.md) |
+| Dificultad / Esfuerzo | A (avanzada) / L (más de tres días) |
+| Dueño sugerido / Mentor | D3 (implementado) / — (revisor obligatorio D1 o D2 por ser una pieza de moderación adyacente a IA) |
+
 ## 1. Contexto y Objetivo
 Actualmente, las notas (comentarios o respuestas cortas) se publican de inmediato sin ningún tipo de revisión. A diferencia de los artículos que pasan por una validación con IA (Gemini) según el `PRD-5.3-publish-moderation.md`, las notas quedaron explícitamente fuera de ese flujo (ADR 0009 establece que una nota siempre nace como `published`).
 

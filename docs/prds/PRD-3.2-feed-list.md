@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-3 — Feed y seguimiento](PRD-3-feed-follows.md) |
 | Dificultad / Esfuerzo | M (media) / M (2-3 días) |
-| Dueño sugerido / Mentor | D11 / D3 |
+| Dueño sugerido / Mentor | D12 / D4 |
 | Depende de | [PRD-2.1](PRD-2.1-posts-data-rls.md) (tabla `posts` y RLS), [PRD-3.1](PRD-3.1-follow-system.md) (`getFollowedAuthorIds`, `getAllFollowedAuthorIds`), [PRD-0.3](PRD-0.3-app-shell.md) (el marco de la página) |
 | Se conecta con | [PRD-4.2](PRD-4.2-recs-query-ui.md) (recomendados en `/`: carrusel o intercalados), [PRD-7.2](PRD-7.2-notes-ui.md) (barra "¿Qué estás pensando?" y menú Crear), [PRD-7.3](PRD-7.3-likes.md) (`LikeButton`), [PRD-9.1](PRD-9.1-explore-page.md) (`/explore` reutiliza `FeedList`), [PRD-9.3](PRD-9.3-post-options-drawer.md) (menú de cada tarjeta) |
 | Código | `src/app/(public)/page.tsx`, `getFeedPage`, `getFeedPostsByIds` y sus ayudas en `src/features/posts/queries.ts`, `interleave.ts`, `loadMoreFeed` en `src/features/posts/actions.ts`, `src/features/posts/components/FeedList.tsx`, `PostCard.tsx`, `ArticleCard.tsx`, `feedQuerySchema` en `schemas.ts` |

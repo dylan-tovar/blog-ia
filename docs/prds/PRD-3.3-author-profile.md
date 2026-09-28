@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-3 — Feed y seguimiento](PRD-3-feed-follows.md) |
 | Dificultad / Esfuerzo | B (básica) / S (hasta 1 día) |
-| Dueño sugerido / Mentor | D12 / D3 |
+| Dueño sugerido / Mentor | D13 / D4 |
 | Depende de | [PRD-3.1](PRD-3.1-follow-system.md) (`FollowButton`, contador), [PRD-3.2](PRD-3.2-feed-list.md) (`PostCard`, `FeedPost`), [PRD-1.3](PRD-1.3-profile-settings.md) (`getPublicProfile`) |
 | Se conecta con | [PRD-7.2](PRD-7.2-notes-ui.md) (`CreatePostMenu` y `NoteTriggerBar` en el perfil propio) |
 | Código | `src/app/(public)/author/[id]/page.tsx`, `src/features/profile/components/AuthorProfileView.tsx`, `getPublicProfile` en `src/features/profile/queries.ts`, `getPublishedPostsByAuthor` y `getLikedPostsByUser` en `src/features/posts/queries.ts` |

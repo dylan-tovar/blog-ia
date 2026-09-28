@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-4 — Recomendaciones](PRD-4-recommendations.md) |
 | Dificultad / Esfuerzo | B (básica) / S (hasta 1 día) |
-| Dueño sugerido / Mentor | D4 / D2 |
+| Dueño sugerido / Mentor | D5 / D2 |
 | Depende de | [PRD-4.1](PRD-4.1-scoring-core.md) (`buildTagProfile`, `rankCandidates`), [PRD-3.2](PRD-3.2-feed-list.md) (la página `/` que la contiene) |
 | Código | `src/features/recommendations/queries.ts` (`getRecommendedPosts`, `getRecommendedPostIds`), `src/features/recommendations/components/RecommendedSection.tsx`, `RecommendedCard.tsx`, `RecommendedSkeleton.tsx`, `row-styles.ts`; integración en `src/app/(public)/page.tsx` |
 | ADRs | [0004](../adr/0004-recomendaciones-scoring-determinista.md), [0025](../adr/0025-intereses-en-onboarding.md), [0026](../adr/0026-feed-de-seguidos-con-recomendados.md) |

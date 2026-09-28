@@ -7,6 +7,8 @@
 | Migraciones | `0012_email_preferences.sql` (nueva) |
 | ADRs relacionados | [0028](../adr/0028-emails-transaccionales-resend.md), [0007](../adr/0007-login-por-username-con-secret-key.md) (precedente de `SECURITY DEFINER` sobre `auth.users`) |
 | Código (a crear) | `supabase/migrations/0012_email_preferences.sql`, `src/features/subscriptions/queries.ts` (`getFollowerEmails`), `src/features/subscriptions/notify-followers.ts`, `src/lib/email/templates/new-article.ts`, `src/app/unsubscribe/[token]/route.ts`, cambio en `src/features/posts/actions.ts` (`publishPost`) |
+| Dificultad / Esfuerzo | M (media) / M (dos a tres días) |
+| Dueño sugerido / Mentor | D9 / D2 (D1 revisor obligatorio por tocar `supabase/migrations/` y una función `SECURITY DEFINER` sobre `auth.users`) |
 
 ## Problema y objetivo
 

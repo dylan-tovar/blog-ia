@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-3 — Feed y seguimiento](PRD-3-feed-follows.md) |
 | Dificultad / Esfuerzo | M (media) / M (2-3 días) |
-| Dueño sugerido / Mentor | D3 / D1 |
+| Dueño sugerido / Mentor | D4 / D1 |
 | Depende de | [PRD-1.2](PRD-1.2-auth-security.md) (`requireUser`), [PRD-0.2](PRD-0.2-ui-primitives.md) (`Button`) |
 | Lo usan | [PRD-3.2](PRD-3.2-feed-list.md) (botón en cada tarjeta), [PRD-3.3](PRD-3.3-author-profile.md) (botón y contador en el perfil) |
 | Código | `src/features/subscriptions/actions.ts`, `queries.ts`, `components/FollowButton.tsx`; en `supabase/migrations/0003_feed.sql` la tabla `subscriptions`, su índice y sus políticas |

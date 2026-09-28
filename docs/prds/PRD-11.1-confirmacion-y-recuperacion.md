@@ -7,6 +7,8 @@
 | Migraciones | Ninguna propia (usa los flujos nativos de Supabase Auth) |
 | ADRs relacionados | [0028](../adr/0028-emails-transaccionales-resend.md) |
 | Código (a crear) | `src/app/auth/confirm/route.ts`, `src/app/(auth)/forgot-password/`, `src/app/(auth)/reset-password/`, cambios en `src/features/auth/actions.ts`, `src/features/auth/schemas.ts`, `src/features/auth/components/LoginForm.tsx` |
+| Dificultad / Esfuerzo | M (media) / M (dos a tres días) |
+| Dueño sugerido / Mentor | D6 / D2 |
 
 ## Por qué se agrupan confirmación y recuperación
 

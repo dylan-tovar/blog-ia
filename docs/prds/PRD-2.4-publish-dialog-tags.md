@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-2 — Posts](PRD-2-posts.md) |
 | Dificultad / Esfuerzo | M (media) / M (2-3 días) |
-| Dueño sugerido / Mentor | D3 / D1 |
+| Dueño sugerido / Mentor | D4 / D1 |
 | Depende de | [PRD-2.3](PRD-2.3-autosave-drafts.md) (`persist` asegura que el post exista), [PRD-5.3](PRD-5.3-publish-moderation.md) (lo que hace `publishPost` por dentro) |
 | Código | `src/features/posts/components/editor/PublishDialog.tsx`, `EditorTopBar.tsx`, `src/features/posts/components/PostStatusBadge.tsx`, `src/features/posts/actions.ts` (`addTag`, `removeTag`, `attachTag`, lado cliente de `publishPost`), `src/features/posts/schemas.ts` (`tagNameSchema`) |
 | ADRs | [0011](../adr/0011-ia-con-gemini.md), [0012](../adr/0012-integridad-de-escritura-de-posts.md) |

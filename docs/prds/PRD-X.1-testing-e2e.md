@@ -5,7 +5,7 @@
 | **Padre** | [PRD-global](../PRD-global-vision.md) (paquete transversal, no pertenece a una sola feature) |
 | **Dificultad** | Media (M) |
 | **Esfuerzo** | M (2 a 3 días de lectura y trabajo) |
-| **Dueño sugerido** | D12 |
+| **Dueño sugerido** | D13 |
 | **Mentor** | D2 |
 | **Depende de** | [PRD-1.1](PRD-1.1-auth-forms.md) (el registro que usa `register`), [PRD-0.3](PRD-0.3-app-shell.md) (barra de navegación), [PRD-2.3](PRD-2.3-autosave-drafts.md) (creación perezosa del borrador), [PRD-2.4](PRD-2.4-publish-dialog-tags.md) (diálogo de publicar), [PRD-7.2](PRD-7.2-notes-ui.md) (botón "+" y menú Crear) |
 | **Código** | `e2e/` (`helpers.ts`, `auth.spec.ts`, `posts.spec.ts`, `feed.spec.ts`, `shell.spec.ts`, `editor-ai-drawer.spec.ts`), `playwright.config.ts`, `vitest.config.mts` |

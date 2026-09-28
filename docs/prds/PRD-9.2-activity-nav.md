@@ -5,8 +5,8 @@
 | Padre | [PRD-9 — Explorar, Actividad y opciones de post](PRD-9-explore-activity.md) |
 | Dificultad | B (básica) |
 | Esfuerzo | S (1 punto, menos de un día) |
-| Dueño sugerido | D10 |
-| Mentor | D6 (apoyo entre pares; escala a D2 o D1) |
+| Dueño sugerido | D11 |
+| Mentor | D7 (apoyo entre pares; escala a D2 o D1) |
 | Depende de | [PRD-0.3](PRD-0.3-app-shell.md) (la navegación que lleva a esta página) |
 | Código | `src/app/(dashboard)/activity/page.tsx`, `src/components/shared/navigation.ts` (`NAV_ITEMS`, `getPageTitle`, `isNavItemActive`) |
 | ADRs | [0008](../adr/0008-tema-oscuro-y-shell-de-aplicacion.md), [0021](../adr/0021-feed-en-raiz-y-global.md) |

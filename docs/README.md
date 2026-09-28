@@ -22,7 +22,7 @@ Esta documentación está escrita para que alguien que recibe el proyecto entien
 | :--- | :--- | :--- |
 | [`PRD-global-vision.md`](PRD-global-vision.md) | Visión, alcance y decisiones KISS del producto | Antes de proponer cambios de alcance |
 | [`prds/`](prds/README.md) | PRDs por feature (0 a 11) y sus paquetes de trabajo (`PRD-N.M`): objetivos, comportamiento, datos y criterios de aceptación | Al implementar o revisar una feature, o al asumir un paquete |
-| [`team/`](team/reparto-de-tareas.md) | Reparto de los 35 paquetes entre las 12 personas del equipo: cargas, mentorías, olas, acuerdos y guía de presentación | Al incorporarte al equipo o al planificar quién hace qué |
+| [`team/`](team/reparto-de-tareas.md) | Reparto de los 44 paquetes entre las 13 personas del equipo: cargas, mentorías, olas, acuerdos y guía de presentación | Al incorporarte al equipo o al planificar quién hace qué |
 | [`adr/`](adr/README.md) | Decisiones de arquitectura con alternativas y consecuencias (0001 a 0035) | Al cuestionar o cambiar una decisión |
 | [`architecture/`](architecture/README.md) | Cómo funciona la app hoy: carpetas, rutas, flujos, auth, errores | Al incorporarse al código o agregar un módulo |
 | [`ai/`](ai/overview.md) | La capa de IA: funciones, límites, protecciones y cómo agregar una | Al tocar cualquier cosa de IA |

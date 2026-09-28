@@ -7,6 +7,8 @@
 | Migraciones | Ninguna |
 | ADRs relacionados | [0028](../adr/0028-emails-transaccionales-resend.md) |
 | Código (a crear) | `src/lib/email/templates/welcome.ts`, cambio en `src/features/profile/actions.ts` (`completeOnboarding`) |
+| Dificultad / Esfuerzo | B (básica) / S (hasta un día) |
+| Dueño sugerido / Mentor | D8 / D3 |
 
 ## Problema y objetivo
 

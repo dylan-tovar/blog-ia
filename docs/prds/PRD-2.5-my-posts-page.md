@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-2 — Posts](PRD-2-posts.md) |
 | Dificultad / Esfuerzo | B (básica) / S (hasta 1 día) |
-| Dueño sugerido / Mentor | D9 / D2 |
+| Dueño sugerido / Mentor | D10 / D2 |
 | Depende de | [PRD-2.1](PRD-2.1-posts-data-rls.md) (la consulta `getOwnPosts`), [PRD-0.3](PRD-0.3-app-shell.md) (el marco de la página) |
 | Código | `src/app/(dashboard)/posts/page.tsx`, `src/features/posts/components/PostStatusBadge.tsx`, `getOwnPosts` en `src/features/posts/queries.ts`, `src/lib/format.ts` (`formatShortDate`) |
 | ADRs | [0003](../adr/0003-seguridad-rls-y-proxy-minimo.md) |

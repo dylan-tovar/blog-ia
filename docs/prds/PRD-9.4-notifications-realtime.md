@@ -3,10 +3,10 @@
 | Campo | Valor |
 | :--- | :--- |
 | Padre | [PRD-9 — Explorar, Actividad y opciones de post](PRD-9-explore-activity.md) |
-| Dificultad | I (intermedia) |
+| Dificultad | M (media) |
 | Esfuerzo | S (1 punto, menos de un día) |
-| Dueño sugerido | D6 |
-| Mentor | D2 (apoyo entre pares; escala a D1) |
+| Dueño sugerido | D3 |
+| Mentor | — (D3 es de nivel avanzado; revisor obligatorio D1 o D2 por tocar Realtime/RLS) |
 | Depende de | [PRD-9.2](PRD-9.2-activity-nav.md) (`/activity` y `NAV_ITEMS`); tabla `notifications` de `supabase/migrations/0011_notifications.sql` |
 | Código | `supabase/migrations/0015_notifications_realtime.sql`, `src/features/notifications/realtime/NotificationsRealtimeProvider.tsx`, `src/components/shared/NotificationBell.tsx`, `src/components/shared/AppShell.tsx` |
 | ADRs | [0027](../adr/0027-notificaciones-por-triggers-sql.md), [0036](../adr/0036-notificaciones-realtime.md) |

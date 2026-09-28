@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-5 — IA para el autor](PRD-5-ai-author.md) |
 | Dificultad / Esfuerzo | A (avanzada) / M (2 a 3 días) |
-| Dueño sugerido / Mentor | D1 / — |
+| Dueño sugerido / Mentor | D2 / — |
 | Depende de | [PRD-5.1](PRD-5.1-ai-foundation.md) (`AiError`, variables de entorno), cliente admin de [PRD-1.2](PRD-1.2-auth-security.md) |
 | Alimenta a | [PRD-5.3](PRD-5.3-publish-moderation.md) (carril de moderación), [PRD-6.1](PRD-6.1-summary-backend.md) y [PRD-8.1](PRD-8.1-chat-server.md) (carril de asistencia) |
 | Código | `src/features/ai/rate-limit.ts`, `rate-limit.server.ts`, `src/features/ai/cached-feature.ts` (uso), `supabase/migrations/0007_ai_features.sql` (partes 5 y 6) |

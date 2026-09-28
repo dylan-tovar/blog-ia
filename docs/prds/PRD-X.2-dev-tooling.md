@@ -5,7 +5,7 @@
 | **Padre** | [PRD-global](../PRD-global-vision.md) (paquete transversal) |
 | **Dificultad** | Básica (B) |
 | **Esfuerzo** | S (1 día) |
-| **Dueño sugerido** | D4 |
+| **Dueño sugerido** | D5 |
 | **Mentor** | D1 |
 | **Depende de** | [PRD-2.1](PRD-2.1-posts-data-rls.md) (las escrituras de `posts` que verifica), [PRD-5.1](PRD-5.1-ai-foundation.md) (la integración con Gemini que prueba), [PRD-8.1](PRD-8.1-chat-server.md) (las herramientas del chat que replica) |
 | **Código** | `scripts/seed-dev.mjs`, `scripts/verify-post-writes.mjs`, `scripts/ai-smoke.mjs`, los tres scripts de `package.json`, [`docs/guides/getting-started.md`](../guides/getting-started.md) |

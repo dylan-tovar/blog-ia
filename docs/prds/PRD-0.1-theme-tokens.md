@@ -5,7 +5,7 @@
 | Padre | [PRD-0 — Sistema de diseño](PRD-0-design-system.md) |
 | Dificultad | B (básica) |
 | Esfuerzo | S (1 punto, menos de un día) |
-| Dueño sugerido | D4 |
+| Dueño sugerido | D5 |
 | Mentor | D2 |
 | Depende de | Nada |
 | Código | `src/app/globals.css`, `src/app/layout.tsx`, `components.json` (solo lectura) |

@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-2 — Posts](PRD-2-posts.md) |
 | Dificultad / Esfuerzo | M (media) / M (2-3 días) |
-| Dueño sugerido / Mentor | D3 / D2 |
+| Dueño sugerido / Mentor | D4 / D2 |
 | Depende de | [PRD-2.1](PRD-2.1-posts-data-rls.md) (tabla y permisos), [PRD-2.2](PRD-2.2-editor-tiptap.md) (el editor que produce el texto) |
 | Código | `src/features/posts/components/editor/use-autosave.ts`, `src/features/posts/actions.ts` (`createDraftPost`, `savePostContent`), `src/features/posts/limits.ts`, `src/features/posts/constants.ts`, `src/features/posts/schemas.ts` (`savePostSchema`), `src/features/posts/components/editor/EditorTopBar.tsx` (estado de guardado) |
 | ADRs | [0010](../adr/0010-editor-markdown.md), [0012](../adr/0012-integridad-de-escritura-de-posts.md) |

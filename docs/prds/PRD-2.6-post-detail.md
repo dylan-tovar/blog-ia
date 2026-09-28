@@ -4,7 +4,7 @@
 | :--- | :--- |
 | Padre | [PRD-2 — Posts](PRD-2-posts.md) |
 | Dificultad / Esfuerzo | B (básica) / S (hasta 1 día) |
-| Dueño sugerido / Mentor | D10 / D2 |
+| Dueño sugerido / Mentor | D11 / D2 |
 | Depende de | [PRD-2.1](PRD-2.1-posts-data-rls.md) (`getPublishedPost`), [PRD-2.2](PRD-2.2-editor-tiptap.md) (`MarkdownContent`) |
 | Se conecta con | [PRD-3.1](PRD-3.1-follow-system.md) (`ReadTracker` alimenta `reading_history`), [PRD-6.2](PRD-6.2-summary-ui.md) (botón de resumen), [PRD-7.2](PRD-7.2-notes-ui.md) (notas), [PRD-7.3](PRD-7.3-likes.md) (me gusta), [PRD-9.3](PRD-9.3-post-options-drawer.md) (menú de opciones) |
 | Código | `src/app/(public)/post/[id]/page.tsx`, `src/features/posts/components/MarkdownContent.tsx`, `ReadTracker.tsx`, `getPublishedPost` en `src/features/posts/queries.ts`, `recordRead` en `actions.ts`, `src/lib/format.ts` (`formatRelativeDate`) |

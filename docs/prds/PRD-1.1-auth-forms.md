@@ -5,8 +5,8 @@
 | Padre | [PRD-1 — Autenticación](PRD-1-auth.md) |
 | Dificultad | B (básica) |
 | Esfuerzo | M (2 puntos, 2 a 3 días) |
-| Dueño sugerido | D7 |
-| Mentor | D3 |
+| Dueño sugerido | D1 |
+| Mentor | — |
 | Depende de | [PRD-0.2](PRD-0.2-ui-primitives.md) (`Input`, `Button`, `Card`, `Drawer`), [PRD-1.2](PRD-1.2-auth-security.md) (las Server Actions `signUp` y `signIn` que estos formularios llaman) |
 | Código | `src/features/auth/components/{LoginForm,RegisterForm,LoginDrawer}.tsx`, `src/features/profile/components/{OnboardingForm,OnboardingSteps}.tsx`, `src/features/interests/components/{InterestsForm,InterestsLoadError}.tsx`, `src/features/auth/schemas.ts`, `src/features/auth/utils.ts`, `src/app/(auth)/login/page.tsx`, `src/app/(auth)/register/page.tsx`, `src/app/(auth)/onboarding/page.tsx` |
 | ADRs | [0007](../adr/0007-login-por-username-con-secret-key.md), [0025](../adr/0025-intereses-en-onboarding.md) |
