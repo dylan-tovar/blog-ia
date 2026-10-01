@@ -18,6 +18,7 @@ export function ChangePasswordForm() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [confirmTouched, setConfirmTouched] = useState(false);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
 
   // The reauth step is captcha-gated; a Turnstile token is single-use, so a
   // failed submit leaves a spent one — reset for a fresh token (same pattern
@@ -89,7 +90,7 @@ export function ChangePasswordForm() {
           )}
         </div>
       </div>
-      <TurnstileWidget ref={turnstileRef} />
+      <TurnstileWidget ref={turnstileRef} onVerifiedChange={setCaptchaVerified} />
       {state?.error && (
         <p role="alert" className="text-sm text-destructive">
           {state.error}
@@ -100,7 +101,11 @@ export function ChangePasswordForm() {
           Contraseña actualizada.
         </p>
       )}
-      <Button type="submit" disabled={pending || !canSubmit} className="w-full min-h-11 font-medium">
+      <Button
+        type="submit"
+        disabled={pending || !canSubmit || !captchaVerified}
+        className="w-full min-h-11 font-medium"
+      >
         {pending && <Loader2 className="animate-spin" />}
         Actualizar contraseña
       </Button>
