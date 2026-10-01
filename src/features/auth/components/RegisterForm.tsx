@@ -22,6 +22,7 @@ export function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [confirmTouched, setConfirmTouched] = useState(false);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
 
   // Turnstile tokens are single-use: a server-side rejection (weak password,
   // duplicate email, expired captcha) leaves a spent token behind. Reset the
@@ -102,13 +103,17 @@ export function RegisterForm() {
           )}
         </div>
       </div>
-      <TurnstileWidget ref={turnstileRef} />
+      <TurnstileWidget ref={turnstileRef} onVerifiedChange={setCaptchaVerified} />
       {state?.error && (
         <p role="alert" className="text-sm text-destructive">
           {state.error}
         </p>
       )}
-      <Button type="submit" disabled={pending || !canSubmit} className="w-full">
+      <Button
+        type="submit"
+        disabled={pending || !canSubmit || !captchaVerified}
+        className="w-full"
+      >
         {pending && <Loader2 className="animate-spin" />}
         Crear cuenta
       </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ export function LoginForm({
   inDrawer = false,
 }: LoginFormProps) {
   const [state, action, pending] = useActionState(signIn, undefined);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
 
   // Turnstile tokens are single-use: a rejected submit (bad credentials, expired
   // captcha) leaves a spent token behind. Reset the widget to get a fresh one.
@@ -63,10 +64,14 @@ export function LoginForm({
           ¿Olvidaste tu contraseña?
         </Link>
       </div>
-      <TurnstileWidget ref={turnstileRef} />
+      <TurnstileWidget ref={turnstileRef} onVerifiedChange={setCaptchaVerified} />
       {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
       <FooterWrapper className={inDrawer ? "px-0 pt-1 pb-0 gap-3" : "flex flex-col gap-4"}>
-        <Button type="submit" disabled={pending} className="w-full min-h-11 font-medium">
+        <Button
+          type="submit"
+          disabled={pending || !captchaVerified}
+          className="w-full min-h-11 font-medium"
+        >
           {pending && <Loader2 className="animate-spin" />}
           Iniciar sesión
         </Button>
