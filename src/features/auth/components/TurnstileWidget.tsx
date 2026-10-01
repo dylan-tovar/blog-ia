@@ -78,7 +78,7 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle>(function Turnst
   return (
     <>
       <Script src={TURNSTILE_SCRIPT_SRC} strategy="afterInteractive" onLoad={renderWidget} />
-      <div ref={containerRef} />
+      <div ref={containerRef} className="flex justify-center" />
     </>
   );
 });
