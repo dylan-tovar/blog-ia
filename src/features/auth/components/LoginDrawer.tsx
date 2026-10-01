@@ -164,6 +164,7 @@ export function LoginDrawer({
             <LoginForm
               redirectTo={pathname}
               onRegisterClick={() => setOpen(false)}
+              onForgotPasswordClick={() => setOpen(false)}
               inDrawer={true}
             />
           </div>
@@ -213,6 +214,7 @@ export function LoginDrawer({
           <LoginForm
             redirectTo={pathname}
             onRegisterClick={() => setOpen(false)}
+            onForgotPasswordClick={() => setOpen(false)}
             inDrawer={true}
           />
         </div>
