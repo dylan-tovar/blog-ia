@@ -1,6 +1,7 @@
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ARTICLE_PROSE_CLASS } from "@/features/posts/components/markdown-styles";
+import { remarkHighlight } from "@/features/posts/components/remark-highlight";
 import { isAllowedImageUrl, parseImageSize } from "@/features/posts/images/image-utils";
 import { env } from "@/lib/env";
 import { cn } from "@/lib/utils";
@@ -14,7 +15,7 @@ export function MarkdownContent({ children, className }: { children: string; cla
   return (
     <div className={cn(ARTICLE_PROSE_CLASS, className)}>
       <Markdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkHighlight]}
         components={{
           img({ src, alt }) {
             if (typeof src !== "string" || !isAllowedImageUrl(src, env.NEXT_PUBLIC_SUPABASE_URL)) {
