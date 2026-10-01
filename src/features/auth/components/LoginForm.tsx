@@ -16,10 +16,16 @@ import {
 interface LoginFormProps {
   redirectTo?: string;
   onRegisterClick?: () => void;
+  onForgotPasswordClick?: () => void;
   inDrawer?: boolean;
 }
 
-export function LoginForm({ redirectTo, onRegisterClick, inDrawer = false }: LoginFormProps) {
+export function LoginForm({
+  redirectTo,
+  onRegisterClick,
+  onForgotPasswordClick,
+  inDrawer = false,
+}: LoginFormProps) {
   const [state, action, pending] = useActionState(signIn, undefined);
 
   // Turnstile tokens are single-use: a rejected submit (bad credentials, expired
@@ -49,14 +55,13 @@ export function LoginForm({ redirectTo, onRegisterClick, inDrawer = false }: Log
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="password">Contraseña</Label>
         <Input id="password" name="password" type="password" required />
-        {!inDrawer && (
-          <Link
-            href="/forgot-password"
-            className="self-end text-sm text-muted-foreground hover:text-primary hover:underline"
-          >
-            ¿Olvidaste tu contraseña?
-          </Link>
-        )}
+        <Link
+          href="/forgot-password"
+          onClick={onForgotPasswordClick}
+          className="self-end text-sm text-muted-foreground hover:text-primary hover:underline"
+        >
+          ¿Olvidaste tu contraseña?
+        </Link>
       </div>
       <TurnstileWidget ref={turnstileRef} />
       {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
