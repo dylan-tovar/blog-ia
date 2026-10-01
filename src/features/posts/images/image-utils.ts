@@ -102,8 +102,14 @@ const GENERIC_NAME_WORDS = new Set([
   "screenshot", "screen", "shot", "captura", "de", "pantalla", "at", "a", "las", "pm", "am",
 ]);
 
+// A long digit run is how stock-photo sites (Pexels, Unsplash, Pixabay...) stamp an asset
+// id onto the file name, e.g. "pexels-dogu-tuncer-339534179-15917308.jpg". The author's name
+// in there reads as real words, so without this check it would pass as "descriptive".
+const STOCK_ASSET_ID = /\d{6,}/;
+
 // A file name only makes useful alt text when it says something ("atardecer-en-la-playa");
-// camera and screenshot names are noise for screen readers, so those get an empty alt.
+// camera, screenshot and stock-photo names are noise for screen readers, so those get an
+// empty alt.
 export function defaultAltText(fileName: string): string {
   const text = fileName
     .replace(/\.[a-z0-9]{2,5}$/i, "")
@@ -112,9 +118,9 @@ export function defaultAltText(fileName: string): string {
     .replace(/\s+/g, " ")
     .trim();
 
-  const isDescriptive = text
-    .split(" ")
-    .some((word) => /^\p{L}+$/u.test(word) && !GENERIC_NAME_WORDS.has(word.toLowerCase()));
+  const isDescriptive =
+    !STOCK_ASSET_ID.test(text) &&
+    text.split(" ").some((word) => /^\p{L}+$/u.test(word) && !GENERIC_NAME_WORDS.has(word.toLowerCase()));
 
   return isDescriptive ? text.slice(0, ALT_MAX_LENGTH).trim() : "";
 }

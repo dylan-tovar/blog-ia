@@ -184,6 +184,7 @@ describe("defaultAltText", () => {
     "Captura de pantalla 2026-09-21 a las 4.30.15.png",
     "image.png",
     "123456.png",
+    "pexels-dogu-tuncer-339534179-15917308.jpg",
     "",
   ])("returns an empty alt for generic file name %j", (name) => {
     expect(defaultAltText(name)).toBe("");
